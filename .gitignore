@@ -1,0 +1,92 @@
+#-----------------------------------------------------------
+# CodeIgniter 4 Standard .gitignore
+#-----------------------------------------------------------
+
+# Environment Files (Credentials & Local Configs)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.vagrant
+Vagrantfile
+
+# Composer Dependencies
+/vendor/
+
+# Writable Directory Junk & Temporary Files
+writable/cache/*
+!writable/cache/index.html
+!writable/cache/.gitkeep
+
+writable/debugbar/*
+!writable/debugbar/index.html
+!writable/debugbar/.gitkeep
+
+writable/logs/*
+!writable/logs/index.html
+!writable/logs/.gitkeep
+
+writable/session/*
+!writable/session/index.html
+!writable/session/.gitkeep
+
+writable/uploads/*
+!writable/uploads/index.html
+!writable/uploads/.gitkeep
+
+# Logs & Debugging Output
+php_errors.log
+*.log
+
+# Operating System Specific Junk Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+*.cab
+*.msi
+*.msm
+*.msp
+*~
+.directory
+.Trash-*
+
+# IDEs & Text Editors
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+nbproject/
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+.nb-gradle/
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+.phpintel
+
+# Test & Coverage Files
+/tests/coverage*
+/phpunit*.xml
+phpunit
+.phpunit.result.cache
+/results/
+
+# AI Agent & Antigravity IDE Metadata
+.gemini/
+.agents/
+scratch/

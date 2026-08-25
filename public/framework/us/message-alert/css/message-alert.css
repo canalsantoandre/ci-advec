@@ -1,0 +1,56 @@
+﻿@charset "utf-8";
+/* CSS Document */
+
+div.mensagens							{ position:fixed; width:100%; bottom:0px; left:0px; text-align:center; }
+div.mensagem-sucesso					{ background:#d6e9b9; color:#598527; margin:0px 0px 0px 0px; padding:15px; font-weight:bold; font-size:18px; border-top:2px dotted #598527; }
+div.mensagem-atencao					{ background:#ffe0b2; color:#f09000; margin:0px 0px 0px 0px; padding:15px; font-weight:bold; font-size:18px; border-top:2px dotted #f09000; }
+div.mensagem-erro						{ background:#cc0000; color:#ffffff; margin:0px 0px 0px 0px; padding:15px; font-weight:bold; font-size:18px; border-top:2px dotted #ffffff; }
+
+
+div.message-alert           
+{
+    margin: 0px 10px 0px 10px;
+    border-image-slice: 100%; 
+    border-image-source: none;
+    border-image-width: 1;
+    border-left-color: rgb(156, 180, 197);
+    border-left-style: solid;
+    border-left-width: 5px;
+    border-right-color: rgb(156, 180, 197);
+    border-right-style: solid;
+    border-right-width: 0px;
+    border-top-color: rgb(156, 180, 197);
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    border-top-style: solid;
+    border-top-width: 0px;
+    box-sizing: border-box;
+    color: rgb(52, 101, 151);
+
+    
+
+    font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+    font-size: 17px; 
+    margin-bottom: 0px;
+    border-left-width: 10px; 
+    padding: 15px ; 
+}
+
+div.message-alert-success   { border-color: #8eb589; color: #296829; background: #cee0cf; }
+div.message-alert-warning   { border-color: #e5c693; color: #6b6d31; background: #ecdfb0; }
+div.message-alert-danger	{ border-color: #963b49; color: #fff;    background: #c46a69; text-shadow: none; }
+div.message-alert-info	    { border-color: #9cb4c5; color: #346597; background: #d6dde7; }
+
+div.message-alert-icon-warning 	{ position: absolute; width: 20px; left: 50px; padding-right: 20px; padding-bottom: 5px; background-image: url(../images/warning.png); background-repeat: no-repeat; background-position: left; background-size: 15px 15px; }
+div.message-alert-icon-success	{ position: absolute; width: 20px; left: 50px; padding-right: 20px; padding-bottom: 5px; background-image: url(../images/success.png); background-repeat: no-repeat; background-position: left; background-size: 15px 15px; }
+div.message-alert-icon-info 	{ position: absolute; width: 20px; left: 50px; padding-right: 20px; padding-bottom: 5px; background-image: url(../images/info.png); background-repeat: no-repeat; background-position: left; background-size: 15px 15px; width: 50px; }
+div.message-alert-icon-danger 	{ position: absolute; width: 20px; left: 50px; padding-right: 20px; padding-bottom: 5px; background-image: url(../images/error.png); background-repeat: no-repeat; background-position: left; background-size: 15px 15px; }		
+
+div.message-alert-button-delete 		{ position: absolute; width: 20px; right: 50px; padding-bottom: 15px; background-image: url(../images/excluir-1.png); background-repeat: no-repeat; padding-left: 18px; cursor:pointer; }
+div.message-alert-button-delete:hover 	{ position: absolute; width: 20px; right: 50px; padding-bottom: 15px; background-image: url(../images/excluir-2.png); background-repeat: no-repeat; padding-left: 18px; cursor:pointer; }			
+		
+div.message-alert-separation 	        { margin-left: 20px; padding-left: 2px; }
+div.message-alert-content		 	    { padding: 2px 20px; text-align: justify; margin-right: 30px; padding-right: 2px; }
+
+
+
