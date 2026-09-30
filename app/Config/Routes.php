@@ -41,6 +41,64 @@ $routes->group('cultopadrao', static function ($routes) {
     $routes->get('apagar/(:num)', 'Cultopadrao::apagar/$1', ['filter'=>'auth']);
 });
 
+/* DEPARTAMENTOS */
+$routes->get('departamento', 'Departamento::index', ['filter'=>'auth']);
+$routes->group('departamento', static function ($routes) {
+    $routes->match(['GET','POST'], 'index', 'Departamento::index', ['filter'=>'auth']);
+    $routes->get('novo', 'Departamento::novo', ['filter'=>'auth']);
+    $routes->match(['GET','POST'], 'editar/(:num)', 'Departamento::editar/$1', ['filter'=>'auth']);
+    $routes->post('salvar', 'Departamento::salvar', ['filter'=>'auth']);
+    $routes->get('apagar/(:num)', 'Departamento::apagar/$1', ['filter'=>'auth']);
+    $routes->post('salvarArea', 'Departamento::salvarArea', ['filter'=>'auth']);
+    $routes->post('excluirArea', 'Departamento::excluirArea', ['filter'=>'auth']);
+    $routes->get('getAreasByDepartamento/(:num)', 'Departamento::getAreasByDepartamento/$1', ['filter'=>'auth']);
+});
+
+/* VOLUNTÁRIOS */
+$routes->get('voluntario', 'Voluntario::index', ['filter'=>'auth']);
+$routes->group('voluntario', static function ($routes) {
+    $routes->match(['GET','POST'], 'index', 'Voluntario::index', ['filter'=>'auth']);
+    $routes->get('novo', 'Voluntario::novo', ['filter'=>'auth']);
+    $routes->match(['GET','POST'], 'editar/(:any)', 'Voluntario::editar/$1', ['filter'=>'auth']);
+    $routes->post('salvar', 'Voluntario::salvar', ['filter'=>'auth']);
+    $routes->get('apagar/(:num)', 'Voluntario::apagar/$1', ['filter'=>'auth']);
+    $routes->get('dashVoluntario/(:num)', 'Voluntario::dashVoluntario/$1', ['filter'=>'auth']);
+    $routes->get('desempenho', 'Voluntario::desempenho', ['filter'=>'auth']);
+    $routes->get('getJustificativas/(:num)', 'Voluntario::getJustificativas/$1', ['filter'=>'auth']);
+    $routes->get('getEstatisticasPeriodo', 'Voluntario::getEstatisticasPeriodo', ['filter'=>'auth']);
+    $routes->post('resetSenha', 'Voluntario::resetSenha', ['filter'=>'auth']);
+});
+
+/* PORTAL DO VOLUNTÁRIO (ACESSO EXCLUSIVO) */
+$routes->match(['GET','POST'], 'portal/login', 'PortalVoluntario::login');
+$routes->get('portal/logout', 'PortalVoluntario::logout');
+$routes->get('portal', 'PortalVoluntario::agenda', ['filter' => 'auth_voluntario']);
+$routes->group('portal', ['filter' => 'auth_voluntario'], static function ($routes) {
+    $routes->get('agenda', 'PortalVoluntario::agenda');
+    $routes->get('agenda/(:num)/(:num)', 'PortalVoluntario::agenda/$1/$2');
+    $routes->post('confirmarEscala', 'PortalVoluntario::confirmarEscala');
+    $routes->post('recusarEscala', 'PortalVoluntario::recusarEscala');
+    $routes->get('metricas', 'PortalVoluntario::metricas');
+    $routes->get('perfil', 'PortalVoluntario::perfil');
+    $routes->post('salvarPerfil', 'PortalVoluntario::salvarPerfil');
+    $routes->post('alterarSenha', 'PortalVoluntario::alterarSenha');
+});
+
+/* ESCALA DE VOLUNTÁRIOS */
+$routes->get('escala', 'Escala::index', ['filter'=>'auth']);
+$routes->group('escala', static function ($routes) {
+    $routes->match(['GET','POST'], 'index', 'Escala::index', ['filter'=>'auth']);
+    $routes->match(['GET','POST'], 'grade', 'Escala::grade', ['filter'=>'auth']);
+    $routes->match(['GET','POST'], 'grade/(:num)', 'Escala::grade/$1', ['filter'=>'auth']);
+    $routes->match(['GET','POST'], 'grade/(:num)/(:num)/(:num)', 'Escala::grade/$1/$2/$3', ['filter'=>'auth']);
+    $routes->post('salvarEscala', 'Escala::salvarEscala', ['filter'=>'auth']);
+    $routes->post('removerEscala', 'Escala::removerEscala', ['filter'=>'auth']);
+    $routes->post('alternarPresenca', 'Escala::alternarPresenca', ['filter'=>'auth']);
+    $routes->get('getVoluntariosPorArea', 'Escala::getVoluntariosPorArea', ['filter'=>'auth']);
+    $routes->get('imprimir/(:num)/(:num)/(:num)', 'Escala::imprimir/$1/$2/$3', ['filter'=>'auth']);
+    $routes->get('imprimir', 'Escala::imprimir', ['filter'=>'auth']);
+});
+
 /* CONVIDADO */
 $routes->get('convidado'   , 'Convidado::index',['filter'=>'auth']);
 $routes->group('convidado', static function ($routes) {

@@ -232,17 +232,42 @@
           </li>
 
           <!-- User Menu Dropdown -->
+          <?php
+            $nomeUserLayout = isset($usuario->nome) ? trim($usuario->nome) : 'Usuário';
+            $partesNomeUser = preg_split('/\s+/', $nomeUserLayout);
+            $iniciaisUser = '';
+            if (count($partesNomeUser) >= 2) {
+                $iniciaisUser = mb_strtoupper(mb_substr($partesNomeUser[0], 0, 1) . mb_substr(end($partesNomeUser), 0, 1));
+            } elseif (!empty($nomeUserLayout)) {
+                $iniciaisUser = mb_strtoupper(mb_substr($nomeUserLayout, 0, 2));
+            } else {
+                $iniciaisUser = 'US';
+            }
+            $fotoUserLayout = !empty($usuario->foto_url) ? $usuario->foto_url : (!empty($usuario->foto) ? $usuario->foto : null);
+          ?>
           <li class="nav-item dropdown user-menu">
             <a href="#" class="nav-link dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown">
-              <img src="<?= base_url('templates/AdminLTE') ?>/dist/img/user1-128x128.jpg" class="user-avatar-circle shadow-sm" alt="Foto do Usuário" />
-              <span class="d-none d-md-inline fw-semibold"><?= isset($usuario->nome) ? esc($usuario->nome) : 'Usuário'; ?></span>
+              <?php if ($fotoUserLayout) { ?>
+                <img src="<?= esc($fotoUserLayout) ?>" class="user-avatar-circle shadow-sm" alt="Foto do Usuário" />
+              <?php } else { ?>
+                <span class="user-avatar-circle shadow-sm d-inline-flex align-items-center justify-content-center fw-bold text-white text-center" style="background: linear-gradient(135deg, #0284c7 0%, #1d4ed8 100%); font-size: 0.85rem; letter-spacing: 0.5px;">
+                  <?= esc($iniciaisUser) ?>
+                </span>
+              <?php } ?>
+              <span class="d-none d-md-inline fw-semibold"><?= esc($nomeUserLayout); ?></span>
             </a>
             <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end shadow-lg rounded-3 border-0">
               <!--begin::User Header-->
               <li class="user-header text-bg-primary rounded-top p-4 text-center">
-                <img src="<?= base_url('templates/AdminLTE') ?>/dist/img/user1-128x128.jpg" class="rounded-circle shadow mb-2" style="width: 70px; height: 70px; object-fit: cover;" alt="Foto do Usuário" />
+                <?php if ($fotoUserLayout) { ?>
+                  <img src="<?= esc($fotoUserLayout) ?>" class="rounded-circle shadow mb-2" style="width: 70px; height: 70px; object-fit: cover;" alt="Foto do Usuário" />
+                <?php } else { ?>
+                  <div class="rounded-circle shadow mb-2 d-inline-flex align-items-center justify-content-center fw-bold text-white mx-auto border border-3 border-white-50" style="width: 70px; height: 70px; font-size: 1.6rem; letter-spacing: 1px; background: linear-gradient(135deg, #0284c7 0%, #1e40af 100%);">
+                    <?= esc($iniciaisUser) ?>
+                  </div>
+                <?php } ?>
                 <p class="mb-0 fw-bold fs-6">
-                  <?= isset($usuario->nome) ? esc($usuario->nome) : 'Usuário'; ?>
+                  <?= esc($nomeUserLayout); ?>
                 </p>
                 <small class="text-white-50"><?= isset($usuario->nome_perfil) ? esc($usuario->nome_perfil) : 'Perfil Acesso'; ?></small>
               </li>

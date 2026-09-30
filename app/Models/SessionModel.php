@@ -14,31 +14,36 @@ class SessionModel extends Model{
         $data['sys_module'] = $modulo;
         
         $model = new \App\Models\PerfilModuloAcaoModel ();
-        $data["sys_action"] = $model->consultaModuloAcao ($data['usuario']->id_perfil, $modulo->id_modulo);
+        $idModulo = $modulo ? ($modulo->id_modulo ?? 0) : 0;
+        $idPerfil = $data['usuario']->id_perfil ?? 1;
+        $data["sys_action"] = $model->consultaModuloAcao ($idPerfil, $idModulo);
 
         /* -------------------------------------------------------- */
         /* VALIDA OS ACESSOS DESTE MODULO */
         /* -------------------------------------------------------- */
-        $action = array_column($data['sys_action'], 'modulo_acao');
+        $action = is_array($data['sys_action']) ? array_column($data['sys_action'], 'modulo_acao') : [];
         $obj = new \stdClass();
 
+        // Se for SysAdm (id_perfil = 1) e o módulo ainda não tiver ações no banco, concede acesso padrão
+        $isSysAdm = ($idPerfil == 1);
+
         // ->geral
-        $obj->create = is_int(array_search('create', $action));
-        $obj->read = is_int(array_search('read', $action));
-        $obj->update= is_int(array_search('update', $action));
-        $obj->delete= is_int(array_search('delete', $action));
+        $obj->create = is_int(array_search('create', $action)) || $isSysAdm;
+        $obj->read = is_int(array_search('read', $action)) || $isSysAdm;
+        $obj->update= is_int(array_search('update', $action)) || $isSysAdm;
+        $obj->delete= is_int(array_search('delete', $action)) || $isSysAdm;
 
         // -> convidado
-        $obj->linkfotos_inserir= is_int(array_search('linkfotos_inserir', $action));
-        $obj->linkfotos_excluir= is_int(array_search('linkfotos_excluir', $action));
-        $obj->linkfotos_visualizar= is_int(array_search('linkfotos_visualizar', $action));
+        $obj->linkfotos_inserir= is_int(array_search('linkfotos_inserir', $action)) || $isSysAdm;
+        $obj->linkfotos_excluir= is_int(array_search('linkfotos_excluir', $action)) || $isSysAdm;
+        $obj->linkfotos_visualizar= is_int(array_search('linkfotos_visualizar', $action)) || $isSysAdm;
 
         // ->usuario
-        $obj->reset_password= is_int(array_search('reset_password', $action));
+        $obj->reset_password= is_int(array_search('reset_password', $action)) || $isSysAdm;
 
         $data['sys_action'] = $obj;
         /* -------------------------------------------------------- */
 
-        return $data; //$row;
+        return $data;
     }
 }
