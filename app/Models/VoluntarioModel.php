@@ -18,6 +18,9 @@ class VoluntarioModel extends Model
         'email',
         'senha',
         'primeiro_acesso',
+        'force_pwd_change',
+        'otp_code',
+        'otp_expires_at',
         'data_ultimo_login',
         'data_ultima_senha',
         'telefone_whatsapp',
@@ -574,6 +577,7 @@ class VoluntarioModel extends Model
 
     /**
      * Reseta a senha do voluntário para os dígitos limpos do WhatsApp (padrão do sistema)
+     * e obriga a troca de senha na próxima autenticação com validação OTP via WhatsApp
      */
     public function resetarSenha($id_voluntario)
     {
@@ -592,7 +596,72 @@ class VoluntarioModel extends Model
         return $this->update((int)$id_voluntario, [
             'senha'             => $hashSenha,
             'primeiro_acesso'   => 1,
+            'force_pwd_change'  => 1,
+            'otp_code'          => null,
+            'otp_expires_at'    => null,
             'data_ultima_senha' => date('Y-m-d H:i:s')
+        ]);
+    }
+
+    /**
+     * Gera código OTP de 6 dígitos para o voluntário com validade de 10 minutos
+     */
+    public function gerarOtpTrocaSenha($id_voluntario)
+    {
+        $voluntario = $this->find((int)$id_voluntario);
+        if (!$voluntario) {
+            return null;
+        }
+
+        $otpCode = sprintf('%06d', mt_rand(100000, 999999));
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+
+        $this->update((int)$id_voluntario, [
+            'otp_code'         => $otpCode,
+            'otp_expires_at'   => $expiresAt,
+            'force_pwd_change' => 1
+        ]);
+
+        return $otpCode;
+    }
+
+    /**
+     * Valida se o código OTP informado está correto e dentro do prazo de validade
+     */
+    public function validarOtpTrocaSenha($id_voluntario, $otpInformado)
+    {
+        $voluntario = $this->find((int)$id_voluntario);
+        if (!$voluntario || empty($voluntario->otp_code) || empty($voluntario->otp_expires_at)) {
+            return false;
+        }
+
+        $otpLimpo = trim((string)$otpInformado);
+        if ($voluntario->otp_code !== $otpLimpo) {
+            return false;
+        }
+
+        if (strtotime($voluntario->otp_expires_at) < time()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Conclui a troca de senha obrigatória via OTP e limpa as flags de bloqueio
+     */
+    public function concluirTrocaSenhaComOtp($id_voluntario, $novaSenha)
+    {
+        $hashSenha = password_hash($novaSenha, PASSWORD_BCRYPT);
+
+        return $this->update((int)$id_voluntario, [
+            'senha'             => $hashSenha,
+            'primeiro_acesso'   => 0,
+            'force_pwd_change'  => 0,
+            'otp_code'          => null,
+            'otp_expires_at'    => null,
+            'data_ultima_senha' => date('Y-m-d H:i:s'),
+            'data_ultimo_login' => date('Y-m-d H:i:s')
         ]);
     }
 
@@ -605,6 +674,9 @@ class VoluntarioModel extends Model
         return $this->update((int)$id_voluntario, [
             'senha'             => $hashSenha,
             'primeiro_acesso'   => 0,
+            'force_pwd_change'  => 0,
+            'otp_code'          => null,
+            'otp_expires_at'    => null,
             'data_ultima_senha' => date('Y-m-d H:i:s')
         ]);
     }

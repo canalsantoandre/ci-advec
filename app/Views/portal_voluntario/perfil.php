@@ -205,7 +205,14 @@
             <label for="telefone_whatsapp" class="form-label fw-semibold small">
               <i class="bi bi-whatsapp text-success me-1"></i> Telefone WhatsApp <span class="text-danger">*</span>
             </label>
-            <input type="tel" id="telefone_whatsapp" name="telefone_whatsapp" class="form-control" placeholder="(11) 99999-9999" value="<?= esc($voluntario->telefone_whatsapp) ?>" required>
+            <?php
+              $foneExibicao = (string)($voluntario->telefone_whatsapp ?? '');
+              $foneDigits = preg_replace('/\D/', '', $foneExibicao);
+              if (strpos($foneDigits, '55') === 0 && strlen($foneDigits) >= 12) {
+                  $foneExibicao = substr($foneDigits, 2);
+              }
+            ?>
+            <input type="tel" id="telefone_whatsapp" name="telefone_whatsapp" class="form-control" placeholder="(11) 99999-9999" value="<?= esc($foneExibicao) ?>" required>
             <small class="text-muted" style="font-size: 0.7rem;">Este número é usado como seu usuário de login no portal.</small>
           </div>
 

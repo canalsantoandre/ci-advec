@@ -7,6 +7,7 @@ use App\Models\VoluntarioAreaModel;
 use App\Models\VoluntarioCultoModel;
 use App\Models\CultoPadraoModel;
 use App\Models\EscalaVoluntarioModel;
+use App\Services\WebhookService;
 
 class PortalVoluntario extends BaseController
 {
@@ -71,36 +72,60 @@ class PortalVoluntario extends BaseController
             }
 
             // Validação de senha:
-            // 1. Se tem hash no banco, valida via password_verify
-            // 2. Se a senha está nula ou coincide com a senha padrão (dígitos do telefone)
+            // 1. Se tem hash no banco e o usuário já trocou a senha (force_pwd_change = 0), aceita EXCLUSIVAMENTE o hash via password_verify
+            // 2. Se o usuário ainda precisa trocar a senha (force_pwd_change = 1 ou primeiro_acesso = 1), aceita hash ou senha inicial padrão (telefone)
             $digitosTelefone = preg_replace('/\D/', '', (string)$voluntario->telefone_whatsapp);
             $digitosTelefoneSem55 = (strpos($digitosTelefone, '55') === 0 && strlen($digitosTelefone) >= 12) ? substr($digitosTelefone, 2) : $digitosTelefone;
 
             $senhaValida = false;
+            $precisaTrocarSenha = (!empty($voluntario->force_pwd_change) || !empty($voluntario->primeiro_acesso));
 
             if (!empty($voluntario->senha)) {
                 if (password_verify($senha, $voluntario->senha)) {
                     $senhaValida = true;
-                } elseif ($senha === $digitosTelefone || $senha === $digitosTelefoneSem55) {
-                    // Senha padrão informada pelo usuário
+                } elseif ($precisaTrocarSenha && ($senha === $digitosTelefone || $senha === $digitosTelefoneSem55)) {
+                    // Senha padrão inicial é aceita APENAS se ainda não tiver concluído a troca obrigatória
                     $senhaValida = true;
                 }
             } else {
-                // Sem hash gravado ainda: senha padrão é o telefone limpo
+                // Sem hash gravado ainda: aceita a senha padrão inicial e força a troca
                 if ($senha === $digitosTelefone || $senha === $digitosTelefoneSem55 || $senha === $voluntario->telefone_whatsapp) {
                     $senhaValida = true;
-                    // Gera hash para futuros logins
-                    $voluntarioModel->update($voluntario->id_voluntario, [
-                        'senha'             => password_hash($senha, PASSWORD_BCRYPT),
-                        'primeiro_acesso'   => 1,
-                        'data_ultima_senha' => date('Y-m-d H:i:s')
-                    ]);
+                    $precisaTrocarSenha = true;
                 }
             }
 
             if (!$senhaValida) {
                 $data['erro'] = 'Senha incorreta. Caso seja seu primeiro acesso, sua senha inicial é o seu número de WhatsApp.';
                 return view('portal_voluntario/login', $data);
+            }
+
+            // ============================================================
+            // INTERCEPTAÇÃO DE SEGURANÇA: TROCA OBRIGATÓRIA DE SENHA (OTP)
+            // ============================================================
+            $precisaTrocarSenha = (!empty($voluntario->force_pwd_change) || !empty($voluntario->primeiro_acesso));
+
+            if ($precisaTrocarSenha) {
+                // Gera código OTP de 6 dígitos válido por 10 minutos
+                $otpCode = $voluntarioModel->gerarOtpTrocaSenha($voluntario->id_voluntario);
+
+                // Dispara mensagem via Webhook para o WhatsApp do voluntário
+                $envio = WebhookService::enviarOtpTrocaSenha($voluntario->telefone_whatsapp, $otpCode, $voluntario->nome);
+
+                // Grava sessão temporária de desafio OTP (sem liberar acesso ao sistema)
+                $session->set('otp_auth_challenge', [
+                    'id_voluntario'     => (int)$voluntario->id_voluntario,
+                    'nome'              => $voluntario->nome,
+                    'telefone'          => $voluntario->telefone_whatsapp,
+                    'solicitado_em'     => time(),
+                    'webhook_status'    => $envio['success']
+                ]);
+
+                if (!$envio['success']) {
+                    session()->setFlashdata('info_otp', 'Aviso: Código de segurança gerado. Caso não receba no WhatsApp, verifique suas configurações ou solicite o reenvio.');
+                }
+
+                return redirect()->to(base_url('portal/verificar-otp'));
             }
 
             // Atualiza data do último login
@@ -126,6 +151,166 @@ class PortalVoluntario extends BaseController
         }
 
         return view('portal_voluntario/login', $data);
+    }
+
+    /**
+     * Tela de Verificação de OTP e Definição de Nova Senha Obrigatória
+     */
+    public function verificarOtp()
+    {
+        $session = session();
+        $challenge = $session->get('otp_auth_challenge');
+
+        if (empty($challenge) || empty($challenge['id_voluntario'])) {
+            return redirect()->to(base_url('portal/login'));
+        }
+
+        $telefone = (string)($challenge['telefone'] ?? '');
+        $digits = preg_replace('/\D/', '', $telefone);
+        $telefoneMascarado = $telefone;
+
+        if (strlen($digits) >= 10) {
+            $ddd = substr($digits, 0, 2);
+            $fim = substr($digits, -4);
+            $telefoneMascarado = "({$ddd}) 9****-{$fim}";
+        }
+
+        $data = [
+            'title'             => 'Validação de Segurança OTP - ADVEC',
+            'challenge'         => $challenge,
+            'telefoneMascarado' => $telefoneMascarado,
+            'erro'              => ''
+        ];
+
+        return view('portal_voluntario/trocar-senha-otp', $data);
+    }
+
+    /**
+     * Processa a confirmação de troca de senha via código OTP
+     */
+    public function confirmarTrocaSenhaOtp()
+    {
+        $session = session();
+        $challenge = $session->get('otp_auth_challenge');
+
+        if (empty($challenge) || empty($challenge['id_voluntario'])) {
+            return redirect()->to(base_url('portal/login'));
+        }
+
+        $id_voluntario = (int)$challenge['id_voluntario'];
+        $voluntarioModel = new VoluntarioModel();
+        $voluntario = $voluntarioModel->find($id_voluntario);
+
+        if (!$voluntario) {
+            $session->remove('otp_auth_challenge');
+            return redirect()->to(base_url('portal/login'));
+        }
+
+        $telefone = (string)($challenge['telefone'] ?? '');
+        $digits = preg_replace('/\D/', '', $telefone);
+        $telefoneMascarado = (strlen($digits) >= 10) ? "(" . substr($digits, 0, 2) . ") 9****-" . substr($digits, -4) : $telefone;
+
+        $data = [
+            'title'             => 'Validação de Segurança OTP - ADVEC',
+            'challenge'         => $challenge,
+            'telefoneMascarado' => $telefoneMascarado,
+            'erro'              => ''
+        ];
+
+        $otpInformado       = trim((string)$this->request->getPost('txtOtp'));
+        $novaSenha          = trim((string)$this->request->getPost('txtNovaSenha'));
+        $confirmaNovaSenha  = trim((string)$this->request->getPost('txtConfirmaSenha'));
+
+        if (empty($otpInformado) || empty($novaSenha) || empty($confirmaNovaSenha)) {
+            $data['erro'] = 'Por favor, preencha o código OTP e todos os campos de senha.';
+            return view('portal_voluntario/trocar-senha-otp', $data);
+        }
+
+        // Validação do Código OTP e Expiração
+        if (!$voluntarioModel->validarOtpTrocaSenha($id_voluntario, $otpInformado)) {
+            $data['erro'] = 'Código OTP incorreto ou expirado. Verifique a mensagem no seu WhatsApp ou solicite o reenvio.';
+            return view('portal_voluntario/trocar-senha-otp', $data);
+        }
+
+        // Validação da Nova Senha
+        if (strlen($novaSenha) < 6) {
+            $data['erro'] = 'A nova senha deve ter no mínimo 6 caracteres.';
+            return view('portal_voluntario/trocar-senha-otp', $data);
+        }
+
+        if ($novaSenha !== $confirmaNovaSenha) {
+            $data['erro'] = 'A confirmação de senha não coincide com a nova senha digitada.';
+            return view('portal_voluntario/trocar-senha-otp', $data);
+        }
+
+        // Não permite que a nova senha seja igual ao telefone limpo (senha padrão)
+        $telLimpo = preg_replace('/\D/', '', (string)$voluntario->telefone_whatsapp);
+        if ($novaSenha === $telLimpo) {
+            $data['erro'] = 'Sua nova senha deve ser diferente da senha padrão inicial (seu telefone).';
+            return view('portal_voluntario/trocar-senha-otp', $data);
+        }
+
+        // Conclui a alteração de senha e limpa as flags de OTP
+        $voluntarioModel->concluirTrocaSenhaComOtp($id_voluntario, $novaSenha);
+
+        // Remove o desafio temporário da sessão
+        $session->remove('otp_auth_challenge');
+
+        // Cria a sessão definitiva autenticada do voluntário
+        $sessionData = [
+            'id_voluntario' => $voluntario->id_voluntario,
+            'nome'          => $voluntario->nome,
+            'nickname'      => $voluntario->nickname,
+            'email'         => $voluntario->email,
+            'telefone'      => $voluntario->telefone_whatsapp,
+            'foto_url'      => $voluntario->foto_url,
+            'logged_in'     => true,
+            'role'          => 'VOLUNTARIO'
+        ];
+
+        $session->set('dsh_voluntario', $sessionData);
+        session()->setFlashdata('success', 'Sua senha pessoal foi definida com sucesso! Bem-vindo(a) ao Portal do Voluntário.');
+
+        return redirect()->to(base_url('portal/agenda'));
+    }
+
+    /**
+     * AJAX: Reenvia novo código OTP por WhatsApp para o voluntário
+     */
+    public function reenviarOtp()
+    {
+        $session = session();
+        $challenge = $session->get('otp_auth_challenge');
+
+        if (empty($challenge) || empty($challenge['id_voluntario'])) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Sessão expirada. Faça login novamente.']);
+        }
+
+        $id_voluntario = (int)$challenge['id_voluntario'];
+        $voluntarioModel = new VoluntarioModel();
+        $voluntario = $voluntarioModel->find($id_voluntario);
+
+        if (!$voluntario) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Voluntário não encontrado.']);
+        }
+
+        // Gera novo OTP com validade renovada
+        $novoOtp = $voluntarioModel->gerarOtpTrocaSenha($id_voluntario);
+
+        // Dispara mensagem via Webhook
+        $envio = WebhookService::enviarOtpTrocaSenha($voluntario->telefone_whatsapp, $novoOtp, $voluntario->nome);
+
+        if ($envio['success']) {
+            return $this->response->setJSON([
+                'status'  => 'success',
+                'message' => 'Novo código de segurança enviado para o seu WhatsApp com sucesso!'
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'status'  => 'error',
+            'message' => 'Não foi possível disparar o WhatsApp: ' . ($envio['message'] ?? 'Falha no webhook.')
+        ]);
     }
 
     /**
@@ -336,6 +521,11 @@ class PortalVoluntario extends BaseController
             $redesPlataformas = $this->request->getPost('rede_plataforma') ?: [];
             $redesUrls        = $this->request->getPost('rede_url') ?: [];
 
+            // Se o telefone não foi enviado no formulário, mantém o telefone cadastrado
+            if (empty($telefone_whatsapp)) {
+                $telefone_whatsapp = (string)($voluntario->telefone_whatsapp ?? '');
+            }
+
             if (empty($telefone_whatsapp)) {
                 return $this->response->setJSON(['status' => 'error', 'message' => 'O telefone WhatsApp é obrigatório.']);
             }
@@ -356,39 +546,37 @@ class PortalVoluntario extends BaseController
             $redesJson = !empty($redesArray) ? json_encode($redesArray, JSON_UNESCAPED_UNICODE) : null;
 
             $dadosUpdate = [
-                'nickname'          => $nickname,
-                'data_nascimento'   => $data_nascimento,
+                'nickname'          => $nickname ?: ($voluntario->nickname ?? null),
+                'data_nascimento'   => !empty($data_nascimento) ? $data_nascimento : ($voluntario->data_nascimento ?? null),
                 'telefone_whatsapp' => $telefone_whatsapp,
                 'redes_sociais'     => $redesJson
             ];
 
-            // Upload de Foto
+            // Upload de Foto (se enviada junto com o form)
             $fotoFile = $this->request->getFile('foto_file');
             if ($fotoFile && $fotoFile->isValid() && !$fotoFile->hasMoved()) {
-                $ext = strtolower($fotoFile->getClientExtension());
-                if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'])) {
-                    $newName = 'vol_' . $voluntario->id_voluntario . '_' . time() . '.' . $ext;
-                    $uploadPath = ROOTPATH . 'public/uploads/voluntarios/';
-                    if (!is_dir($uploadPath)) {
-                        mkdir($uploadPath, 0755, true);
-                    }
-                    $fotoFile->move($uploadPath, $newName);
-                    $dadosUpdate['foto_url'] = base_url('uploads/voluntarios/' . $newName);
+                $uploadDir = FCPATH . 'uploads/voluntarios';
+                if (!is_dir($uploadDir)) {
+                    @mkdir($uploadDir, 0777, true);
                 }
+                $newName = $fotoFile->getRandomName();
+                $fotoFile->move($uploadDir, $newName);
+                $dadosUpdate['foto_url'] = base_url('uploads/voluntarios/' . $newName);
             }
 
             $voluntarioModel = new VoluntarioModel();
             $voluntarioModel->atualizarPerfilVoluntario($voluntario->id_voluntario, $dadosUpdate);
 
-            // Sincroniza Disponibilidade de Cultos (N:N)
-            $cultosIds = $this->request->getPost('cultos') ?: [];
+            // Sincroniza Disponibilidade de Cultos (N:N) se o campo estiver presente
+            $cultosPost = $this->request->getPost('cultos');
+            $cultosIds = is_array($cultosPost) ? $cultosPost : [];
             $voluntarioCultoModel = new VoluntarioCultoModel();
             $voluntarioCultoModel->sincronizarCultos($voluntario->id_voluntario, (array)$cultosIds);
 
             // Atualiza sessão
             $sess = session();
             $currSess = $sess->get('dsh_voluntario');
-            $currSess['nickname'] = $nickname;
+            $currSess['nickname'] = $dadosUpdate['nickname'];
             $currSess['telefone'] = $telefone_whatsapp;
             if (!empty($dadosUpdate['foto_url'])) {
                 $currSess['foto_url'] = $dadosUpdate['foto_url'];
@@ -402,6 +590,50 @@ class PortalVoluntario extends BaseController
             ]);
         } catch (\Throwable $e) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'Erro ao salvar perfil: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * AJAX: Upload Direto de Foto de Perfil
+     */
+    public function uploadFoto()
+    {
+        $voluntario = $this->getVoluntarioSessao();
+        if (!$voluntario) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Sessão expirada. Faça login novamente.']);
+        }
+
+        $fotoFile = $this->request->getFile('foto_file');
+        if (!$fotoFile || !$fotoFile->isValid() || $fotoFile->hasMoved()) {
+            $msgErro = ($fotoFile && !$fotoFile->isValid()) ? $fotoFile->getErrorString() : 'Arquivo de imagem inválido ou não enviado.';
+            return $this->response->setJSON(['status' => 'error', 'message' => $msgErro]);
+        }
+
+        try {
+            $uploadDir = FCPATH . 'uploads/voluntarios';
+            if (!is_dir($uploadDir)) {
+                @mkdir($uploadDir, 0777, true);
+            }
+            $newName = $fotoFile->getRandomName();
+            $fotoFile->move($uploadDir, $newName);
+            $fotoUrl = base_url('uploads/voluntarios/' . $newName);
+
+            $voluntarioModel = new VoluntarioModel();
+            $voluntarioModel->atualizarPerfilVoluntario($voluntario->id_voluntario, ['foto_url' => $fotoUrl]);
+
+            // Atualiza sessão
+            $sess = session();
+            $currSess = $sess->get('dsh_voluntario');
+            $currSess['foto_url'] = $fotoUrl;
+            $sess->set('dsh_voluntario', $currSess);
+
+            return $this->response->setJSON([
+                'status'   => 'success',
+                'message'  => 'Sua foto foi atualizada com sucesso!',
+                'foto_url' => $fotoUrl
+            ]);
+        } catch (\Throwable $e) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Erro ao salvar foto: ' . $e->getMessage()]);
         }
     }
 
@@ -437,7 +669,7 @@ class PortalVoluntario extends BaseController
 
         $senhaAtualCorreta = false;
         if (!empty($voluntario->senha)) {
-            if (password_verify($senha_atual, $voluntario->senha) || $senha_atual === $digitosTelefone || $senha_atual === $digitosTelefoneSem55) {
+            if (password_verify($senha_atual, $voluntario->senha)) {
                 $senhaAtualCorreta = true;
             }
         } else {

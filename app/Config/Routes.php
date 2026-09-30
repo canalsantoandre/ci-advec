@@ -72,6 +72,10 @@ $routes->group('voluntario', static function ($routes) {
 /* PORTAL DO VOLUNTÁRIO (ACESSO EXCLUSIVO) */
 $routes->match(['GET','POST'], 'portal/login', 'PortalVoluntario::login');
 $routes->get('portal/logout', 'PortalVoluntario::logout');
+$routes->get('portal/verificar-otp', 'PortalVoluntario::verificarOtp');
+$routes->post('portal/confirmar-troca-senha-otp', 'PortalVoluntario::confirmarTrocaSenhaOtp');
+$routes->post('portal/reenviar-otp', 'PortalVoluntario::reenviarOtp');
+
 $routes->get('portal', 'PortalVoluntario::agenda', ['filter' => 'auth_voluntario']);
 $routes->group('portal', ['filter' => 'auth_voluntario'], static function ($routes) {
     $routes->get('agenda', 'PortalVoluntario::agenda');
@@ -81,7 +85,19 @@ $routes->group('portal', ['filter' => 'auth_voluntario'], static function ($rout
     $routes->get('metricas', 'PortalVoluntario::metricas');
     $routes->get('perfil', 'PortalVoluntario::perfil');
     $routes->post('salvarPerfil', 'PortalVoluntario::salvarPerfil');
+    $routes->post('uploadFoto', 'PortalVoluntario::uploadFoto');
     $routes->post('alterarSenha', 'PortalVoluntario::alterarSenha');
+});
+
+/* WEBHOOKS */
+$routes->get('webhook', 'Webhook::index', ['filter'=>'auth']);
+$routes->group('webhook', static function ($routes) {
+    $routes->match(['GET','POST'], 'index', 'Webhook::index', ['filter'=>'auth']);
+    $routes->get('novo', 'Webhook::novo', ['filter'=>'auth']);
+    $routes->match(['GET','POST'], 'editar/(:num)', 'Webhook::editar/$1', ['filter'=>'auth']);
+    $routes->post('salvar', 'Webhook::salvar', ['filter'=>'auth']);
+    $routes->get('apagar/(:num)', 'Webhook::apagar/$1', ['filter'=>'auth']);
+    $routes->post('testar', 'Webhook::testar', ['filter'=>'auth']);
 });
 
 /* ESCALA DE VOLUNTÁRIOS */
