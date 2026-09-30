@@ -779,4 +779,15 @@ class VoluntarioModel extends Model
             'percentil'     => $percentil
         ];
     }
+
+    /**
+     * Retorna lista de voluntários disponíveis para um determinado culto aplicando a Regra do Coringa
+     * (Voluntários que marcaram o culto OU que não possuem nenhuma restrição cadastrada)
+     */
+    public function getVoluntariosDisponiveisPorCulto($id_culto_padrao, $id_departamento = null, $id_area = null, $onlyActive = true)
+    {
+        $voluntarioCultoModel = new VoluntarioCultoModel();
+        return $voluntarioCultoModel->getVoluntariosDisponiveisPorCulto($id_culto_padrao, $id_departamento, $id_area, $onlyActive);
+    }
 }
+

@@ -4,6 +4,8 @@ namespace App\Controllers;
 
 use App\Models\VoluntarioModel;
 use App\Models\VoluntarioAreaModel;
+use App\Models\VoluntarioCultoModel;
+use App\Models\CultoPadraoModel;
 use App\Models\DepartamentoModel;
 use App\Models\DepartamentoAreaModel;
 use App\Models\SessionModel;
@@ -55,8 +57,12 @@ class Voluntario extends BaseController
             return redirect()->to('accessdeny');
         }
 
-        $areaModel = new DepartamentoAreaModel();
+        $areaModel        = new DepartamentoAreaModel();
+        $cultoPadraoModel = new CultoPadraoModel();
+
         $data['departamentosComAreas'] = $areaModel->getTodasAreasAgrupadas();
+        $data['cultosPadrao']          = $cultoPadraoModel->getCultosPadraoAtivos();
+        $data['cultosSelecionadosIds'] = [];
         $data['voluntario']            = null;
         $data['areasSelecionadasIds']  = [];
         $data['redesSociais']          = [];
@@ -88,11 +94,15 @@ class Voluntario extends BaseController
             return redirect()->to('voluntario');
         }
 
-        $voluntarioAreaModel = new VoluntarioAreaModel();
-        $areaModel           = new DepartamentoAreaModel();
+        $voluntarioAreaModel  = new VoluntarioAreaModel();
+        $voluntarioCultoModel = new VoluntarioCultoModel();
+        $areaModel            = new DepartamentoAreaModel();
+        $cultoPadraoModel     = new CultoPadraoModel();
 
         $data['voluntario']            = $voluntario;
         $data['areasSelecionadasIds']  = $voluntarioAreaModel->getIdsAreasDoVoluntario($voluntario->id_voluntario);
+        $data['cultosSelecionadosIds'] = $voluntarioCultoModel->getIdsCultosDoVoluntario($voluntario->id_voluntario);
+        $data['cultosPadrao']          = $cultoPadraoModel->getCultosPadraoAtivos();
         $data['departamentosComAreas'] = $areaModel->getTodasAreasAgrupadas();
 
         // Decodifica redes sociais se houver
@@ -218,6 +228,11 @@ class Voluntario extends BaseController
         $areaIds = $this->request->getPost('areas') ?: [];
         $voluntarioAreaModel = new VoluntarioAreaModel();
         $voluntarioAreaModel->sincronizarAreas($id_voluntario, (array)$areaIds);
+
+        // Sincroniza Disponibilidade de Cultos (N:N)
+        $cultoIds = $this->request->getPost('cultos') ?: [];
+        $voluntarioCultoModel = new VoluntarioCultoModel();
+        $voluntarioCultoModel->sincronizarCultos($id_voluntario, (array)$cultoIds);
 
         session()->setFlashdata('success', $msg);
         return redirect()->to('voluntario');

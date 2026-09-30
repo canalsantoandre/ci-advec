@@ -4,6 +4,8 @@ namespace App\Controllers;
 
 use App\Models\VoluntarioModel;
 use App\Models\VoluntarioAreaModel;
+use App\Models\VoluntarioCultoModel;
+use App\Models\CultoPadraoModel;
 use App\Models\EscalaVoluntarioModel;
 
 class PortalVoluntario extends BaseController
@@ -286,31 +288,36 @@ class PortalVoluntario extends BaseController
     /**
      * Tela de Edição de Perfil do Voluntário (Acesso ao clicar no nome/foto)
      */
-    public function perfil()
-    {
-        $voluntario = $this->getVoluntarioSessao();
-        if (!$voluntario) {
-            return redirect()->to(base_url('portal/login'));
-        }
+     public function perfil()
+     {
+         $voluntario = $this->getVoluntarioSessao();
+         if (!$voluntario) {
+             return redirect()->to(base_url('portal/login'));
+         }
 
-        // Redes Sociais Decodificadas
-        $redesSociais = [];
-        if (!empty($voluntario->redes_sociais)) {
-            $dec = json_decode($voluntario->redes_sociais, true);
-            if (is_array($dec)) {
-                $redesSociais = $dec;
-            }
-        }
+         // Redes Sociais Decodificadas
+         $redesSociais = [];
+         if (!empty($voluntario->redes_sociais)) {
+             $dec = json_decode($voluntario->redes_sociais, true);
+             if (is_array($dec)) {
+                 $redesSociais = $dec;
+             }
+         }
 
-        $data = [
-            'title'        => 'Meu Perfil - Portal do Voluntário',
-            'voluntario'   => $voluntario,
-            'redesSociais' => $redesSociais,
-            'menuAtivo'    => 'perfil'
-        ];
+         $cultoPadraoModel     = new CultoPadraoModel();
+         $voluntarioCultoModel = new VoluntarioCultoModel();
 
-        return view('portal_voluntario/perfil', $data);
-    }
+         $data = [
+             'title'                => 'Meu Perfil - Portal do Voluntário',
+             'voluntario'           => $voluntario,
+             'redesSociais'         => $redesSociais,
+             'cultosPadrao'         => $cultoPadraoModel->getCultosPadraoAtivos(),
+             'cultosSelecionadosIds'=> $voluntarioCultoModel->getIdsCultosDoVoluntario($voluntario->id_voluntario),
+             'menuAtivo'            => 'perfil'
+         ];
+
+         return view('portal_voluntario/perfil', $data);
+     }
 
     /**
      * AJAX: Salva dados permitidos do perfil do voluntário
@@ -372,6 +379,11 @@ class PortalVoluntario extends BaseController
 
             $voluntarioModel = new VoluntarioModel();
             $voluntarioModel->atualizarPerfilVoluntario($voluntario->id_voluntario, $dadosUpdate);
+
+            // Sincroniza Disponibilidade de Cultos (N:N)
+            $cultosIds = $this->request->getPost('cultos') ?: [];
+            $voluntarioCultoModel = new VoluntarioCultoModel();
+            $voluntarioCultoModel->sincronizarCultos($voluntario->id_voluntario, (array)$cultosIds);
 
             // Atualiza sessão
             $sess = session();

@@ -265,6 +265,84 @@
             </div>
           </div>
 
+          <!-- ========================================== -->
+          <!-- DISPONIBILIDADE DE CULTOS PARA SERVIR (N:N) -->
+          <!-- ========================================== -->
+          <div class="col-12 mt-4 pt-3 border-top">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+              <div>
+                <h6 class="fw-bold mb-1 text-body">
+                  <i class="bi bi-calendar2-week-fill text-warning me-2"></i> Minha Disponibilidade para Servir
+                </h6>
+                <small class="text-muted">Selecione em quais dias e cultos da semana você está disponível para ser escalado.</small>
+              </div>
+
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-2 fw-bold" id="badgeTotalCultosPortal">
+                  <i class="bi bi-check2-all me-1"></i> <?= count($cultosSelecionadosIds ?? []) ?> selecionado(s)
+                </span>
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-2 py-1 small" onclick="marcarTodosCultosPortal(true)">
+                  Marcar Todos
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-2 py-1 small" onclick="marcarTodosCultosPortal(false)">
+                  Limpar
+                </button>
+              </div>
+            </div>
+
+            <!-- Banner Explicativo da Regra do Coringa -->
+            <div class="alert alert-primary-subtle border border-primary-subtle rounded-4 p-3 mb-3 d-flex align-items-start gap-3">
+              <i class="bi bi-stars text-primary fs-4 flex-shrink-0 mt-1"></i>
+              <div>
+                <strong class="d-block text-body mb-1">Como funciona sua disponibilidade?</strong>
+                <div class="small text-secondary">
+                  <p class="mb-1">&bull; <strong>Disponibilidade Total (Coringa):</strong> Se você deixar <strong>todas as opções desmarcadas</strong>, entenderemos que você tem disponibilidade para servir em <strong>qualquer culto</strong>.</p>
+                  <p class="mb-0">&bull; <strong>Disponibilidade Específica:</strong> Se você marcar <strong>um ou mais cultos</strong>, a liderança só poderá escalá-lo nos dias e horários que você selecionou.</p>
+                </div>
+              </div>
+            </div>
+
+            <?php if (!empty($cultosPadrao)) { ?>
+              <div class="row g-2">
+                <?php 
+                  $diasNomes = [
+                    0 => 'Domingo', 1 => 'Segunda-feira', 2 => 'Terça-feira',
+                    3 => 'Quarta-feira', 4 => 'Quinta-feira', 5 => 'Sexta-feira', 6 => 'Sábado'
+                  ];
+                  foreach ($cultosPadrao as $cp) { 
+                    $isChecked = in_array((int)$cp->id_culto_padrao, $cultosSelecionadosIds ?? []);
+                    $nomeDia = $diasNomes[(int)$cp->dia_semana] ?? 'Culto';
+                    $horaInicio = substr($cp->horario_inicio, 0, 5);
+                    $horaTermino = substr($cp->horario_termino, 0, 5);
+                    $corEvento = !empty($cp->cor_evento) ? $cp->cor_evento : '#2563eb';
+                    // Formato: [Dia da Semana] - [Horário] - [Nome do Culto]
+                    $labelFormatado = "{$nomeDia} - {$horaInicio} - {$cp->nome_culto}";
+                ?>
+                  <div class="col-12 col-md-6">
+                    <label class="d-flex align-items-center gap-3 p-3 rounded-3 border user-select-none h-100 culto-portal-card <?= $isChecked ? 'bg-primary-subtle border-primary' : 'bg-body-tertiary' ?>" for="portal_culto_check_<?= $cp->id_culto_padrao ?>" style="cursor: pointer; transition: all 0.15s ease; border-left: 4px solid <?= esc($corEvento) ?> !important;">
+                      <input class="form-check-input mt-0 flex-shrink-0 culto-portal-checkbox" type="checkbox" name="cultos[]" value="<?= $cp->id_culto_padrao ?>" id="portal_culto_check_<?= $cp->id_culto_padrao ?>" <?= $isChecked ? 'checked' : '' ?> style="cursor: pointer; width: 1.2rem; height: 1.2rem;">
+                      <div class="flex-grow-1">
+                        <div class="fw-bold text-body small"><?= esc($labelFormatado) ?></div>
+                        <div class="text-muted small d-flex align-items-center gap-2 mt-1" style="font-size: 0.72rem;">
+                          <span><i class="bi bi-clock me-1"></i><?= $horaInicio ?> às <?= $horaTermino ?></span>
+                          <?php if (!empty($cp->descricao)) { ?>
+                            <span>&bull;</span>
+                            <span class="text-truncate" style="max-width: 150px;"><?= esc($cp->descricao) ?></span>
+                          <?php } ?>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                <?php } ?>
+              </div>
+            <?php } else { ?>
+              <div class="alert alert-warning border-0 rounded-3 small">
+                Nenhum culto padrão disponível no momento.
+              </div>
+            <?php } ?>
+
+          </div>
+
         </div>
 
         <div class="mt-4 pt-3 border-top text-end">
@@ -338,7 +416,53 @@
         }
       };
       $('#telefone_whatsapp').mask(maskBehavior, options);
+
+      // Atualiza estado inicial de cultos
+      atualizarContadorCultosPortal();
+
+      // Event listener nos checkboxes de cultos do portal
+      document.querySelectorAll('.culto-portal-checkbox').forEach(chk => {
+        chk.addEventListener('change', atualizarContadorCultosPortal);
+      });
     });
+
+    function atualizarContadorCultosPortal() {
+      const checkboxes = document.querySelectorAll('.culto-portal-checkbox');
+      let totalChecked = 0;
+      checkboxes.forEach(chk => {
+        const parent = chk.closest('.culto-portal-card');
+        if (chk.checked) {
+          totalChecked++;
+          if (parent) {
+            parent.classList.add('bg-primary-subtle', 'border-primary');
+            parent.classList.remove('bg-body-tertiary');
+          }
+        } else {
+          if (parent) {
+            parent.classList.remove('bg-primary-subtle', 'border-primary');
+            parent.classList.add('bg-body-tertiary');
+          }
+        }
+      });
+
+      const badge = document.getElementById('badgeTotalCultosPortal');
+      if (badge) {
+        if (totalChecked === 0) {
+          badge.className = 'badge bg-info-subtle text-info-emphasis border border-info-subtle rounded-pill px-3 py-2 fw-bold';
+          badge.innerHTML = `<i class="bi bi-asterisk me-1"></i> Todos (Disponibilidade Total)`;
+        } else {
+          badge.className = 'badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-2 fw-bold';
+          badge.innerHTML = `<i class="bi bi-check2-all me-1"></i> ${totalChecked} selecionado(s)`;
+        }
+      }
+    }
+
+    function marcarTodosCultosPortal(marcar) {
+      document.querySelectorAll('.culto-portal-checkbox').forEach(chk => {
+        chk.checked = marcar;
+      });
+      atualizarContadorCultosPortal();
+    }
 
     function showToast(tipo, mensagem) {
       const toastEl = document.getElementById('portalToast');

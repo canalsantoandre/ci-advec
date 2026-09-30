@@ -1,9 +1,9 @@
 <?php
-  $isEdit = !empty($voluntario);
-  $idVol  = $isEdit ? $voluntario->id_voluntario : 0;
-  $defaultAvatar = 'https://ui-avatars.com/api/?name=' . ($isEdit ? urlencode($voluntario->nome) : 'Novo Voluntario') . '&background=2563eb&color=fff&size=150&bold=true';
-  $avatarSrc = $isEdit && !empty($voluntario->foto_url) ? $voluntario->foto_url : $defaultAvatar;
-  $idade = $isEdit && !empty($voluntario->data_nascimento) ? date_diff(date_create($voluntario->data_nascimento), date_create('today'))->y : null;
+$isEdit = !empty($voluntario);
+$idVol  = $isEdit ? $voluntario->id_voluntario : 0;
+$defaultAvatar = 'https://ui-avatars.com/api/?name=' . ($isEdit ? urlencode($voluntario->nome) : 'Novo Voluntario') . '&background=2563eb&color=fff&size=150&bold=true';
+$avatarSrc = $isEdit && !empty($voluntario->foto_url) ? $voluntario->foto_url : $defaultAvatar;
+$idade = $isEdit && !empty($voluntario->data_nascimento) ? date_diff(date_create($voluntario->data_nascimento), date_create('today'))->y : null;
 ?>
 
 <!-- Content Header (Page header) -->
@@ -46,18 +46,18 @@
     <?php } ?>
 
     <div class="row g-4">
-      
+
       <!-- ========================================== -->
       <!-- COLUNA ESQUERDA: PROFILE HERO CARD -->
       <!-- ========================================== -->
       <div class="col-lg-4">
         <div class="card card-outline card-primary shadow-sm border-0 rounded-4 sticky-lg-top" style="top: 80px;">
           <div class="card-body text-center p-4">
-            
+
             <!-- Avatar Container com Preview Instantâneo -->
             <div class="position-relative d-inline-block mb-3">
               <img src="<?= esc($avatarSrc) ?>" id="imgAvatarPreview" class="rounded-circle shadow border border-3 border-white" style="width: 130px; height: 130px; object-fit: cover;" alt="Foto de Perfil" onerror="this.onerror=null;this.src='<?= $defaultAvatar ?>';">
-              
+
               <span class="position-absolute bottom-0 end-0 badge rounded-circle p-2 bg-<?= ($isEdit && $voluntario->status == 0 ? 'danger' : 'success') ?> border border-2 border-white" id="badgeStatusPreview" title="Status">
                 <span class="visually-hidden">Status</span>
               </span>
@@ -65,7 +65,7 @@
 
             <!-- Identificação -->
             <h5 class="fw-bold mb-1 text-body" id="previewNome"><?= $isEdit ? esc($voluntario->nome) : 'Nome do Voluntário' ?></h5>
-            
+
             <div class="mb-2">
               <span class="text-muted small" id="previewEmail">
                 <i class="bi bi-envelope me-1"></i><?= $isEdit ? esc($voluntario->email) : 'email@exemplo.com' ?>
@@ -121,24 +121,29 @@
       <!-- ========================================== -->
       <div class="col-lg-8">
         <div class="card card-outline card-primary shadow-sm border-0 rounded-4">
-          
+
           <!-- Header com Abas -->
           <div class="card-header bg-body p-0 border-bottom">
             <ul class="nav nav-tabs card-header-tabs m-0 border-bottom-0" id="voluntarioTabs" role="tablist">
               <li class="nav-item" role="presentation">
                 <button class="nav-link active fw-bold py-3 px-4" id="dados-tab" data-bs-toggle="tab" data-bs-target="#dados-pane" type="button" role="tab">
-                  <i class="bi bi-person-lines-fill me-2 text-primary"></i>Dados Pessoais & Contato
+                  <i class="bi bi-person-lines-fill me-2 text-primary"></i>Informaçõese
                 </button>
               </li>
               <li class="nav-item" role="presentation">
                 <button class="nav-link fw-bold py-3 px-4" id="areas-tab" data-bs-toggle="tab" data-bs-target="#areas-pane" type="button" role="tab">
-                  <i class="bi bi-diagram-3-fill me-2 text-info"></i>Departamentos & Sub-áreas
+                  <i class="bi bi-diagram-3-fill me-2 text-info"></i>Sub-áreas
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold py-3 px-4" id="cultos-tab" data-bs-toggle="tab" data-bs-target="#cultos-pane" type="button" role="tab">
+                  <i class="bi bi-calendar2-week-fill me-2 text-warning"></i>Disponibilidade
                 </button>
               </li>
               <?php if ($isEdit) { ?>
                 <li class="nav-item" role="presentation">
                   <button class="nav-link fw-bold py-3 px-4" id="metricas-tab" data-bs-toggle="tab" data-bs-target="#metricas-pane" type="button" role="tab">
-                    <i class="bi bi-graph-up me-2 text-success"></i>Métricas & Assiduidade
+                    <i class="bi bi-graph-up me-2 text-success"></i>Métricas
                   </button>
                 </li>
               <?php } ?>
@@ -155,7 +160,7 @@
                 <!-- ABA 1: DADOS PESSOAIS E CONTATO -->
                 <!-- ========================================== -->
                 <div class="tab-pane fade show active" id="dados-pane" role="tabpanel" tabindex="0">
-                  
+
                   <h6 class="fw-bold text-primary mb-3">
                     <i class="bi bi-card-heading me-1"></i> Informações Principais
                   </h6>
@@ -310,7 +315,7 @@
 
                   <?php if (!empty($departamentosComAreas)) { ?>
                     <div class="row g-3">
-                      <?php foreach ($departamentosComAreas as $dep) { 
+                      <?php foreach ($departamentosComAreas as $dep) {
                         $corDep = !empty($dep->cor_identificacao) ? $dep->cor_identificacao : '#2563eb';
                         $totalAreasDep = count($dep->areas);
                       ?>
@@ -334,7 +339,7 @@
                             <div class="card-body p-3">
                               <?php if (!empty($dep->areas)) { ?>
                                 <div class="d-flex flex-column gap-2">
-                                  <?php foreach ($dep->areas as $area) { 
+                                  <?php foreach ($dep->areas as $area) {
                                     $isChecked = in_array($area->id_area, $areasSelecionadasIds);
                                   ?>
                                     <label class="custom-checkbox-card d-flex align-items-start gap-2 p-2 rounded-3 border user-select-none <?= $isChecked ? 'bg-primary-subtle border-primary' : 'bg-body' ?>" for="area_check_<?= $area->id_area ?>" style="cursor: pointer; transition: all 0.15s ease;">
@@ -364,11 +369,93 @@
                 </div>
 
                 <!-- ========================================== -->
-                <!-- ABA 3: MÉTRICAS E ASSIDUIDADE (SE EDIÇÃO) -->
+                <!-- ABA: DISPONIBILIDADE DE CULTOS (N:N) -->
+                <!-- ========================================== -->
+                <div class="tab-pane fade" id="cultos-pane" role="tabpanel" tabindex="0">
+                  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                    <div>
+                      <h6 class="fw-bold text-primary mb-1">
+                        <i class="bi bi-calendar2-week-fill me-1 text-warning"></i> Disponibilidade
+                      </h6>
+                      <p class="text-secondary small mb-0">Selecione os cultos e horários em que este voluntário tem disponibilidade para atuar.</p>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-2 fw-bold" id="badgeTotalCultosSelecionados">
+                        <i class="bi bi-check2-all me-1"></i> <?= count($cultosSelecionadosIds ?? []) ?> selecionado(s)
+                      </span>
+                      <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="marcarTodosCultos(true)">
+                        Marcar Todos
+                      </button>
+                      <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="marcarTodosCultos(false)">
+                        Limpar Seleção
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Banner Informativo da Regra do Coringa -->
+                  <div class="alert alert-primary-subtle border border-primary-subtle rounded-4 p-3 mb-4 d-flex align-items-start gap-3">
+                    <i class="bi bi-info-circle-fill text-primary fs-4 flex-shrink-0 mt-1"></i>
+                    <div>
+                      <strong class="d-block text-body mb-1">Regra da Disponibilidade Total (Coringa):</strong>
+                      <div class="small text-secondary">
+                        <p class="mb-1">&bull; Se <strong>nenhum culto</strong> for marcado, o voluntário será considerado apto para servir em <strong>TODOS os cultos</strong> (disponibilidade total / sem restrições).</p>
+                        <p class="mb-0">&bull; Se <strong>um ou mais cultos</strong> forem marcados, o voluntário ficará restrito exclusivamente aos cultos especificamente selecionados.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <?php if (!empty($cultosPadrao)) { ?>
+                    <div class="row g-3">
+                      <?php
+                      $diasNomes = [
+                        0 => 'Domingo',
+                        1 => 'Segunda-feira',
+                        2 => 'Terça-feira',
+                        3 => 'Quarta-feira',
+                        4 => 'Quinta-feira',
+                        5 => 'Sexta-feira',
+                        6 => 'Sábado'
+                      ];
+                      foreach ($cultosPadrao as $cp) {
+                        $isChecked = in_array((int)$cp->id_culto_padrao, $cultosSelecionadosIds ?? []);
+                        $nomeDia = $diasNomes[(int)$cp->dia_semana] ?? 'Culto';
+                        $horaInicio = substr($cp->horario_inicio, 0, 5);
+                        $horaTermino = substr($cp->horario_termino, 0, 5);
+                        $corEvento = !empty($cp->cor_evento) ? $cp->cor_evento : '#2563eb';
+                        // Formato: [Dia da Semana] - [Horário] - [Nome do Culto]
+                        $labelFormatado = "{$nomeDia} - {$horaInicio} - {$cp->nome_culto}";
+                      ?>
+                        <div class="col-md-6">
+                          <label class="custom-checkbox-card d-flex align-items-center gap-3 p-3 rounded-4 border user-select-none h-100 <?= $isChecked ? 'bg-primary-subtle border-primary shadow-xs' : 'bg-body' ?>" for="culto_check_<?= $cp->id_culto_padrao ?>" style="cursor: pointer; transition: all 0.15s ease; border-left: 4px solid <?= esc($corEvento) ?> !important;">
+                            <input class="form-check-input mt-0 flex-shrink-0 culto-checkbox" type="checkbox" name="cultos[]" value="<?= $cp->id_culto_padrao ?>" id="culto_check_<?= $cp->id_culto_padrao ?>" <?= $isChecked ? 'checked' : '' ?> style="cursor: pointer; width: 1.25rem; height: 1.25rem;">
+                            <div class="flex-grow-1">
+                              <div class="fw-bold text-body small"><?= esc($labelFormatado) ?></div>
+                              <div class="text-secondary small d-flex align-items-center gap-2 mt-1" style="font-size: 0.75rem;">
+                                <span><i class="bi bi-clock me-1"></i><?= $horaInicio ?> às <?= $horaTermino ?></span>
+                                <?php if (!empty($cp->descricao)) { ?>
+                                  <span>&bull;</span>
+                                  <span class="text-truncate" style="max-width: 180px;"><?= esc($cp->descricao) ?></span>
+                                <?php } ?>
+                              </div>
+                            </div>
+                          </label>
+                        </div>
+                      <?php } ?>
+                    </div>
+                  <?php } else { ?>
+                    <div class="alert alert-warning border-0 rounded-3">
+                      Nenhum tipo de culto cadastrado no sistema ainda.
+                    </div>
+                  <?php } ?>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- ABA: MÉTRICAS E ASSIDUIDADE (SE EDIÇÃO) -->
                 <!-- ========================================== -->
                 <?php if ($isEdit && !empty($stats)) { ?>
                   <div class="tab-pane fade" id="metricas-pane" role="tabpanel" tabindex="0">
-                    
+
                     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
                       <div>
                         <h6 class="fw-bold text-primary mb-1">
@@ -582,15 +669,67 @@
     const checks = document.querySelectorAll(`.dep-area-checkbox[data-dep-id="${depId}"]`);
     const total = checks.length;
     let marcados = 0;
-    checks.forEach(c => { if (c.checked) marcados++; });
-    
+    checks.forEach(c => {
+      if (c.checked) marcados++;
+    });
+
     const novoStatus = (marcados < total);
-    checks.forEach(c => { c.checked = novoStatus; });
+    checks.forEach(c => {
+      c.checked = novoStatus;
+    });
     atualizarContadorAreas();
   }
 
+  // Atualiza contador e destaque visual dos cultos
+  function atualizarContadorCultos() {
+    const checkboxes = document.querySelectorAll('.culto-checkbox');
+    let totalChecked = 0;
+    checkboxes.forEach(chk => {
+      const parent = chk.closest('.custom-checkbox-card');
+      if (chk.checked) {
+        totalChecked++;
+        if (parent) {
+          parent.classList.add('bg-primary-subtle', 'border-primary', 'shadow-xs');
+          parent.classList.remove('bg-body');
+        }
+      } else {
+        if (parent) {
+          parent.classList.remove('bg-primary-subtle', 'border-primary', 'shadow-xs');
+          parent.classList.add('bg-body');
+        }
+      }
+    });
+
+    const badge = document.getElementById('badgeTotalCultosSelecionados');
+    if (badge) {
+      if (totalChecked === 0) {
+        badge.className = 'badge bg-info-subtle text-info-emphasis border border-info-subtle rounded-pill px-3 py-2 fw-bold';
+        badge.innerHTML = `<i class="bi bi-asterisk me-1"></i> Todos (Disponibilidade Total)`;
+      } else {
+        badge.className = 'badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-2 fw-bold';
+        badge.innerHTML = `<i class="bi bi-check2-all me-1"></i> ${totalChecked} selecionado(s)`;
+      }
+    }
+  }
+
+  // Event listener nos checkboxes de cultos
+  document.querySelectorAll('.culto-checkbox').forEach(chk => {
+    chk.addEventListener('change', atualizarContadorCultos);
+  });
+
+  // Marcar / Desmarcar todos os cultos
+  function marcarTodosCultos(marcar) {
+    document.querySelectorAll('.culto-checkbox').forEach(chk => {
+      chk.checked = marcar;
+    });
+    atualizarContadorCultos();
+  }
+
   // Inicializa estado visual
-  document.addEventListener('DOMContentLoaded', atualizarContadorAreas);
+  document.addEventListener('DOMContentLoaded', function() {
+    atualizarContadorAreas();
+    atualizarContadorCultos();
+  });
 
   // Dynamic Social Media Links
   function adicionarRedeSocial() {
@@ -650,44 +789,48 @@
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Redefinindo...';
 
     fetch('<?= base_url('voluntario/resetSenha') ?>/' + id, {
-      method: 'POST',
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-        'Content-Type': 'application/json'
-      }
-    })
-    .then(r => r.json())
-    .then(data => {
-      btn.disabled = false;
-      btn.innerHTML = originalText;
-      const modalEl = document.getElementById('modalResetSenhaForm');
-      const modal = bootstrap.Modal.getInstance(modalEl);
-      if (modal) modal.hide();
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(r => r.json())
+      .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        const modalEl = document.getElementById('modalResetSenhaForm');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
 
-      if (data.status) {
-        if (typeof Swal !== 'undefined') {
-          Swal.fire({
-            icon: 'success',
-            title: 'Senha Resetada!',
-            html: `${data.message}<br><br><strong>Nova senha padrão:</strong> <code>${data.nova_senha_padrao}</code>`,
-            confirmButtonColor: '#2563eb'
-          });
+        if (data.status) {
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              icon: 'success',
+              title: 'Senha Resetada!',
+              html: `${data.message}<br><br><strong>Nova senha padrão:</strong> <code>${data.nova_senha_padrao}</code>`,
+              confirmButtonColor: '#2563eb'
+            });
+          } else {
+            alert(data.message + '\nNova senha padrão: ' + data.nova_senha_padrao);
+          }
         } else {
-          alert(data.message + '\nNova senha padrão: ' + data.nova_senha_padrao);
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              icon: 'error',
+              title: 'Erro',
+              text: data.message || 'Erro ao resetar senha.'
+            });
+          } else {
+            alert('Erro: ' + (data.message || 'Erro ao resetar senha.'));
+          }
         }
-      } else {
-        if (typeof Swal !== 'undefined') {
-          Swal.fire({ icon: 'error', title: 'Erro', text: data.message || 'Erro ao resetar senha.' });
-        } else {
-          alert('Erro: ' + (data.message || 'Erro ao resetar senha.'));
-        }
-      }
-    })
-    .catch(err => {
-      btn.disabled = false;
-      btn.innerHTML = originalText;
-      alert('Erro de comunicação com o servidor.');
-    });
+      })
+      .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        alert('Erro de comunicação com o servidor.');
+      });
   }
 </script>
 

@@ -7,6 +7,7 @@ use App\Models\DepartamentoModel;
 use App\Models\DepartamentoAreaModel;
 use App\Models\VoluntarioModel;
 use App\Models\VoluntarioAreaModel;
+use App\Models\VoluntarioCultoModel;
 use App\Models\CultoPadraoModel;
 use App\Models\SessionModel;
 
@@ -311,19 +312,21 @@ class Escala extends BaseController
     }
 
     /**
-     * AJAX: Retorna voluntários vinculados a uma sub-área e departamento com status do limite mensal
+     * AJAX: Retorna voluntários vinculados a uma sub-área e departamento com status do limite mensal e disponibilidade do culto
      */
     public function getVoluntariosPorArea()
     {
         $id_departamento = (int)$this->request->getGet('id_departamento');
         $id_area         = (int)$this->request->getGet('id_area');
         $data_culto      = (string)$this->request->getGet('data_culto');
+        $id_culto_padrao = (int)$this->request->getGet('id_culto_padrao');
 
         $anoCulto = !empty($data_culto) ? (int)date('Y', strtotime($data_culto)) : (int)date('Y');
         $mesCulto = !empty($data_culto) ? (int)date('m', strtotime($data_culto)) : (int)date('m');
 
-        $voluntarioAreaModel = new VoluntarioAreaModel();
-        $voluntarioModel     = new VoluntarioModel();
+        $voluntarioAreaModel  = new VoluntarioAreaModel();
+        $voluntarioModel      = new VoluntarioModel();
+        $voluntarioCultoModel = new VoluntarioCultoModel();
         
         // Voluntários com vínculo direto na área
         $vinculadosArea = $voluntarioAreaModel->getVoluntariosPorDepartamentoEArea($id_departamento, $id_area, true);
@@ -338,8 +341,8 @@ class Escala extends BaseController
             }
         }
 
-        // Calcula total de escalas do mês e status do limite para cada voluntário
-        $enriquecerVoluntario = function(&$lista) use ($voluntarioModel, $anoCulto, $mesCulto) {
+        // Calcula total de escalas do mês, limite e disponibilidade do culto para cada voluntário
+        $enriquecerVoluntario = function(&$lista) use ($voluntarioModel, $voluntarioCultoModel, $anoCulto, $mesCulto, $id_culto_padrao) {
             foreach ($lista as &$v) {
                 $totalNoMes = $voluntarioModel->countEscalasMes($v->id_voluntario, $anoCulto, $mesCulto);
                 $maxMes = isset($v->max_escalas_mes) ? (int)$v->max_escalas_mes : 0;
@@ -347,6 +350,18 @@ class Escala extends BaseController
                 $v->total_escalas_mes = $totalNoMes;
                 $v->max_escalas_mes   = $maxMes;
                 $v->atingiu_limite    = ($maxMes > 0 && $totalNoMes >= $maxMes);
+
+                // Disponibilidade de Cultos (Regra do Coringa)
+                if ($id_culto_padrao > 0) {
+                    $statusDisp = $voluntarioCultoModel->getStatusDisponibilidadeVoluntario($v->id_voluntario, $id_culto_padrao);
+                    $v->disponivel_culto     = $statusDisp['disponivel'];
+                    $v->tipo_disponibilidade  = $statusDisp['tipo'];
+                    $v->label_disponibilidade = $statusDisp['label'];
+                } else {
+                    $v->disponivel_culto     = true;
+                    $v->tipo_disponibilidade  = 'TOTAL';
+                    $v->label_disponibilidade = 'Disponível';
+                }
             }
         };
 

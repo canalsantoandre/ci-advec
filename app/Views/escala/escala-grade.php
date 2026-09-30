@@ -721,8 +721,9 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     }
 
     const dataCulto = document.getElementById('modal_escala_data_culto')?.value || '';
+    const idCultoPadrao = document.getElementById('modal_escala_id_culto_padrao')?.value || '';
 
-    fetch(`<?= base_url("escala/getVoluntariosPorArea?id_departamento={$id_departamento}") ?>&id_area=${id_area}&data_culto=${dataCulto}`)
+    fetch(`<?= base_url("escala/getVoluntariosPorArea?id_departamento={$id_departamento}") ?>&id_area=${id_area}&data_culto=${dataCulto}&id_culto_padrao=${idCultoPadrao}`)
       .then(r => r.json())
       .then(data => {
         if (data.status === 'success') {
@@ -808,6 +809,18 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
         limiteBadge = `<span class="badge bg-light text-secondary border" style="font-size: 0.68rem;">${v.total_escalas_mes} no mês</span>`;
       }
 
+      // Badge de Disponibilidade no Culto (Regra do Coringa)
+      let dispBadge = '';
+      if (v.disponivel_culto) {
+        if (v.tipo_disponibilidade === 'ESPECIFICA') {
+          dispBadge = `<span class="badge ${isSelected ? 'bg-success text-white' : 'bg-success-subtle text-success border border-success-subtle'} px-1 py-0 fw-semibold" style="font-size: 0.65rem;" title="Disponível neste Culto"><i class="bi bi-check2 me-1"></i>Disponível</span>`;
+        } else if (v.tipo_disponibilidade === 'TOTAL') {
+          dispBadge = `<span class="badge ${isSelected ? 'bg-info text-white' : 'bg-info-subtle text-info-emphasis border border-info-subtle'} px-1 py-0 fw-semibold" style="font-size: 0.65rem;" title="Disponibilidade Total (Coringa)"><i class="bi bi-asterisk me-1"></i>Disp. Total</span>`;
+        }
+      } else {
+        dispBadge = `<span class="badge ${isSelected ? 'bg-secondary text-white' : 'bg-secondary-subtle text-muted border border-secondary-subtle'} px-1 py-0 fw-semibold" style="font-size: 0.65rem;" title="Não marcou disponibilidade para este culto"><i class="bi bi-clock-history me-1"></i>Indisponível</span>`;
+      }
+
       const itemClass = isSelected ?
         'border-primary bg-primary text-white shadow-sm' :
         (v.atingiu_limite ? 'border-danger-subtle bg-danger-subtle opacity-75' : 'bg-white border-light-subtle hover-shadow');
@@ -836,9 +849,10 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
             </div>
           </div>
 
-          <div class="d-flex align-items-center gap-2 text-nowrap">
+          <div class="d-flex align-items-center gap-1 text-nowrap">
+            ${dispBadge}
             ${limiteBadge}
-            ${isSelected ? '<i class="bi bi-check-circle-fill text-white fs-5"></i>' : ''}
+            ${isSelected ? '<i class="bi bi-check-circle-fill text-white fs-5 ms-1"></i>' : ''}
           </div>
 
         </div>
