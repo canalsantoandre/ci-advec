@@ -95,7 +95,6 @@ class VoluntarioAreaModel extends Model
     {
         $db = db_connect();
         $builder = $db->table('tb_voluntario as v');
-        $builder->distinct();
         $builder->select('
             v.id_voluntario,
             v.nome,
@@ -106,9 +105,11 @@ class VoluntarioAreaModel extends Model
             v.telefone_whatsapp,
             v.foto_url,
             v.status,
-            v.hash_voluntario
+            v.hash_voluntario,
+            GROUP_CONCAT(DISTINCT a.nome_area ORDER BY a.nome_area SEPARATOR ", ") as nome_area
         ');
         $builder->join('tb_voluntario_departamento_area as vda', 'vda.id_voluntario = v.id_voluntario', 'inner');
+        $builder->join('tb_departamento_area as a', 'a.id_area = vda.id_area', 'left');
 
         if (!empty($id_departamento)) {
             $builder->where('vda.id_departamento', (int)$id_departamento);
@@ -122,6 +123,7 @@ class VoluntarioAreaModel extends Model
             $builder->where('v.status', 1);
         }
 
+        $builder->groupBy('v.id_voluntario');
         $builder->orderBy('v.nome', 'ASC');
 
         return $builder->get()->getResult('object');

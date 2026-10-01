@@ -66,15 +66,122 @@ if (!function_exists('getContrasteTexto')) {
       color: #e2e8f0;
     }
 
+    /* Cards de Estatísticas Interativos (Filtros Premium) */
+    .stat-filter-card {
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      position: relative;
+      border-radius: 1.15rem;
+      padding: 0.75rem 0.6rem;
+      text-align: center;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1.5px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+
+    .stat-filter-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-filter-card:active {
+      transform: translateY(-1px) scale(0.98);
+    }
+
+    .stat-card-total {
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .stat-card-total.active {
+      background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%) !important;
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2), 0 8px 20px -4px rgba(59, 130, 246, 0.25) !important;
+    }
+
+    .stat-card-aceitas {
+      background: linear-gradient(180deg, #f0fdf4 0%, #e8fbee 100%);
+      border-color: #bbf7d0;
+    }
+
+    .stat-card-aceitas.active {
+      background: linear-gradient(180deg, #dcfce7 0%, #bbf7d0 100%) !important;
+      border-color: #16a34a !important;
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2), 0 8px 20px -4px rgba(22, 163, 74, 0.25) !important;
+    }
+
+    .stat-card-pendentes {
+      background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
+      border-color: #fde68a;
+    }
+
+    .stat-card-pendentes.active {
+      background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%) !important;
+      border-color: #d97706 !important;
+      box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2), 0 8px 20px -4px rgba(217, 119, 6, 0.25) !important;
+    }
+
+    [data-bs-theme="dark"] .stat-card-total {
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    [data-bs-theme="dark"] .stat-card-total.active {
+      background: linear-gradient(180deg, rgba(30, 58, 138, 0.4) 0%, #1e293b 100%) !important;
+      border-color: #3b82f6 !important;
+    }
+
+    [data-bs-theme="dark"] .stat-card-aceitas {
+      background: linear-gradient(180deg, rgba(20, 83, 45, 0.25) 0%, #1e293b 100%);
+      border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    [data-bs-theme="dark"] .stat-card-aceitas.active {
+      background: linear-gradient(180deg, rgba(20, 83, 45, 0.5) 0%, #1e293b 100%) !important;
+      border-color: #22c55e !important;
+    }
+
+    [data-bs-theme="dark"] .stat-card-pendentes {
+      background: linear-gradient(180deg, rgba(120, 53, 15, 0.25) 0%, #1e293b 100%);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    [data-bs-theme="dark"] .stat-card-pendentes.active {
+      background: linear-gradient(180deg, rgba(120, 53, 15, 0.5) 0%, #1e293b 100%) !important;
+      border-color: #f59e0b !important;
+    }
+
+    .stat-filter-indicator {
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .stat-filter-count {
+      font-size: 1.45rem;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
     /* Swipe Container & Gestos Touch (Estilo iOS / Google) */
     .swipe-container {
       position: relative;
       overflow: hidden;
-      border-radius: 1.15rem;
+      border-radius: 1.25rem;
       margin-bottom: 0.85rem;
       touch-action: pan-y;
       user-select: none;
       -webkit-user-select: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
     }
 
     .swipe-bg {
@@ -83,7 +190,7 @@ if (!function_exists('getContrasteTexto')) {
       display: flex;
       align-items: center;
       padding: 0 1.5rem;
-      border-radius: 1.15rem;
+      border-radius: 1.25rem;
       font-weight: 700;
       color: #fff;
       pointer-events: none;
@@ -103,9 +210,10 @@ if (!function_exists('getContrasteTexto')) {
     .swipe-content {
       position: relative;
       background: #ffffff;
-      border-radius: 1.15rem;
+      border-radius: 1.25rem;
       border: 1px solid rgba(0, 0, 0, 0.08);
-      transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1), box-shadow 0.2s ease;
+      box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+      transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
       z-index: 2;
       cursor: grab;
     }
@@ -117,10 +225,12 @@ if (!function_exists('getContrasteTexto')) {
     [data-bs-theme="dark"] .swipe-content {
       border-color: rgba(255, 255, 255, 0.08);
       background: #1e293b;
+      box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.3);
     }
 
     .swipe-content:hover {
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.1);
+      transform: translateY(-2px);
     }
 
     .swipe-content.swiping {
@@ -128,32 +238,33 @@ if (!function_exists('getContrasteTexto')) {
     }
 
     .calendar-badge {
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      background: #f8fafc;
+      border: 1px solid rgba(0, 0, 0, 0.07);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
       transition: transform 0.15s ease;
     }
 
     [data-bs-theme="dark"] .calendar-badge {
-      background: #0f172a;
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
       border-color: #334155;
     }
 
     .status-badge-pendente {
-      background-color: #fef3c7;
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
       color: #92400e;
-      border: 1px solid #fde68a;
+      border: 1px solid #fcd34d;
     }
 
     .status-badge-confirmado {
-      background-color: #dcfce7;
+      background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
       color: #166534;
-      border: 1px solid #bbf7d0;
+      border: 1px solid #86efac;
     }
 
     .status-badge-recusado {
-      background-color: #fee2e2;
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
       color: #991b1b;
-      border: 1px solid #fecaca;
+      border: 1px solid #fca5a5;
     }
 
     .btn-confirmar {
@@ -299,61 +410,46 @@ if (!function_exists('getContrasteTexto')) {
     }
 
     @keyframes swipeDemoLoop {
-
-      0%,
-      100% {
-        transform: translateX(0);
-      }
-
-      22% {
-        transform: translateX(65px);
-      }
-
-      44% {
-        transform: translateX(0);
-      }
-
-      66% {
-        transform: translateX(-65px);
-      }
-
-      88% {
-        transform: translateX(0);
-      }
+      0%, 100% { transform: translateX(0); }
+      22% { transform: translateX(65px); }
+      44% { transform: translateX(0); }
+      66% { transform: translateX(-65px); }
+      88% { transform: translateX(0); }
     }
 
     @keyframes indicatorRightLoop {
-
-      0%,
-      42%,
-      100% {
-        opacity: 0;
-      }
-
-      18%,
-      30% {
-        opacity: 1;
-      }
+      0%, 42%, 100% { opacity: 0; }
+      18%, 30% { opacity: 1; }
     }
 
     @keyframes indicatorLeftLoop {
-
-      0%,
-      45%,
-      86%,
-      100% {
-        opacity: 0;
-      }
-
-      60%,
-      74% {
-        opacity: 1;
-      }
+      0%, 45%, 86%, 100% { opacity: 0; }
+      60%, 74% { opacity: 1; }
     }
   </style>
 </head>
 
 <body>
+
+  <?php
+  // Pré-cálculos de Vigência e Status
+  $hojeIso = date('Y-m-d');
+  $totalVigentes = 0;
+  $totalPassadas = 0;
+
+  if (!empty($escalas)) {
+    foreach ($escalas as $escCheck) {
+      $dataIso = date('Y-m-d', strtotime($escCheck->data_culto));
+      if ($dataIso >= $hojeIso) {
+        $totalVigentes++;
+      } else {
+        $totalPassadas++;
+      }
+    }
+  }
+  // Se houver escalas vigentes no mês, inicia mostrando apenas as vigentes. Se todas forem passadas, mostra todas.
+  $modoInicial = ($totalVigentes > 0) ? 'vigentes' : 'todos';
+  ?>
 
   <!-- Navigation -->
   <?= view('portal_voluntario/_nav', ['voluntario' => $voluntario, 'menuAtivo' => 'agenda']) ?>
@@ -393,43 +489,82 @@ if (!function_exists('getContrasteTexto')) {
           </div>
         </div>
 
-        <!-- Contadores Rápidos do Mês -->
+        <!-- Cards de Estatísticas Interativos com Filtro por Clique -->
         <div class="row g-2 mt-2 pt-2 border-top">
+          <!-- TOTAL -->
           <div class="col-4">
-            <div class="p-2 rounded-3 bg-body-tertiary text-center border">
-              <span class="d-block text-secondary small" style="font-size: 0.72rem;">TOTAL</span>
-              <strong class="fs-5 text-body"><?= $totalMes ?></strong>
+            <div class="stat-filter-card stat-card-total <?= ($modoInicial === 'todos' ? 'active' : '') ?>"
+              id="filter_card_todos"
+              onclick="aplicarFiltro('todos')"
+              role="button"
+              tabindex="0"
+              title="Clique para ver todas as escalas">
+              <span class="stat-filter-indicator text-secondary">
+                <i class="bi bi-grid-fill"></i> TOTAL
+              </span>
+              <strong class="stat-filter-count text-body"><?= $totalMes ?></strong>
             </div>
           </div>
+
+          <!-- ACEITAS -->
           <div class="col-4">
-            <div class="p-2 rounded-3 bg-success-subtle text-center border border-success-subtle">
-              <span class="d-block text-success-emphasis small fw-semibold" style="font-size: 0.72rem;">ACEITAS</span>
-              <strong class="fs-5 text-success-emphasis"><?= $totalConfirmadas ?></strong>
+            <div class="stat-filter-card stat-card-aceitas"
+              id="filter_card_aceitas"
+              onclick="aplicarFiltro('aceitas')"
+              role="button"
+              tabindex="0"
+              title="Clique para filtrar apenas escalas aceitas">
+              <span class="stat-filter-indicator text-success-emphasis">
+                <i class="bi bi-check-circle-fill"></i> ACEITAS
+              </span>
+              <strong class="stat-filter-count text-success-emphasis"><?= $totalConfirmadas ?></strong>
             </div>
           </div>
+
+          <!-- PENDENTES -->
           <div class="col-4">
-            <div class="p-2 rounded-3 <?= ($totalPendentes > 0 ? 'bg-warning-subtle border-warning-subtle' : 'bg-body-tertiary') ?> text-center border">
-              <span class="d-block text-warning-emphasis small fw-semibold" style="font-size: 0.72rem;">PENDENTES</span>
-              <strong class="fs-5 text-warning-emphasis"><?= $totalPendentes ?></strong>
+            <div class="stat-filter-card stat-card-pendentes <?= ($totalPendentes > 0 ? 'pulse-warning' : '') ?>"
+              id="filter_card_pendentes"
+              onclick="aplicarFiltro('pendentes')"
+              role="button"
+              tabindex="0"
+              title="Clique para filtrar apenas escalas pendentes">
+              <span class="stat-filter-indicator text-warning-emphasis">
+                <i class="bi bi-hourglass-split"></i> PENDENTES
+              </span>
+              <strong class="stat-filter-count text-warning-emphasis"><?= $totalPendentes ?></strong>
             </div>
           </div>
         </div>
+
       </div>
     </div>
 
-    <!-- Botão de Ajuda Rápida / Tutorial Gestos -->
+    <!-- Barra Informativa de Filtro Ativo & Ação de Gestos -->
     <?php if (!empty($escalas)) { ?>
-      <div class="d-flex align-items-center justify-content-between mb-3 text-muted small px-1">
-        <span style="font-size: 0.78rem;">
-          <i class="bi bi-phone-fill me-1 text-primary"></i> No celular, arraste o card para responder
-        </span>
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 px-1">
+        <!-- Status do Filtro e Opção de Ver Passadas -->
+        <div class="d-flex align-items-center gap-1.5 flex-wrap">
+          <span class="badge bg-body text-secondary border rounded-pill px-2.5 py-1.5 small fw-semibold shadow-xs d-flex align-items-center gap-1.5" id="filtroAtivoBadge">
+            <i class="bi bi-funnel-fill text-primary" id="filtroAtivoIcon"></i>
+            <span id="filtroAtivoTexto">Exibindo escalas vigentes</span>
+          </span>
+
+          <?php if ($totalPassadas > 0) { ?>
+            <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 fw-bold text-primary small" id="btnTogglePassadas" onclick="togglePassadas()" style="font-size: 0.76rem;">
+              <i class="bi bi-clock-history me-1"></i> Ver anteriores (<?= $totalPassadas ?>)
+            </button>
+          <?php } ?>
+        </div>
+
+        <!-- Botão de Ajuda Swipe -->
         <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 fw-semibold text-primary" style="font-size: 0.76rem;" onclick="reabrirOnboardingSwipe()">
           <i class="bi bi-question-circle me-1"></i> Como usar?
         </button>
       </div>
     <?php } ?>
 
-    <!-- Lista de Escalas Minimalistas com Suporte a Swipe -->
+    <!-- Lista de Escalas Minimalistas e Premium -->
     <?php if (empty($escalas)) { ?>
       <div class="card border-0 shadow-sm rounded-4 text-center py-5 px-3 bg-body">
         <div class="mb-3">
@@ -444,7 +579,7 @@ if (!function_exists('getContrasteTexto')) {
         </div>
       </div>
     <?php } else { ?>
-      <div class="d-flex flex-column gap-2.5">
+      <div class="d-flex flex-column gap-2" id="listaEscalasContainer">
         <?php foreach ($escalas as $esc) {
           $conf = strtoupper((string)($esc->status_confirmacao ?: 'PENDENTE'));
           $corDep = !empty($esc->cor_departamento) ? $esc->cor_departamento : '#2563eb';
@@ -452,12 +587,19 @@ if (!function_exists('getContrasteTexto')) {
           $corCulto = !empty($esc->cor_evento) ? $esc->cor_evento : '#2563eb';
 
           $tsData = strtotime($esc->data_culto);
+          $dataCultoIso = date('Y-m-d', $tsData);
           $diaNum = date('d', $tsData);
           $diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
           $diaSemanaNome = $diasSemana[(int)date('w', $tsData)] ?? '';
-          $isPassado = (strtotime($esc->data_culto . ' 23:59:59') < time());
+          $isPassado = ($dataCultoIso < $hojeIso);
+          $isHoje = ($dataCultoIso === $hojeIso);
+          $isAmanha = ($dataCultoIso === date('Y-m-d', strtotime('+1 day')));
         ?>
-          <div class="swipe-container" id="swipe_wrapper_<?= $esc->id_escala_voluntario ?>">
+          <div class="swipe-container <?= ($isPassado && $modoInicial === 'vigentes') ? 'd-none' : '' ?>"
+            id="swipe_wrapper_<?= $esc->id_escala_voluntario ?>"
+            data-escala-item="1"
+            data-passado="<?= $isPassado ? '1' : '0' ?>"
+            data-status="<?= $conf ?>">
 
             <!-- Fundo de Ação Esquerda: Aceitar / Confirmar (Verde) -->
             <div class="swipe-bg swipe-bg-accept" id="bg_accept_<?= $esc->id_escala_voluntario ?>" style="opacity: 0;">
@@ -475,7 +617,7 @@ if (!function_exists('getContrasteTexto')) {
               </div>
             </div>
 
-            <!-- Card Minimalista Interativo -->
+            <!-- Card Minimalista Interativo Premium -->
             <div class="swipe-content p-3"
               id="card_escala_<?= $esc->id_escala_voluntario ?>"
               data-id="<?= $esc->id_escala_voluntario ?>"
@@ -483,16 +625,16 @@ if (!function_exists('getContrasteTexto')) {
               data-data="<?= date('d/m/Y', $tsData) ?>"
               data-status="<?= $conf ?>"
               data-passado="<?= $isPassado ? '1' : '0' ?>"
-              style="border-left: 5px solid <?= esc($corCulto) ?> !important;">
+              style="border-left: 6px solid <?= esc($corCulto) ?> !important;">
 
               <div class="d-flex align-items-center gap-3">
 
                 <!-- Coluna Esquerda: Calendário (2 linhas) + Status debaixo -->
-                <div class="d-flex flex-column align-items-center flex-shrink-0" style="min-width: 72px; width: 72px;">
+                <div class="d-flex flex-column align-items-center flex-shrink-0" style="min-width: 74px; width: 74px;">
                   <!-- Box do Calendário com respiro interno sem encostar nas bordas -->
-                  <div class="calendar-badge text-center w-100 shadow-xs mb-1.5" style="padding: 6px 4px 5px 4px; border-radius: 0.75rem;">
-                    <span class="d-block text-uppercase fw-bold text-primary font-monospace" style="font-size: 0.65rem; line-height: 1.2; letter-spacing: 0.5px; margin-top: 1px;"><?= $diaSemanaNome ?></span>
-                    <strong class="text-body d-block font-monospace" style="font-size: 1.32rem; line-height: 1; font-weight: 800; margin-top: 3px; margin-bottom: 2px;"><?= $diaNum ?></strong>
+                  <div class="calendar-badge text-center w-100 shadow-xs mb-1.5" style="padding: 6px 4px 5px 4px; border-radius: 0.85rem;">
+                    <span class="d-block text-uppercase fw-bold text-primary font-monospace" style="font-size: 0.66rem; line-height: 1.2; letter-spacing: 0.6px; margin-top: 1px;"><?= $diaSemanaNome ?></span>
+                    <strong class="text-body d-block font-monospace" style="font-size: 1.38rem; line-height: 1; font-weight: 800; margin-top: 3px; margin-bottom: 2px;"><?= $diaNum ?></strong>
                   </div>
 
                   <!-- Status Encaixado Debaixo do Calendário com respiro -->
@@ -520,12 +662,25 @@ if (!function_exists('getContrasteTexto')) {
                     <?= esc($esc->titulo_culto) ?>
                   </h6>
 
-                  <!-- Linha 2: Horário -->
-                  <div class="text-muted small mb-1.5 d-flex align-items-center gap-1" style="font-size: 0.78rem;">
-                    <i class="bi bi-clock"></i>
-                    <span><?= substr($esc->horario_inicio, 0, 5) ?> - <?= substr($esc->horario_termino, 0, 5) ?></span>
-                    <?php if ($isPassado) { ?>
-                      <span class="badge bg-secondary-subtle text-secondary rounded-pill px-1.5 py-0 ms-1" style="font-size: 0.62rem;">Realizado</span>
+                  <!-- Linha 2: Horário e Badges de Tempo -->
+                  <div class="text-muted small mb-1.5 d-flex align-items-center gap-1.5 flex-wrap" style="font-size: 0.78rem;">
+                    <div class="d-flex align-items-center gap-1">
+                      <i class="bi bi-clock"></i>
+                      <span><?= substr($esc->horario_inicio, 0, 5) ?> - <?= substr($esc->horario_termino, 0, 5) ?></span>
+                    </div>
+
+                    <?php if ($isHoje) { ?>
+                      <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-0 fw-bold" style="font-size: 0.64rem;">
+                        <i class="bi bi-record-circle-fill me-1"></i>Hoje
+                      </span>
+                    <?php } elseif ($isAmanha) { ?>
+                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-0 fw-bold" style="font-size: 0.64rem;">
+                        Amanhã
+                      </span>
+                    <?php } elseif ($isPassado) { ?>
+                      <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-0" style="font-size: 0.64rem;">
+                        Realizado
+                      </span>
                     <?php } ?>
                   </div>
 
@@ -581,6 +736,21 @@ if (!function_exists('getContrasteTexto')) {
 
           </div>
         <?php } ?>
+
+        <!-- Empty State de Filtro -->
+        <div id="emptyFilterState" class="card border-0 shadow-sm rounded-4 text-center py-5 px-3 bg-body" style="display: none;">
+          <div class="mb-3">
+            <i class="bi bi-funnel text-muted" style="font-size: 3rem;"></i>
+          </div>
+          <h6 class="fw-bold text-body mb-1" id="emptyFilterTitle">Nenhuma escala encontrada</h6>
+          <p class="text-secondary small mb-3" id="emptyFilterDesc">Nenhuma escala coincide com o filtro selecionado.</p>
+          <div>
+            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-4 fw-semibold" onclick="aplicarFiltro('todos')">
+              <i class="bi bi-calendar-range me-1"></i> Ver Todas as Escalas
+            </button>
+          </div>
+        </div>
+
       </div>
     <?php } ?>
 
@@ -805,6 +975,108 @@ if (!function_exists('getContrasteTexto')) {
           btn.innerHTML = '<i class="bi bi-send-fill me-1"></i> Enviar Justificativa';
           showToast('error', 'Falha na conexão com o servidor.');
         });
+    }
+
+    // ========================================================
+    // FILTRAGEM INTERATIVA (TOTAL, ACEITAS, PENDENTES, VIGENTES)
+    // ========================================================
+    let filtroAtual = '<?= $modoInicial ?>';
+    const totalPassadas = <?= (int)$totalPassadas ?>;
+    const totalVigentes = <?= (int)$totalVigentes ?>;
+
+    function aplicarFiltro(tipo) {
+      filtroAtual = tipo;
+      const items = document.querySelectorAll('.swipe-container[data-escala-item="1"]');
+      const emptyState = document.getElementById('emptyFilterState');
+      const emptyTitle = document.getElementById('emptyFilterTitle');
+      const emptyDesc = document.getElementById('emptyFilterDesc');
+      const badgeTexto = document.getElementById('filtroAtivoTexto');
+      const badgeIcon = document.getElementById('filtroAtivoIcon');
+      const btnToggle = document.getElementById('btnTogglePassadas');
+
+      // Limpa classes ativas dos cards de filtro
+      document.getElementById('filter_card_todos')?.classList.remove('active');
+      document.getElementById('filter_card_aceitas')?.classList.remove('active');
+      document.getElementById('filter_card_pendentes')?.classList.remove('active');
+
+      let visiveis = 0;
+
+      items.forEach(item => {
+        const status = item.getAttribute('data-status');
+        const isPassado = item.getAttribute('data-passado') === '1';
+        let exibir = false;
+
+        if (tipo === 'todos') {
+          exibir = true;
+        } else if (tipo === 'vigentes') {
+          exibir = !isPassado;
+        } else if (tipo === 'aceitas') {
+          exibir = (status === 'CONFIRMADO');
+        } else if (tipo === 'pendentes') {
+          exibir = (status === 'PENDENTE');
+        }
+
+        if (exibir) {
+          item.classList.remove('d-none');
+          visiveis++;
+        } else {
+          item.classList.add('d-none');
+        }
+      });
+
+      // Atualiza o card de filtro ativo
+      if (tipo === 'todos') {
+        document.getElementById('filter_card_todos')?.classList.add('active');
+        if (badgeTexto) badgeTexto.textContent = `Exibindo todas as escalas (${visiveis})`;
+        if (badgeIcon) badgeIcon.className = 'bi bi-grid-fill text-primary';
+        if (btnToggle) {
+          btnToggle.innerHTML = '<i class="bi bi-eye-slash me-1"></i> Ocultar anteriores';
+        }
+      } else if (tipo === 'aceitas') {
+        document.getElementById('filter_card_aceitas')?.classList.add('active');
+        if (badgeTexto) badgeTexto.textContent = `Exibindo escalas aceitas (${visiveis})`;
+        if (badgeIcon) badgeIcon.className = 'bi bi-check-circle-fill text-success';
+      } else if (tipo === 'pendentes') {
+        document.getElementById('filter_card_pendentes')?.classList.add('active');
+        if (badgeTexto) badgeTexto.textContent = `Exibindo escalas pendentes (${visiveis})`;
+        if (badgeIcon) badgeIcon.className = 'bi bi-hourglass-split text-warning';
+      } else if (tipo === 'vigentes') {
+        if (badgeTexto) badgeTexto.textContent = `Exibindo escalas vigentes (${visiveis})`;
+        if (badgeIcon) badgeIcon.className = 'bi bi-funnel-fill text-primary';
+        if (btnToggle) {
+          btnToggle.innerHTML = `<i class="bi bi-clock-history me-1"></i> Ver anteriores (${totalPassadas})`;
+        }
+      }
+
+      // Controle do Empty State
+      if (emptyState) {
+        if (visiveis === 0) {
+          emptyState.style.display = 'block';
+          if (tipo === 'pendentes') {
+            if (emptyTitle) emptyTitle.textContent = 'Nenhuma escala pendente';
+            if (emptyDesc) emptyDesc.textContent = 'Você não possui escalas aguardando resposta neste mês. Parabéns!';
+          } else if (tipo === 'aceitas') {
+            if (emptyTitle) emptyTitle.textContent = 'Nenhuma escala aceita';
+            if (emptyDesc) emptyDesc.textContent = 'Nenhuma escala confirmada para este mês.';
+          } else if (tipo === 'vigentes') {
+            if (emptyTitle) emptyTitle.textContent = 'Nenhuma escala vigente';
+            if (emptyDesc) emptyDesc.textContent = 'Todas as escalas deste mês já foram concluídas.';
+          } else {
+            if (emptyTitle) emptyTitle.textContent = 'Nenhuma escala encontrada';
+            if (emptyDesc) emptyDesc.textContent = 'Não há registros para exibição com o filtro atual.';
+          }
+        } else {
+          emptyState.style.display = 'none';
+        }
+      }
+    }
+
+    function togglePassadas() {
+      if (filtroAtual === 'vigentes') {
+        aplicarFiltro('todos');
+      } else {
+        aplicarFiltro('vigentes');
+      }
     }
 
     // ========================================================

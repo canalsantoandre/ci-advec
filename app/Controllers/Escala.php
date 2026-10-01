@@ -103,8 +103,12 @@ class Escala extends BaseController
             $idCp = (int)$esc->id_culto_padrao;
             $idAr = (int)$esc->id_area;
             $escalasPorDataECultoPadrao[$dIso][$idCp][$idAr][] = $esc;
-            $totalEscalasPreenchidas++;
-            $voluntariosUnicosEscalados[$esc->id_voluntario] = true;
+            
+            $statusConf = strtoupper((string)($esc->status_confirmacao ?: 'PENDENTE'));
+            if ($statusConf !== 'RECUSADO') {
+                $totalEscalasPreenchidas++;
+                $voluntariosUnicosEscalados[$esc->id_voluntario] = true;
+            }
         }
 
         // 6. Projeta os Cultos Dinamicamente Dia a Dia no Mês
@@ -132,7 +136,19 @@ class Escala extends BaseController
                 if (CultoPadraoModel::isOcorrenciaCultoValida($cp, $dataIso)) {
                     $totalCultosMes++;
                     $escalasDesteCulto = $escalasPorDataECultoPadrao[$dataIso][$cp->id_culto_padrao] ?? [];
-                    $temAlgumaEscala = !empty($escalasDesteCulto);
+                    
+                    // Verifica se há alguma escala ATIVA (não recusada) no culto
+                    $temAlgumaEscala = false;
+                    if (!empty($escalasDesteCulto)) {
+                        foreach ($escalasDesteCulto as $arrEscalasArea) {
+                            foreach ($arrEscalasArea as $eCheck) {
+                                if (strtoupper((string)($eCheck->status_confirmacao ?: 'PENDENTE')) !== 'RECUSADO') {
+                                    $temAlgumaEscala = true;
+                                    break 2;
+                                }
+                            }
+                        }
+                    }
 
                     if ($temAlgumaEscala) {
                         $cultosComEscala++;
@@ -195,7 +211,7 @@ class Escala extends BaseController
     }
 
     /**
-     * AJAX: Salva / Encaixa voluntário em uma sub-área do culto
+     * AJAX: Salva / Encaixa um ou múltiplos voluntários em uma sub-área do culto
      */
     public function salvarEscala()
     {
@@ -209,55 +225,85 @@ class Escala extends BaseController
             $id_culto_padrao = (int)$this->request->getPost('id_culto_padrao');
             $id_departamento = (int)$this->request->getPost('id_departamento');
             $id_area         = (int)$this->request->getPost('id_area');
-            $id_voluntario   = (int)$this->request->getPost('id_voluntario');
             $observacao      = trim((string)$this->request->getPost('observacao'));
 
-            if (empty($data_culto) || $id_culto_padrao <= 0 || $id_departamento <= 0 || $id_area <= 0 || $id_voluntario <= 0) {
-                return $this->response->setJSON(['status' => 'error', 'message' => 'Selecione a data, culto, sub-área e o voluntário.']);
+            // Trata múltiplos IDs de voluntários recebidos via array ou string separada por vírgula
+            $rawVoluntarios = $this->request->getPost('id_voluntarios') ?: $this->request->getPost('id_voluntario');
+            $idsVoluntarios = [];
+
+            if (is_array($rawVoluntarios)) {
+                $idsVoluntarios = array_map('intval', $rawVoluntarios);
+            } elseif (is_string($rawVoluntarios)) {
+                $idsVoluntarios = array_map('intval', explode(',', $rawVoluntarios));
+            } else {
+                $idsVoluntarios = [(int)$rawVoluntarios];
             }
 
-            // Validação de Limite Máximo Mensal de Escalas
+            $idsVoluntarios = array_values(array_unique(array_filter($idsVoluntarios, function($id) { return $id > 0; })));
+
+            if (empty($data_culto) || $id_culto_padrao <= 0 || $id_departamento <= 0 || $id_area <= 0 || empty($idsVoluntarios)) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Selecione a data, culto, sub-área e pelo menos um voluntário.']);
+            }
+
             $voluntarioModel = new VoluntarioModel();
-            $voluntario = $voluntarioModel->find($id_voluntario);
+            $escalaModel     = new EscalaVoluntarioModel();
+            $db              = db_connect();
 
-            if ($voluntario && !empty($voluntario->max_escalas_mes) && (int)$voluntario->max_escalas_mes > 0) {
-                $maxPermitido = (int)$voluntario->max_escalas_mes;
-                $anoCulto = (int)date('Y', strtotime($data_culto));
-                $mesCulto = (int)date('m', strtotime($data_culto));
+            $anoCulto = (int)date('Y', strtotime($data_culto));
+            $mesCulto = (int)date('m', strtotime($data_culto));
 
-                // Verifica se já está escalado nesta mesma vaga
-                $db = db_connect();
-                $jaEscaladoAqui = $db->table('tb_escala_voluntario')
-                    ->where('data_culto', $data_culto)
-                    ->where('id_culto_padrao', $id_culto_padrao)
-                    ->where('id_departamento', $id_departamento)
-                    ->where('id_area', $id_area)
-                    ->where('id_voluntario', $id_voluntario)
-                    ->countAllResults();
+            $escaladosSucesso = 0;
+            $erros = [];
 
-                if (!$jaEscaladoAqui) {
-                    $totalMes = $voluntarioModel->countEscalasMes($id_voluntario, $anoCulto, $mesCulto);
-                    if ($totalMes >= $maxPermitido) {
-                        return $this->response->setJSON([
-                            'status'  => 'error',
-                            'message' => "O voluntário '{$voluntario->nome}' já atingiu o limite mensal de {$maxPermitido} escala(s) no mês ({$totalMes} já agendadas)."
-                        ]);
+            foreach ($idsVoluntarios as $id_voluntario) {
+                $voluntario = $voluntarioModel->find($id_voluntario);
+                if (!$voluntario) continue;
+
+                // Validação de Limite Máximo Mensal de Escalas
+                if (!empty($voluntario->max_escalas_mes) && (int)$voluntario->max_escalas_mes > 0) {
+                    $maxPermitido = (int)$voluntario->max_escalas_mes;
+
+                    $jaEscaladoAqui = $db->table('tb_escala_voluntario')
+                        ->where('data_culto', $data_culto)
+                        ->where('id_culto_padrao', $id_culto_padrao)
+                        ->where('id_departamento', $id_departamento)
+                        ->where('id_area', $id_area)
+                        ->where('id_voluntario', $id_voluntario)
+                        ->countAllResults();
+
+                    if (!$jaEscaladoAqui) {
+                        $totalMes = $voluntarioModel->countEscalasMes($id_voluntario, $anoCulto, $mesCulto);
+                        if ($totalMes >= $maxPermitido) {
+                            $erros[] = "Voluntário '{$voluntario->nome}' atingiu o limite mensal ({$totalMes}/{$maxPermitido}).";
+                            continue;
+                        }
                     }
+                }
+
+                $id_escala = $escalaModel->escalarVoluntario($data_culto, $id_culto_padrao, $id_departamento, $id_area, $id_voluntario, $observacao);
+                if ($id_escala) {
+                    $escaladosSucesso++;
                 }
             }
 
-            $escalaModel = new EscalaVoluntarioModel();
-            $id_escala = $escalaModel->escalarVoluntario($data_culto, $id_culto_padrao, $id_departamento, $id_area, $id_voluntario, $observacao);
+            if ($escaladosSucesso > 0) {
+                $msg = ($escaladosSucesso === 1) 
+                    ? '1 voluntário escalado com sucesso!' 
+                    : "{$escaladosSucesso} voluntários escalados com sucesso!";
+                
+                if (!empty($erros)) {
+                    $msg .= ' Atenção: ' . implode(' ', $erros);
+                }
 
-            if ($id_escala) {
                 return $this->response->setJSON([
                     'status'    => 'success',
-                    'message'   => 'Voluntário escalado com sucesso!',
-                    'id_escala' => $id_escala
+                    'message'   => $msg,
+                    'total'     => $escaladosSucesso
                 ]);
             }
 
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Não foi possível escalar o voluntário.']);
+            $erroMsg = !empty($erros) ? implode(' ', $erros) : 'Não foi possível escalar os voluntários selecionados.';
+            return $this->response->setJSON(['status' => 'error', 'message' => $erroMsg]);
         } catch (\Throwable $e) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'Erro ao salvar escala: ' . $e->getMessage()]);
         }

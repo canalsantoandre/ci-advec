@@ -218,18 +218,40 @@ class Usuario extends BaseController
 
     public function atualizarSenha()
     {
-        $id_usuario       = $this->request->getPost('id_usuario');
-        $txtSenhaAtual    = $this->request->getPost('txtSenhaAtual');
-        $txtUsuarioSenhaNova = $this->request->getPost('txtUsuarioSenhaNova');
+        $id_usuario             = (int)$this->request->getPost('id_usuario');
+        $txtSenhaAtual          = (string)$this->request->getPost('txtSenhaAtual');
+        $txtUsuarioSenhaNova    = (string)$this->request->getPost('txtUsuarioSenhaNova');
+        $txtUsuarioSenhaConfirm = (string)$this->request->getPost('txtUsuarioSenhaConfirm');
 
         if (!$id_usuario || empty($txtSenhaAtual) || empty($txtUsuarioSenhaNova)) {
-            return redirect()->back()->with('error', 'Preencha todos os campos.');
+            return redirect()->back()->with('error', 'Por favor, preencha todos os campos obrigatórios.');
+        }
+
+        if (!empty($txtUsuarioSenhaConfirm) && $txtUsuarioSenhaNova !== $txtUsuarioSenhaConfirm) {
+            return redirect()->back()->with('error', 'A nova senha e a confirmação de senha não coincidem.');
+        }
+
+        if (strlen($txtUsuarioSenhaNova) < 6) {
+            return redirect()->back()->with('error', 'A nova senha deve ter no mínimo 6 caracteres.');
         }
 
         $usuarioModel = new UsuarioModel();
         $usuario = $usuarioModel->find($id_usuario);
 
-        if (!password_verify($txtSenhaAtual, $usuario->senha) && !password_verify($txtSenhaAtual, $usuario->senha_usuario)) {
+        if (!$usuario) {
+            return redirect()->to('dashboard')->with('error', 'Usuário não encontrado.');
+        }
+
+        $senhaAtualValida = false;
+        if (!empty($usuario->senha) && password_verify($txtSenhaAtual, $usuario->senha)) {
+            $senhaAtualValida = true;
+        } elseif (!empty($usuario->senha_usuario) && password_verify($txtSenhaAtual, $usuario->senha_usuario)) {
+            $senhaAtualValida = true;
+        } elseif ((!empty($usuario->senha) && md5($txtSenhaAtual) === $usuario->senha) || (!empty($usuario->senha_usuario) && md5($txtSenhaAtual) === $usuario->senha_usuario)) {
+            $senhaAtualValida = true;
+        }
+
+        if (!$senhaAtualValida) {
             return redirect()->back()->with('error', 'A senha atual informada está incorreta.');
         }
 
@@ -241,7 +263,7 @@ class Usuario extends BaseController
             'data_ultima_senha' => date('Y-m-d H:i:s')
         ]);
 
-        return redirect()->to('dashboard')->with('success', 'Senha alterada com sucesso!');
+        return redirect()->to('dashboard')->with('success', 'Sua senha foi atualizada com sucesso!');
     }
 
     public function getModalResetSenha($hash_user = null)
