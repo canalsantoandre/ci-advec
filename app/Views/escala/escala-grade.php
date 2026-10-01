@@ -94,6 +94,31 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   }
 
+  .slot-vol-badge {
+    background-color: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    color: #1e293b;
+    transition: all 0.15s ease;
+  }
+
+  .slot-vol-name {
+    color: #1e293b;
+  }
+
+  [data-bs-theme="dark"] .slot-vol-badge {
+    background-color: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+  }
+
+  [data-bs-theme="dark"] .slot-vol-name {
+    color: #f8fafc !important;
+  }
+
+  [data-bs-theme="dark"] .slot-vol-badge:hover {
+    background-color: #273549 !important;
+    border-color: #60a5fa !important;
+  }
+
   .btn-presence-toggle {
     cursor: pointer;
     transition: transform 0.15s ease;
@@ -104,13 +129,109 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
   }
 
   .vol-card-item {
+    background-color: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    color: #1e293b;
     transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .vol-card-item:hover:not(.opacity-75) {
+  .vol-card-item:hover:not(.opacity-75):not(.vol-card-selected) {
     transform: translateX(3px);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
     border-color: #93c5fd !important;
+    background-color: #f8fafc;
+  }
+
+  .vol-card-item.vol-card-selected {
+    background: #2563eb !important;
+    border-color: #1d4ed8 !important;
+    color: #ffffff !important;
+  }
+
+  /* Suporte a Visão Noturna (Dark Mode) */
+  [data-bs-theme="dark"] .vol-card-item {
+    background-color: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #f8fafc !important;
+  }
+
+  [data-bs-theme="dark"] .vol-card-item:hover:not(.opacity-75):not(.vol-card-selected) {
+    background-color: #2d3d54 !important;
+    border-color: #60a5fa !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  [data-bs-theme="dark"] .vol-card-item.vol-card-selected {
+    background: #1d4ed8 !important;
+    border-color: #3b82f6 !important;
+    color: #ffffff !important;
+  }
+
+  [data-bs-theme="dark"] #container_voluntarios_lista {
+    background-color: #0b1120 !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+  }
+
+  .badge-escala-limite {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    font-size: 0.68rem;
+  }
+
+  [data-bs-theme="dark"] .badge-escala-limite {
+    background-color: #334155 !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #475569 !important;
+  }
+
+  .badge-nickname-modal {
+    background-color: #e2e8f0;
+    color: #1e293b;
+    border: 1px solid #cbd5e1;
+    font-size: 0.68rem;
+  }
+
+  [data-bs-theme="dark"] .badge-nickname-modal {
+    background-color: #334155 !important;
+    color: #f8fafc !important;
+    border: 1px solid #475569 !important;
+  }
+
+  .modal-input-search-addon {
+    background-color: #f8fafc;
+    border-color: #dee2e6;
+    color: #64748b;
+  }
+
+  [data-bs-theme="dark"] .modal-input-search-addon {
+    background-color: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    color: #94a3b8 !important;
+  }
+
+  [data-bs-theme="dark"] #filtro_busca_voluntario {
+    background-color: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    color: #f8fafc !important;
+  }
+
+  [data-bs-theme="dark"] #filtro_busca_voluntario::placeholder {
+    color: #64748b !important;
+  }
+
+  [data-bs-theme="dark"] .bg-purple-subtle {
+    background-color: rgba(168, 85, 247, 0.2) !important;
+    color: #c084fc !important;
+    border-color: rgba(168, 85, 247, 0.3) !important;
+  }
+
+  [data-bs-theme="dark"] .text-purple {
+    color: #c084fc !important;
+  }
+
+  [data-bs-theme="dark"] .vol-text-muted {
+    color: #94a3b8 !important;
   }
 </style>
 
@@ -462,10 +583,10 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
                                     $nomeDisplay = formatarNomeExibicaoGrade($esc->nome_voluntario, $esc->nickname);
                                     $nivelVol = !empty($esc->nivel_conhecimento) ? $esc->nivel_conhecimento : 'JUNIOR';
                                   ?>
-                                    <div class="d-flex align-items-center justify-content-between gap-1 p-1 bg-white rounded border shadow-sm" id="boxEscala_<?= $esc->id_escala_voluntario ?>">
+                                    <div class="d-flex align-items-center justify-content-between gap-1 p-1 rounded shadow-sm slot-vol-badge" id="boxEscala_<?= $esc->id_escala_voluntario ?>">
                                       <div class="d-flex align-items-center gap-1 text-truncate" style="max-width: 150px;">
                                         <img src="<?= esc($av) ?>" class="rounded-circle border" style="width: 22px; height: 22px; object-fit: cover;" alt="avatar" onerror="this.onerror=null;this.src='<?= $defaultAv ?>';">
-                                        <span class="small fw-semibold text-truncate text-body" title="<?= esc($esc->nome_voluntario) ?><?= !empty($esc->nickname) ? ' (' . esc($esc->nickname) . ')' : '' ?> [<?= esc($nivelVol) ?>]">
+                                        <span class="small fw-semibold text-truncate slot-vol-name" title="<?= esc($esc->nome_voluntario) ?><?= !empty($esc->nickname) ? ' (' . esc($esc->nickname) . ')' : '' ?> [<?= esc($nivelVol) ?>]">
                                           <?= esc($nomeDisplay) ?>
                                         </span>
                                       </div>
@@ -605,7 +726,7 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
 
             <!-- Campo de Busca em Tempo Real -->
             <div class="input-group input-group-sm mb-2 shadow-sm">
-              <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+              <span class="input-group-text modal-input-search-addon border-end-0"><i class="bi bi-search"></i></span>
               <input type="text" id="filtro_busca_voluntario" class="form-control border-start-0 ps-0" placeholder="Digitar nome, apelido ou nível (ex: Senior)..." oninput="filtrarListaVoluntariosModal()" autocomplete="off">
               <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('filtro_busca_voluntario').value=''; filtrarListaVoluntariosModal();" title="Limpar busca">
                 <i class="bi bi-x-lg"></i>
@@ -642,7 +763,7 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
         </div>
 
         <div class="modal-footer border-0 pt-0">
-          <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
           <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold" id="btnSubmitEscala" disabled>
             <i class="bi bi-check-lg me-1"></i> Confirmar Escalação
           </button>
@@ -666,7 +787,7 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
         <p class="mb-0">Deseja realmente remover este voluntário da escala?</p>
       </div>
       <div class="modal-footer border-0 pt-0">
-        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
         <button type="button" id="btnConfirmarRemoverEscalaSubmit" class="btn btn-danger rounded-pill px-4 fw-bold">
           <i class="bi bi-trash3-fill me-1"></i> Confirmar Remoção
         </button>
@@ -803,32 +924,35 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
         if (v.atingiu_limite) {
           limiteBadge = `<span class="badge bg-danger text-white fw-bold" style="font-size: 0.68rem;"><i class="bi bi-slash-circle me-1"></i>${v.total_escalas_mes}/${v.max_escalas_mes} (Limite)</span>`;
         } else {
-          limiteBadge = `<span class="badge bg-light text-secondary border" style="font-size: 0.68rem;">${v.total_escalas_mes}/${v.max_escalas_mes} no mês</span>`;
+          limiteBadge = `<span class="badge ${isSelected ? 'bg-light text-dark' : 'badge-escala-limite'}" style="font-size: 0.68rem;">${v.total_escalas_mes}/${v.max_escalas_mes} no mês</span>`;
         }
       } else {
-        limiteBadge = `<span class="badge bg-light text-secondary border" style="font-size: 0.68rem;">${v.total_escalas_mes} no mês</span>`;
+        limiteBadge = `<span class="badge ${isSelected ? 'bg-light text-dark' : 'badge-escala-limite'}" style="font-size: 0.68rem;">${v.total_escalas_mes} no mês</span>`;
       }
 
       // Badge de Disponibilidade no Culto (Regra do Coringa)
       let dispBadge = '';
       if (v.disponivel_culto) {
         if (v.tipo_disponibilidade === 'ESPECIFICA') {
-          dispBadge = `<span class="badge ${isSelected ? 'bg-success text-white' : 'bg-success-subtle text-success border border-success-subtle'} px-1 py-0 fw-semibold" style="font-size: 0.65rem;" title="Disponível neste Culto"><i class="bi bi-check2 me-1"></i>Disponível</span>`;
+          dispBadge = `<span class="badge ${isSelected ? 'bg-success text-white' : 'bg-success-subtle text-success-emphasis border border-success-subtle'} px-1 py-0 fw-semibold" style="font-size: 0.65rem;" title="Disponível neste Culto"><i class="bi bi-check2 me-1"></i>Disponível</span>`;
         } else if (v.tipo_disponibilidade === 'TOTAL') {
           dispBadge = `<span class="badge ${isSelected ? 'bg-info text-white' : 'bg-info-subtle text-info-emphasis border border-info-subtle'} px-1 py-0 fw-semibold" style="font-size: 0.65rem;" title="Disponibilidade Total (Coringa)"><i class="bi bi-asterisk me-1"></i>Disp. Total</span>`;
         }
       } else {
-        dispBadge = `<span class="badge ${isSelected ? 'bg-secondary text-white' : 'bg-secondary-subtle text-muted border border-secondary-subtle'} px-1 py-0 fw-semibold" style="font-size: 0.65rem;" title="Não marcou disponibilidade para este culto"><i class="bi bi-clock-history me-1"></i>Indisponível</span>`;
+        dispBadge = `<span class="badge ${isSelected ? 'bg-secondary text-white' : 'bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle'} px-1 py-0 fw-semibold" style="font-size: 0.65rem;" title="Não marcou disponibilidade para este culto"><i class="bi bi-clock-history me-1"></i>Indisponível</span>`;
       }
 
       const itemClass = isSelected ?
-        'border-primary bg-primary text-white shadow-sm' :
-        (v.atingiu_limite ? 'border-danger-subtle bg-danger-subtle opacity-75' : 'bg-white border-light-subtle hover-shadow');
+        'vol-card-selected shadow-sm' :
+        (v.atingiu_limite ? 'border-danger-subtle bg-danger-subtle opacity-75' : '');
+
+      const cleanNick = (v.nickname || '').trim();
+      const nickHtml = cleanNick !== '' ? `<span class="badge ${isSelected ? 'bg-light text-dark' : 'badge-nickname-modal'} px-1 py-0" style="font-size: 0.68rem;">${escapeHtml(cleanNick)}</span>` : '';
 
       const jsonVolStr = JSON.stringify(v).replace(/"/g, '&quot;');
 
       html += `
-        <div class="vol-card-item p-2 rounded-3 border d-flex align-items-center justify-content-between transition-all ${itemClass}" 
+        <div class="vol-card-item p-2 rounded-3 border d-flex align-items-center justify-content-between ${itemClass}" 
              style="cursor: ${v.atingiu_limite ? 'not-allowed' : 'pointer'};"
              onclick="clickVoluntarioItem(${v.id_voluntario}, ${v.atingiu_limite ? 'true' : 'false'}, ${jsonVolStr})">
           
@@ -838,12 +962,12 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
             <div class="d-flex flex-column text-truncate">
               <div class="d-flex align-items-center gap-1 text-truncate">
                 <span class="fw-bold ${isSelected ? 'text-white' : 'text-body'} small text-truncate">${escapeHtml(v.nome)}</span>
-                ${v.nickname ? `<span class="badge ${isSelected ? 'bg-light text-dark' : 'bg-secondary-subtle text-secondary'} border px-1 py-0" style="font-size: 0.68rem;">${escapeHtml(v.nickname)}</span>` : ''}
-                <span class="badge ${badgeNivelClass} px-1 py-0 fw-semibold" style="font-size: 0.65rem;">${escapeHtml(nivel)}</span>
+                ${nickHtml}
+                <span class="badge ${isSelected ? 'bg-light text-dark' : badgeNivelClass} px-1 py-0 fw-semibold" style="font-size: 0.65rem;">${escapeHtml(nivel)}</span>
               </div>
               
-              <div class="d-flex align-items-center gap-2 small ${isSelected ? 'text-white-50' : 'text-muted'}" style="font-size: 0.72rem;">
-                <span><i class="bi bi-whatsapp me-1"></i>${escapeHtml(v.telefone_whatsapp)}</span>
+              <div class="d-flex align-items-center gap-2 small ${isSelected ? 'text-white-50' : 'text-muted vol-text-muted'}" style="font-size: 0.72rem;">
+                <span><i class="bi bi-whatsapp me-1 text-success"></i>${escapeHtml(v.telefone_whatsapp || 'Sem Whats')}</span>
                 ${v.is_vinculado ? `<span class="${isSelected ? 'text-warning' : 'text-success'} fw-semibold"><i class="bi bi-star-fill text-warning me-1"></i>Vinculado</span>` : `<span class="${isSelected ? 'text-white-50' : 'text-secondary'}">Outra área</span>`}
               </div>
             </div>

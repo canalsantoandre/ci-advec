@@ -92,9 +92,48 @@ class VoluntarioModel extends Model
     }
 
     /**
-     * Estatísticas e indicadores de assiduidade por período selecionável
+     * Retorna todos os departamentos que o voluntário atua (por áreas cadastradas ou escalas)
      */
-    public function getEstatisticasVoluntario($id_voluntario, $periodo = 'tudo')
+    public function getDepartamentosDoVoluntario($id_voluntario)
+    {
+        $db = db_connect();
+        
+        // 1. Departamentos cadastrados via áreas
+        $builder1 = $db->table('tb_voluntario_departamento_area as vda')
+            ->select('d.id_departamento, d.nome as nome_departamento, d.cor_identificacao')
+            ->join('tb_departamento as d', 'd.id_departamento = vda.id_departamento', 'inner')
+            ->where('vda.id_voluntario', (int)$id_voluntario)
+            ->where('d.status', 1);
+        $deps1 = $builder1->get()->getResult('object');
+
+        // 2. Departamentos vinculados via escalas históricas
+        $builder2 = $db->table('tb_escala_voluntario as ev')
+            ->select('d.id_departamento, d.nome as nome_departamento, d.cor_identificacao')
+            ->join('tb_departamento as d', 'd.id_departamento = ev.id_departamento', 'inner')
+            ->where('ev.id_voluntario', (int)$id_voluntario)
+            ->where('d.status', 1);
+        $deps2 = $builder2->get()->getResult('object');
+
+        $departamentos = [];
+        foreach (array_merge($deps1, $deps2) as $dep) {
+            $idDep = (int)$dep->id_departamento;
+            if (!isset($departamentos[$idDep])) {
+                $departamentos[$idDep] = $dep;
+            }
+        }
+
+        // Ordena alfabeticamente
+        usort($departamentos, function($a, $b) {
+            return strcasecmp($a->nome_departamento, $b->nome_departamento);
+        });
+
+        return array_values($departamentos);
+    }
+
+    /**
+     * Estatísticas e indicadores de assiduidade por período selecionável e opcionalmente por departamento
+     */
+    public function getEstatisticasVoluntario($id_voluntario, $periodo = 'tudo', $id_departamento = null)
     {
         $id_voluntario = (int)$id_voluntario;
         $voluntario = $this->find($id_voluntario);
@@ -134,6 +173,12 @@ class VoluntarioModel extends Model
                 break;
         }
 
+        $departamentoInfo = null;
+        if (!empty($id_departamento)) {
+            $depModel = new DepartamentoModel();
+            $departamentoInfo = $depModel->find((int)$id_departamento);
+        }
+
         $db = db_connect();
         $builder = $db->table('tb_escala_voluntario as ev');
         $builder->select('
@@ -158,6 +203,10 @@ class VoluntarioModel extends Model
         $builder->join('tb_departamento as d', 'd.id_departamento = ev.id_departamento', 'inner');
         $builder->join('tb_departamento_area as a', 'a.id_area = ev.id_area', 'inner');
         $builder->where('ev.id_voluntario', $id_voluntario);
+
+        if (!empty($id_departamento)) {
+            $builder->where('ev.id_departamento', (int)$id_departamento);
+        }
 
         if ($dataInicio) {
             $builder->where('ev.data_culto >=', $dataInicio);
@@ -223,6 +272,8 @@ class VoluntarioModel extends Model
             'voluntario'         => $voluntario,
             'periodo'            => $periodo,
             'labelPeriodo'       => $labelPeriodo,
+            'id_departamento'    => $id_departamento ? (int)$id_departamento : null,
+            'departamento'       => $departamentoInfo,
             'totalEscalas'       => $totalEscalas,
             'totalPresencas'     => $totalPresencas,
             'totalAusencias'     => $totalAusencias,
@@ -706,9 +757,9 @@ class VoluntarioModel extends Model
     }
 
     /**
-     * Retorna ranking e métricas comparativas para o Portal do Voluntário (Gamificação / Leaderboard)
+     * Retorna ranking e métricas comparativas para o Portal do Voluntário (Gamificação / Leaderboard por Departamento)
      */
-    public function getRankingVoluntariosPortal($idVoluntarioLogado, $periodo = 'mes_atual')
+    public function getRankingVoluntariosPortal($idVoluntarioLogado, $periodo = 'mes_atual', $id_departamento = null)
     {
         $db = db_connect();
 
@@ -735,18 +786,48 @@ class VoluntarioModel extends Model
                 break;
         }
 
-        // Busca todos os voluntários ativos
-        $voluntarios = $db->table('tb_voluntario')
-            ->where('status', 1)
-            ->orderBy('nome', 'ASC')
-            ->get()
-            ->getResult('object');
+        $departamentoInfo = null;
+        if (!empty($id_departamento)) {
+            $depModel = new DepartamentoModel();
+            $departamentoInfo = $depModel->find((int)$id_departamento);
+        }
 
-        // Busca escalas no período
+        // Busca voluntários ativos
+        if (!empty($id_departamento)) {
+            $subqueryAreas = $db->table('tb_voluntario_departamento_area')
+                ->select('id_voluntario')
+                ->where('id_departamento', (int)$id_departamento);
+
+            $subqueryEscalas = $db->table('tb_escala_voluntario')
+                ->select('id_voluntario')
+                ->where('id_departamento', (int)$id_departamento);
+
+            $voluntarios = $db->table('tb_voluntario as v')
+                ->where('v.status', 1)
+                ->groupStart()
+                    ->whereIn('v.id_voluntario', $subqueryAreas)
+                    ->orWhereIn('v.id_voluntario', $subqueryEscalas)
+                    ->orWhere('v.id_voluntario', (int)$idVoluntarioLogado)
+                ->groupEnd()
+                ->orderBy('v.nome', 'ASC')
+                ->get()
+                ->getResult('object');
+        } else {
+            $voluntarios = $db->table('tb_voluntario')
+                ->where('status', 1)
+                ->orderBy('nome', 'ASC')
+                ->get()
+                ->getResult('object');
+        }
+
+        // Busca escalas no período (e no departamento, se filtrado)
         $builderEsc = $db->table('tb_escala_voluntario');
         $builderEsc->select('id_voluntario, status_confirmacao, status_presenca');
         if ($dataInicio) $builderEsc->where('data_culto >=', $dataInicio);
         if ($dataFim)    $builderEsc->where('data_culto <=', $dataFim);
+        if (!empty($id_departamento)) {
+            $builderEsc->where('id_departamento', (int)$id_departamento);
+        }
 
         $escalas = $builderEsc->get()->getResult('object');
 
@@ -773,30 +854,53 @@ class VoluntarioModel extends Model
         }
 
         $leaderboard = [];
+        $meuRank = null;
 
         foreach ($voluntarios as $v) {
             $idV = (int)$v->id_voluntario;
-            $vStats = $escalasPorVoluntario[$idV] ?? [
-                'total' => 0, 'confirmados' => 0, 'cancelados' => 0, 'presencas' => 0
-            ];
+            $vStats = $escalasPorVoluntario[$idV] ?? null;
+            $isMe = ($idV === (int)$idVoluntarioLogado);
+
+            $nomeExibicao = !empty($v->nickname) ? $v->nickname : (explode(' ', trim($v->nome))[0] . ' ' . (explode(' ', trim($v->nome))[count(explode(' ', trim($v->nome))) - 1] ?? ''));
+            $defaultAvatar = 'https://ui-avatars.com/api/?name=' . urlencode($v->nome) . '&background=2563eb&color=fff&size=80&bold=true';
+
+            // Se o voluntário NÃO possui nenhuma escala no período (ou departamento), não entra no ranking (não classificado)
+            if (!$vStats || $vStats['total'] === 0) {
+                if ($isMe) {
+                    $meuRank = (object)[
+                        'id_voluntario'      => $idV,
+                        'nome_completo'      => $v->nome,
+                        'nome_exibicao'      => $nomeExibicao,
+                        'nickname'           => $v->nickname,
+                        'foto_url'           => !empty($v->foto_url) ? $v->foto_url : $defaultAvatar,
+                        'nivel_conhecimento' => $v->nivel_conhecimento ?? 'JUNIOR',
+                        'total_escalas'      => 0,
+                        'cultos_aceitos'     => 0,
+                        'cultos_cancelados'  => 0,
+                        'presencas'          => 0,
+                        'taxa_assiduidade'   => 0,
+                        'pontos'             => 0,
+                        'posicao'            => null,
+                        'classificado'       => false,
+                        'is_current_user'    => true
+                    ];
+                }
+                continue;
+            }
 
             $totEsc = $vStats['total'];
             $totConf = $vStats['confirmados'];
             $totCanc = $vStats['cancelados'];
             $totPres = $vStats['presencas'];
 
-            $taxaAssiduidade = $totEsc > 0 ? round(($totPres / $totEsc) * 100, 1) : 100;
+            $taxaAssiduidade = $totEsc > 0 ? round(($totPres / $totEsc) * 100, 1) : 0;
 
             // Sistema de Pontuação (Score de Fidelidade):
             // +15 pts por presença cumprida
             // +10 pts por confirmação
-            // -10 pts por cancelamento/recusa (impacta diretamente na competição)
+            // -10 pts por cancelamento/recusa
             $pontos = ($totPres * 15) + ($totConf * 10) - ($totCanc * 10);
             if ($pontos < 0) $pontos = 0;
-
-            $nomeExibicao = !empty($v->nickname) ? $v->nickname : (explode(' ', trim($v->nome))[0] . ' ' . (explode(' ', trim($v->nome))[count(explode(' ', trim($v->nome))) - 1] ?? ''));
-
-            $defaultAvatar = 'https://ui-avatars.com/api/?name=' . urlencode($v->nome) . '&background=2563eb&color=fff&size=80&bold=true';
 
             $leaderboard[] = (object)[
                 'id_voluntario'      => $idV,
@@ -811,7 +915,8 @@ class VoluntarioModel extends Model
                 'presencas'          => $totPres,
                 'taxa_assiduidade'   => $taxaAssiduidade,
                 'pontos'             => $pontos,
-                'is_current_user'    => ($idV === (int)$idVoluntarioLogado)
+                'classificado'       => true,
+                'is_current_user'    => $isMe
             ];
         }
 
@@ -827,8 +932,7 @@ class VoluntarioModel extends Model
         });
 
         // Atribui posições
-        $meuRank = null;
-        $totalVol = count($leaderboard);
+        $totalClassificados = count($leaderboard);
 
         foreach ($leaderboard as $idx => &$item) {
             $item->posicao = $idx + 1;
@@ -837,18 +941,21 @@ class VoluntarioModel extends Model
             }
         }
 
-        $percentil = 100;
-        if ($meuRank && $totalVol > 0) {
-            $percentil = round(($meuRank->posicao / $totalVol) * 100);
+        $percentil = null;
+        if ($meuRank && !empty($meuRank->posicao) && $totalClassificados > 0) {
+            $percentil = round(($meuRank->posicao / $totalClassificados) * 100);
         }
 
         return (object)[
-            'periodo'       => $periodo,
-            'labelPeriodo'  => $labelPeriodo,
-            'leaderboard'   => $leaderboard,
-            'meuRank'       => $meuRank,
-            'totalAtivos'   => $totalVol,
-            'percentil'     => $percentil
+            'periodo'            => $periodo,
+            'labelPeriodo'       => $labelPeriodo,
+            'id_departamento'    => $id_departamento ? (int)$id_departamento : null,
+            'departamento'       => $departamentoInfo,
+            'leaderboard'        => $leaderboard,
+            'meuRank'            => $meuRank,
+            'totalClassificados' => $totalClassificados,
+            'totalAtivos'        => $totalClassificados,
+            'percentil'          => $percentil
         ];
     }
 

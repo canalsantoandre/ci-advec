@@ -37,7 +37,7 @@
     <!-- Right Profile & Logout -->
     <div class="d-flex align-items-center gap-2">
       <a href="<?= base_url('portal/perfil') ?>" class="d-flex align-items-center text-decoration-none" title="Editar Meu Perfil">
-        <img src="<?= esc($fotoSrc) ?>" class="rounded-circle border shadow-xs" style="width: 36px; height: 36px; object-fit: cover;" onerror="this.onerror=null;this.src='<?= $defaultAvatar ?>';">
+        <img src="<?= esc($fotoSrc) ?>" class="rounded-circle border shadow-xs avatar-nav-img" style="width: 36px; height: 36px; object-fit: cover;" onerror="this.onerror=null;this.src='<?= $defaultAvatar ?>';">
       </a>
       <a href="<?= base_url('portal/logout') ?>" class="btn btn-outline-danger btn-sm rounded-pill px-2 py-1" title="Sair do Portal">
         <i class="bi bi-box-arrow-right"></i> <span class="d-none d-sm-inline ms-1">Sair</span>

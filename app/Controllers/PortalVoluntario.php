@@ -443,7 +443,7 @@ class PortalVoluntario extends BaseController
     }
 
     /**
-     * Tela de Métricas, Assiduidade & Ranking dos Voluntários (Gamificação Premium)
+     * Tela de Métricas, Assiduidade & Ranking dos Voluntários por Departamento (Gamificação Justa)
      */
     public function metricas()
     {
@@ -453,18 +453,53 @@ class PortalVoluntario extends BaseController
         }
 
         $periodo = $this->request->getGet('periodo') ?: 'mes_atual';
+        $id_dep_param = $this->request->getGet('id_departamento');
 
         $voluntarioModel = new VoluntarioModel();
-        $metricas        = $voluntarioModel->getEstatisticasVoluntario($voluntario->id_voluntario, $periodo);
-        $rankingData     = $voluntarioModel->getRankingVoluntariosPortal($voluntario->id_voluntario, $periodo);
+        $meusDepartamentos = $voluntarioModel->getDepartamentosDoVoluntario($voluntario->id_voluntario);
+
+        // Se veio explicitamente 'todos', define como null (visão geral consolidada)
+        if ($id_dep_param === 'todos') {
+            $id_departamento_selecionado = null;
+        } elseif ($id_dep_param !== null && $id_dep_param !== '' && is_numeric($id_dep_param)) {
+            $id_departamento_selecionado = (int)$id_dep_param;
+        } else {
+            // Padrão: Sempre abrir no primeiro departamento do voluntário para separar as métricas justamente
+            if (!empty($meusDepartamentos)) {
+                $id_departamento_selecionado = (int)$meusDepartamentos[0]->id_departamento;
+            } else {
+                $id_departamento_selecionado = null;
+            }
+        }
+
+        // Recupera dados do departamento selecionado se houver
+        $departamentoAtual = null;
+        if ($id_departamento_selecionado) {
+            foreach ($meusDepartamentos as $dep) {
+                if ((int)$dep->id_departamento === $id_departamento_selecionado) {
+                    $departamentoAtual = $dep;
+                    break;
+                }
+            }
+            if (!$departamentoAtual) {
+                $depModel = new \App\Models\DepartamentoModel();
+                $departamentoAtual = $depModel->find($id_departamento_selecionado);
+            }
+        }
+
+        $metricas    = $voluntarioModel->getEstatisticasVoluntario($voluntario->id_voluntario, $periodo, $id_departamento_selecionado);
+        $rankingData = $voluntarioModel->getRankingVoluntariosPortal($voluntario->id_voluntario, $periodo, $id_departamento_selecionado);
 
         $data = [
-            'title'        => 'Métricas & Ranking - Portal do Voluntário',
-            'voluntario'   => $voluntario,
-            'metricas'     => $metricas,
-            'rankingData'  => $rankingData,
-            'periodo'      => $periodo,
-            'menuAtivo'    => 'metricas'
+            'title'                       => 'Métricas & Ranking - Portal do Voluntário',
+            'voluntario'                  => $voluntario,
+            'meusDepartamentos'           => $meusDepartamentos,
+            'id_departamento_selecionado' => $id_departamento_selecionado,
+            'departamentoAtual'           => $departamentoAtual,
+            'metricas'                    => $metricas,
+            'rankingData'                 => $rankingData,
+            'periodo'                     => $periodo,
+            'menuAtivo'                   => 'metricas'
         ];
 
         return view('portal_voluntario/metricas', $data);

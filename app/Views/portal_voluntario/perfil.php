@@ -110,13 +110,14 @@
     <!-- Card Principal: Perfil Header -->
     <div class="profile-card shadow-sm p-4 mb-3 text-center position-relative">
       
-      <!-- Avatar & Upload -->
+      <!-- Avatar & Upload Automático -->
       <div class="avatar-wrapper mb-3">
         <img src="<?= esc($fotoSrc) ?>" id="avatarPreview" class="avatar-img" alt="Foto do Voluntário" onerror="this.onerror=null;this.src='<?= $defaultAvatar ?>';">
-        <label for="foto_file" class="avatar-edit-badge" title="Alterar Foto">
-          <i class="bi bi-camera-fill fs-6"></i>
+        <label for="foto_file" class="avatar-edit-badge" title="Alterar Foto" id="labelFotoFile">
+          <i class="bi bi-camera-fill fs-6" id="avatarCameraIcon"></i>
+          <div class="spinner-border spinner-border-sm text-white d-none" id="avatarSpinner" role="status" style="width: 1rem; height: 1rem;"></div>
         </label>
-        <input type="file" id="foto_file" name="foto_file" class="d-none" accept="image/*" onchange="previewFoto(this)">
+        <input type="file" id="foto_file" name="foto_file" class="d-none" accept="image/*" onchange="uploadFotoAutomatico(this)">
       </div>
 
       <h4 class="fw-bold mb-0 text-body"><?= esc($voluntario->nome) ?></h4>
@@ -136,8 +137,18 @@
           <?php if (!empty($voluntario->areas)) { ?>
             <?php foreach ($voluntario->areas as $va) { 
               $cDep = !empty($va->cor_identificacao) ? $va->cor_identificacao : '#2563eb';
+              $hex = ltrim((string)$cDep, '#');
+              if (strlen($hex) === 3) $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+              $txtDep = '#ffffff';
+              if (strlen($hex) === 6) {
+                  $r = hexdec(substr($hex, 0, 2));
+                  $g = hexdec(substr($hex, 2, 2));
+                  $b = hexdec(substr($hex, 4, 2));
+                  $yiq = (($r * 299) + ($g * 587) + ($b * 114)) / 1000;
+                  $txtDep = ($yiq >= 150) ? '#0f172a' : '#ffffff';
+              }
             ?>
-              <span class="badge rounded-pill px-3 py-2 text-white small shadow-xs" style="background-color: <?= esc($cDep) ?>;">
+              <span class="badge rounded-pill px-3 py-2 small shadow-xs fw-semibold" style="background-color: <?= esc($cDep) ?> !important; color: <?= esc($txtDep) ?> !important; border: 1px solid rgba(0,0,0,0.1);">
                 <?= esc($va->nome_departamento) ?>: <strong><?= esc($va->nome_area) ?></strong>
               </span>
             <?php } ?>
@@ -480,14 +491,56 @@
       bsToast.show();
     }
 
-    function previewFoto(input) {
-      if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          document.getElementById('avatarPreview').src = e.target.result;
-        };
-        reader.readAsDataURL(input.files[0]);
-      }
+    function uploadFotoAutomatico(input) {
+      if (!input.files || !input.files[0]) return;
+
+      const file = input.files[0];
+      const avatarImg = document.getElementById('avatarPreview');
+      const cameraIcon = document.getElementById('avatarCameraIcon');
+      const spinner = document.getElementById('avatarSpinner');
+
+      // 1. Preview imediato na tela para feedback instantâneo
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        if (avatarImg) avatarImg.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+
+      // 2. Indicador visual de salvamento no badge
+      if (cameraIcon) cameraIcon.classList.add('d-none');
+      if (spinner) spinner.classList.remove('d-none');
+
+      // 3. Envio automático via AJAX para salvar imediatamente
+      const formData = new FormData();
+      formData.append('foto_file', file);
+
+      fetch('<?= base_url('portal/uploadFoto') ?>', {
+        method: 'POST',
+        body: formData
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (cameraIcon) cameraIcon.classList.remove('d-none');
+        if (spinner) spinner.classList.add('d-none');
+
+        if (data.status === 'success') {
+          showToast('success', data.message || 'Foto atualizada e salva com sucesso!');
+          if (data.foto_url) {
+            if (avatarImg) avatarImg.src = data.foto_url;
+            // Atualiza também avatar na barra superior
+            document.querySelectorAll('.avatar-nav-img').forEach(img => {
+              img.src = data.foto_url;
+            });
+          }
+        } else {
+          showToast('error', data.message || 'Erro ao salvar a nova foto.');
+        }
+      })
+      .catch(err => {
+        if (cameraIcon) cameraIcon.classList.remove('d-none');
+        if (spinner) spinner.classList.add('d-none');
+        showToast('error', 'Falha na conexão ao salvar a foto.');
+      });
     }
 
     function adicionarRedeSocial() {

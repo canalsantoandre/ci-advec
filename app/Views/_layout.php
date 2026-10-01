@@ -9,7 +9,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="title" content="ADVEC - Sistema de Gestão" />
   <meta name="author" content="ADVEC" />
-  <meta name="description" content="Sistema de Gestão ADVEC" />
+  <meta name="base-url" content="<?= base_url() ?>" />
+  <script>
+    window.baseUrl = '<?= rtrim(base_url(), '/') ?>';
+  </script>
   <!--end::Primary Meta Tags-->
 
   <!--begin::Fonts-->

@@ -182,7 +182,21 @@ $routes->group('sysmodulo', static function ($routes) {
     $routes->get('apagar/(:num)', 'Sysmodulo::apagar/$1', ['filter'=>'auth']);
     $routes->post('reordenar', 'Sysmodulo::reordenar', ['filter'=>'auth']);
     $routes->post('salvarCategoria', 'Sysmodulo::salvarCategoria', ['filter'=>'auth']);
-    $routes->get('apagarCategoria/(:num)', 'Sysmodulo::apagarCategoria/$1', ['filter'=>'auth']);
+});
+
+/* WHATSAPP (EVOLUTION API - GESTÃO DE ACESSO SYSADM) */
+$routes->get('whatsapp', 'Whatsapp::index', ['filter' => 'auth']);
+$routes->group('whatsapp', ['filter' => 'auth'], static function ($routes) {
+    $routes->match(['GET', 'POST'], 'index', 'Whatsapp::index');
+    $routes->post('create', 'Whatsapp::create');
+    $routes->get('status/(:num)', 'Whatsapp::status/$1');
+    $routes->get('qrcode/(:num)', 'Whatsapp::qrcode/$1');
+    $routes->post('restart/(:num)', 'Whatsapp::restart/$1');
+    $routes->post('logout/(:num)', 'Whatsapp::disconnect/$1');
+    $routes->post('profile/(:num)', 'Whatsapp::profile/$1');
+    $routes->post('send/(:num)', 'Whatsapp::send/$1');
+    $routes->delete('delete/(:num)', 'Whatsapp::delete/$1');
+    $routes->get('export/(:num)', 'Whatsapp::export/$1');
 });
 
 /* GERAL UTILS */
