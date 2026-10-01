@@ -60,6 +60,40 @@ class EscalaVoluntarioModel extends Model
     }
 
     /**
+     * Verifica se o voluntário já possui escala confirmada/ativa em outro departamento para a mesma data e culto
+     */
+    public function getConflitoOutroDepartamento(int $id_voluntario, string $data_culto, int $id_culto_padrao, int $id_departamento_atual)
+    {
+        if ($id_voluntario <= 0 || empty($data_culto) || $id_culto_padrao <= 0) {
+            return null;
+        }
+
+        $db = db_connect();
+        $builder = $db->table('tb_escala_voluntario as ev');
+        $builder->select('
+            ev.*,
+            d.nome as nome_departamento,
+            a.nome_area
+        ');
+        $builder->join('tb_departamento as d', 'd.id_departamento = ev.id_departamento', 'inner');
+        $builder->join('tb_departamento_area as a', 'a.id_area = ev.id_area', 'inner');
+        $builder->where('ev.id_voluntario', $id_voluntario);
+        $builder->where('ev.data_culto', $data_culto);
+        $builder->where('ev.id_culto_padrao', $id_culto_padrao);
+        $builder->where('ev.id_departamento !=', $id_departamento_atual);
+        $builder->groupStart()
+                ->where('ev.status_confirmacao !=', 'RECUSADO')
+                ->orWhere('ev.status_confirmacao IS NULL')
+                ->groupEnd();
+        $builder->groupStart()
+                ->where('ev.status_presenca !=', 0)
+                ->orWhere('ev.status_presenca IS NULL')
+                ->groupEnd();
+
+        return $builder->get()->getFirstRow('object');
+    }
+
+    /**
      * Retorna todas as escalas de um período para um departamento
      */
     public function getEscalasMesPorDepartamento($id_departamento, $dataInicio, $dataFim)

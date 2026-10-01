@@ -270,6 +270,15 @@ class Escala extends BaseController
                 $voluntario = $voluntarioModel->find($id_voluntario);
                 if (!$voluntario) continue;
 
+                // Validação de Conflito de Agenda em Outro Departamento no mesmo culto/data
+                $conflito = $escalaModel->getConflitoOutroDepartamento($id_voluntario, $data_culto, $id_culto_padrao, $id_departamento);
+                if ($conflito) {
+                    $deptoUpper = strtoupper(trim($conflito->nome_departamento));
+                    $areaUpper  = strtoupper(trim($conflito->nome_area));
+                    $erros[] = "O voluntário '{$voluntario->nome}' não pode ser escalado, pois já tem uma agenda confirmada para este dia/culto:<br>• {$deptoUpper} {$areaUpper}";
+                    continue;
+                }
+
                 // Validação de Limite Máximo Mensal de Escalas
                 if (!empty($voluntario->max_escalas_mes) && (int)$voluntario->max_escalas_mes > 0) {
                     $maxPermitido = (int)$voluntario->max_escalas_mes;
@@ -393,9 +402,10 @@ class Escala extends BaseController
         $anoCulto = !empty($data_culto) ? (int)date('Y', strtotime($data_culto)) : (int)date('Y');
         $mesCulto = !empty($data_culto) ? (int)date('m', strtotime($data_culto)) : (int)date('m');
 
-        $voluntarioAreaModel  = new VoluntarioAreaModel();
-        $voluntarioModel      = new VoluntarioModel();
-        $voluntarioCultoModel = new VoluntarioCultoModel();
+        $voluntarioAreaModel   = new VoluntarioAreaModel();
+        $voluntarioModel       = new VoluntarioModel();
+        $voluntarioCultoModel  = new VoluntarioCultoModel();
+        $escalaVoluntarioModel = new EscalaVoluntarioModel();
         
         // Voluntários com vínculo direto na área
         $vinculadosArea = $voluntarioAreaModel->getVoluntariosPorDepartamentoEArea($id_departamento, $id_area, true);
@@ -410,8 +420,8 @@ class Escala extends BaseController
             }
         }
 
-        // Calcula total de escalas do mês, limite e disponibilidade do culto para cada voluntário
-        $enriquecerVoluntario = function(&$lista) use ($voluntarioModel, $voluntarioCultoModel, $anoCulto, $mesCulto, $id_culto_padrao) {
+        // Calcula total de escalas do mês, limite, disponibilidade do culto e conflito de agenda em outro departamento
+        $enriquecerVoluntario = function(&$lista) use ($voluntarioModel, $voluntarioCultoModel, $escalaVoluntarioModel, $anoCulto, $mesCulto, $id_culto_padrao, $data_culto, $id_departamento) {
             foreach ($lista as &$v) {
                 $totalNoMes = $voluntarioModel->countEscalasMes($v->id_voluntario, $anoCulto, $mesCulto);
                 $maxMes = isset($v->max_escalas_mes) ? (int)$v->max_escalas_mes : 0;
@@ -431,6 +441,15 @@ class Escala extends BaseController
                     $v->tipo_disponibilidade  = 'TOTAL';
                     $v->label_disponibilidade = 'Disponível';
                 }
+
+                // Conflito de agenda em outro departamento para esta mesma data e culto
+                $conflito = null;
+                if (!empty($data_culto) && $id_culto_padrao > 0) {
+                    $conflito = $escalaVoluntarioModel->getConflitoOutroDepartamento((int)$v->id_voluntario, (string)$data_culto, (int)$id_culto_padrao, (int)$id_departamento);
+                }
+                $v->tem_conflito_agenda   = !empty($conflito);
+                $v->conflito_departamento = $conflito ? strtoupper(trim($conflito->nome_departamento)) : null;
+                $v->conflito_subarea      = $conflito ? strtoupper(trim($conflito->nome_area)) : null;
             }
         };
 

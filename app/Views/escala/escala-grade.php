@@ -1160,15 +1160,17 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
       // Badge Nível de Conhecimento (Padrão da tela de voluntários)
       const badgeNivelMap = {
         'APRENDIZ': 'bg-secondary-subtle text-secondary border border-secondary-subtle',
-        'JUNIOR':   'bg-info-subtle text-info border border-info-subtle',
-        'PLENO':    'bg-success-subtle text-success border border-success-subtle',
-        'SENIOR':   'bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-bold'
+        'JUNIOR': 'bg-info-subtle text-info border border-info-subtle',
+        'PLENO': 'bg-success-subtle text-success border border-success-subtle',
+        'SENIOR': 'bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-bold'
       };
       const badgeNivelClass = badgeNivelMap[nivel] || 'bg-light text-dark';
 
       // Disponibilidade tag (Topo)
       let dispTagHtml = '';
-      if (v.tipo_disponibilidade === 'TOTAL') {
+      if (v.tem_conflito_agenda) {
+        dispTagHtml = `<span class="badge-stacked-disp bg-danger text-white fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Conflito</span>`;
+      } else if (v.tipo_disponibilidade === 'TOTAL') {
         dispTagHtml = `<span class="badge-stacked-disp bg-primary text-white"><i class="bi bi-snow"></i> Total Disp.</span>`;
       } else if (v.disponivel_culto) {
         dispTagHtml = `<span class="badge-stacked-disp bg-success text-white"><i class="bi bi-check2"></i> Disponível</span>`;
@@ -1181,21 +1183,21 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
       if (v.atingiu_limite) {
         limiteTagHtml = `<span class="badge-stacked-limit bg-danger-subtle text-danger border-danger-subtle fw-bold"><i class="bi bi-exclamation-circle me-1"></i>${v.total_escalas_mes}/${v.max_escalas_mes} Limite</span>`;
       } else if (v.max_escalas_mes > 0) {
-        limiteTagHtml = `<span class="badge-stacked-limit">${v.total_escalas_mes}/${v.max_escalas_mes} Monthly</span>`;
+        limiteTagHtml = `<span class="badge-stacked-limit">${v.total_escalas_mes}/${v.max_escalas_mes} por mês</span>`;
       } else {
-        limiteTagHtml = `<span class="badge-stacked-limit">${v.total_escalas_mes} Monthly</span>`;
+        limiteTagHtml = `<span class="badge-stacked-limit">${v.total_escalas_mes} por mês</span>`;
       }
 
       const itemClass = isSelected ?
         'vol-card-selected' :
-        (v.atingiu_limite ? 'border-danger-subtle bg-danger-subtle opacity-75' : '');
+        (v.tem_conflito_agenda ? 'border-danger-subtle bg-danger-subtle opacity-75' : (v.atingiu_limite ? 'border-danger-subtle bg-danger-subtle opacity-75' : ''));
 
       const jsonVolStr = JSON.stringify(v).replace(/"/g, '&quot;');
 
       html += `
         <div class="vol-card-item d-flex align-items-center justify-content-between ${itemClass}" 
-             style="cursor: ${v.atingiu_limite && !isSelected ? 'not-allowed' : 'pointer'};"
-             onclick="clickVoluntarioItem(${v.id_voluntario}, ${v.atingiu_limite ? 'true' : 'false'}, ${jsonVolStr})">
+             style="cursor: ${(v.tem_conflito_agenda || v.atingiu_limite) && !isSelected ? 'not-allowed' : 'pointer'};"
+             onclick="clickVoluntarioItem(${v.id_voluntario}, ${v.atingiu_limite ? 'true' : 'false'}, ${v.tem_conflito_agenda ? 'true' : 'false'}, ${jsonVolStr})">
           
           <!-- Lado Esquerdo: Checkbox + Avatar + Informações -->
           <div class="d-flex align-items-center gap-2.5 flex-grow-1 min-w-0 me-2">
@@ -1238,6 +1240,13 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
                   </span>
                 `}
               </div>
+
+              ${v.tem_conflito_agenda ? `
+                <div class="d-flex align-items-center gap-1 text-danger fw-semibold mt-0.5" style="font-size: 0.70rem; line-height: 1.1;">
+                  <i class="bi bi-calendar-x-fill text-danger"></i>
+                  <span>Já escalado em: <strong>${escapeHtml(v.conflito_departamento)} ${escapeHtml(v.conflito_subarea)}</strong></span>
+                </div>
+              ` : ''}
             </div>
           </div>
 
@@ -1262,10 +1271,21 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     }
   }
 
-  function clickVoluntarioItem(id_voluntario, atingiuLimite, voluntarioObj) {
+  function clickVoluntarioItem(id_voluntario, atingiuLimite, temConflitoAgenda, voluntarioObj) {
     if (voluntariosSelecionadosModal[id_voluntario]) {
       delete voluntariosSelecionadosModal[id_voluntario];
     } else {
+      if (temConflitoAgenda) {
+        const depto = (voluntarioObj.conflito_departamento || '').toUpperCase();
+        const area = (voluntarioObj.conflito_subarea || '').toUpperCase();
+        const msg = `Este voluntário não pode ser escalado, pois já tem uma agenda confirmada para este dia/culto:<br>• <strong>${escapeHtml(depto)} ${escapeHtml(area)}</strong>`;
+        if (typeof USToast !== 'undefined' && USToast.show) {
+          USToast.show('warning', 'Conflito de Agenda', msg);
+        } else if (typeof usShowToast === 'function') {
+          usShowToast('warning', 'Conflito de Agenda', msg);
+        }
+        return;
+      }
       if (atingiuLimite) {
         if (typeof USToast !== 'undefined' && USToast.show) {
           USToast.show('warning', 'Limite Atingido', `Este voluntário já atingiu o limite de ${voluntarioObj.max_escalas_mes} escalas neste mês.`);
