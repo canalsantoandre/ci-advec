@@ -53,19 +53,15 @@ class Whatsapp extends BaseController
         }
         $user = $userData['obj_user'];
         $perfilModel = new PerfilModel();
-        $perfil = $perfilModel->find($user->id_perfil);
-        if ($perfil && (intval($user->id_usuario) === 1 || strtoupper(trim($perfil->nome_perfil)) === 'SYSADM')) {
+        $perfil = $perfilModel->find($user->id_perfil ?? 0);
+        if ($perfil && (intval($user->id_usuario) === 1 || intval($user->id_perfil) === 1 || strtoupper(trim($perfil->nome_perfil)) === 'SYSADM')) {
             return true;
         }
         return false;
     }
 
-    private function validateAuth(): array
+    private function validateAuth(string $requiredAction = 'read'): array
     {
-        if (!$this->isAdmin()) {
-            throw new Exception("Acesso restrito ao perfil SysAdm.", 403);
-        }
-
         $session = session();
         $userData = $session->get('dsh_usuario');
         $user = $userData['obj_user'] ?? null;
@@ -74,10 +70,27 @@ class Whatsapp extends BaseController
             throw new Exception("Sua sessão expirou ou você não está autorizado.", 401);
         }
 
-        return [
-            'usuario_id' => (int) ($user->id_usuario ?? 1),
-            'empresa_id' => 1
-        ];
+        // Se for administrador SysAdm, permissão total
+        if ($this->isAdmin()) {
+            return [
+                'usuario_id' => (int) ($user->id_usuario ?? 1),
+                'empresa_id' => 1
+            ];
+        }
+
+        // Valida se o usuário tem permissão para o módulo de WhatsApp
+        $sessionModel = new SessionModel();
+        $sessData = $sessionModel->retornaSessao([], 'whatsapp/');
+        $actionObj = $sessData['sys_action'] ?? null;
+
+        if (!empty($actionObj->read) || !empty($actionObj->create) || !empty($actionObj->update)) {
+            return [
+                'usuario_id' => (int) ($user->id_usuario ?? 1),
+                'empresa_id' => 1
+            ];
+        }
+
+        throw new Exception("Você não possui permissão para acessar o módulo de WhatsApp.", 403);
     }
 
     private function jsonRespond(array $data, int $status = 200)
@@ -110,9 +123,9 @@ class Whatsapp extends BaseController
      */
     public function index()
     {
-        if (!$this->isAdmin()) {
+        /*if (!$this->isAdmin()) {
             return redirect()->to('accessdeny');
-        }
+        }*/
 
         $data = $this->session();
         if (empty($data['sys_action']->read)) {

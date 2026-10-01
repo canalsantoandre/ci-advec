@@ -4,6 +4,8 @@ namespace App\Controllers;
 
 use App\Models\DepartamentoModel;
 use App\Models\DepartamentoAreaModel;
+use App\Models\DepartamentoGestorModel;
+use App\Models\UsuarioModel;
 use App\Models\SessionModel;
 
 class Departamento extends BaseController
@@ -43,8 +45,12 @@ class Departamento extends BaseController
             return redirect()->to('accessdeny');
         }
 
+        $usuarioModel = new UsuarioModel();
+
         $data['departamento'] = null;
         $data['areas']        = [];
+        $data['usuarios']     = $usuarioModel->where('status_usuario', 1)->orderBy('nome', 'ASC')->findAll();
+        $data['gestoresIds']  = [];
 
         $data['content_view'] = view('departamento/departamento-form', $data);
         return view('_layout', $data);
@@ -69,11 +75,16 @@ class Departamento extends BaseController
             return redirect()->to('departamento');
         }
 
-        $departamentoAreaModel = new DepartamentoAreaModel();
-        $data['departamento']  = $departamento;
-        $data['areas']         = $departamentoAreaModel->getAreasPorDepartamento($id_departamento);
+        $departamentoAreaModel   = new DepartamentoAreaModel();
+        $departamentoGestorModel = new DepartamentoGestorModel();
+        $usuarioModel            = new UsuarioModel();
 
-        $data['content_view']  = view('departamento/departamento-form', $data);
+        $data['departamento'] = $departamento;
+        $data['areas']        = $departamentoAreaModel->getAreasPorDepartamento($id_departamento);
+        $data['usuarios']     = $usuarioModel->where('status_usuario', 1)->orderBy('nome', 'ASC')->findAll();
+        $data['gestoresIds']  = $departamentoGestorModel->getIdsGestoresPorDepartamento($id_departamento);
+
+        $data['content_view'] = view('departamento/departamento-form', $data);
         return view('_layout', $data);
     }
 
@@ -144,14 +155,19 @@ class Departamento extends BaseController
 
         if ($id_departamento > 0) {
             $departamentoModel->update($id_departamento, $dados);
-            session()->setFlashdata('success', 'Departamento atualizado com sucesso!');
+            $msg = 'Departamento atualizado com sucesso!';
         } else {
             $id_departamento = $departamentoModel->insert($dados);
-            session()->setFlashdata('success', 'Departamento cadastrado com sucesso! Agora você pode adicionar as sub-áreas.');
-            return redirect()->to("departamento/editar/{$id_departamento}");
+            $msg = 'Departamento cadastrado com sucesso!';
         }
 
-        return redirect()->to('departamento');
+        // Sincroniza Gestores do Departamento (usuários com permissão de gerenciar este departamento)
+        $gestores = $this->request->getPost('gestores') ?: [];
+        $departamentoGestorModel = new DepartamentoGestorModel();
+        $departamentoGestorModel->sincronizarGestores($id_departamento, (array)$gestores);
+
+        session()->setFlashdata('success', $msg);
+        return redirect()->to("departamento/editar/{$id_departamento}");
     }
 
     /**

@@ -67,6 +67,16 @@ $routes->group('voluntario', static function ($routes) {
     $routes->get('getJustificativas/(:num)', 'Voluntario::getJustificativas/$1', ['filter' => 'auth']);
     $routes->get('getEstatisticasPeriodo', 'Voluntario::getEstatisticasPeriodo', ['filter' => 'auth']);
     $routes->post('resetSenha', 'Voluntario::resetSenha', ['filter' => 'auth']);
+    $routes->get('verificarTelefone', 'Voluntario::verificarTelefone', ['filter' => 'auth']);
+    $routes->post('vincularRapido', 'Voluntario::vincularRapido', ['filter' => 'auth']);
+    $routes->get('getSubareasPorDepartamento', 'Voluntario::getSubareasPorDepartamento', ['filter' => 'auth']);
+});
+
+/* API VOLUNTÁRIOS */
+$routes->group('api/voluntarios', ['filter' => 'auth'], static function ($routes) {
+    $routes->get('verificar-telefone', 'Voluntario::verificarTelefone');
+    $routes->post('vincular-rapido', 'Voluntario::vincularRapido');
+    $routes->get('getSubareasPorDepartamento', 'Voluntario::getSubareasPorDepartamento');
 });
 
 /* PORTAL DO VOLUNTÁRIO (ACESSO EXCLUSIVO) */

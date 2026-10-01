@@ -55,25 +55,36 @@ class VoluntarioAreaModel extends Model
     /**
      * Sincroniza vínculos de áreas e departamentos do voluntário
      * $areaIds: array de IDs de áreas selecionadas
+     * $departamentosPermitidos: se informado (array de IDs), remove e sincroniza apenas os departamentos sob gestão do usuário
      */
-    public function sincronizarAreas($id_voluntario, array $areaIds)
+    public function sincronizarAreas($id_voluntario, array $areaIds, ?array $departamentosPermitidos = null)
     {
         $id_voluntario = (int)$id_voluntario;
         $db = db_connect();
 
-        // Remove vínculos existentes
-        $db->table($this->table)->where('id_voluntario', $id_voluntario)->delete();
+        $builder = $db->table($this->table)->where('id_voluntario', $id_voluntario);
+        if ($departamentosPermitidos !== null) {
+            if (empty($departamentosPermitidos)) {
+                return 0;
+            }
+            $builder->whereIn('id_departamento', $departamentosPermitidos);
+        }
+        $builder->delete();
 
         if (empty($areaIds)) {
             return 0;
         }
 
         // Busca o id_departamento correspondente para cada id_area selecionado
-        $areasInfo = $db->table('tb_departamento_area')
+        $areaQuery = $db->table('tb_departamento_area')
             ->select('id_area, id_departamento')
-            ->whereIn('id_area', $areaIds)
-            ->get()
-            ->getResult('object');
+            ->whereIn('id_area', $areaIds);
+
+        if ($departamentosPermitidos !== null) {
+            $areaQuery->whereIn('id_departamento', $departamentosPermitidos);
+        }
+
+        $areasInfo = $areaQuery->get()->getResult('object');
 
         $inseridos = 0;
         foreach ($areasInfo as $item) {
@@ -86,6 +97,29 @@ class VoluntarioAreaModel extends Model
         }
 
         return $inseridos;
+    }
+
+    /**
+     * Vinculação Rápida de um voluntário a uma sub-área sem duplicação
+     */
+    public function vincularVoluntarioSubarea(int $id_voluntario, int $id_departamento, int $id_area)
+    {
+        $db = db_connect();
+        $exists = $db->table($this->table)
+            ->where('id_voluntario', $id_voluntario)
+            ->where('id_departamento', $id_departamento)
+            ->where('id_area', $id_area)
+            ->countAllResults();
+
+        if ($exists === 0) {
+            $db->table($this->table)->insert([
+                'id_voluntario'   => $id_voluntario,
+                'id_departamento' => $id_departamento,
+                'id_area'         => $id_area
+            ]);
+            return true;
+        }
+        return false;
     }
 
     /**

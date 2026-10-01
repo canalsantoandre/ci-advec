@@ -8,6 +8,7 @@ use App\Models\VoluntarioCultoModel;
 use App\Models\CultoPadraoModel;
 use App\Models\DepartamentoModel;
 use App\Models\DepartamentoAreaModel;
+use App\Models\DepartamentoGestorModel;
 use App\Models\SessionModel;
 
 class Voluntario extends BaseController
@@ -30,18 +31,30 @@ class Voluntario extends BaseController
             return redirect()->to('accessdeny');
         }
 
+        $departamentoGestorModel    = new DepartamentoGestorModel();
+        $departamentosPermitidos    = $departamentoGestorModel->getDepartamentosPermitidosPorUsuario($data['usuario']);
+        $departamentosPermitidosIds = array_column($departamentosPermitidos, 'id_departamento');
+
         $filtros = [
             'id_departamento' => $this->request->getGet('id_departamento'),
             'status'          => $this->request->getGet('status'),
             'busca'           => $this->request->getGet('busca')
         ];
 
+        if (!empty($filtros['id_departamento'])) {
+            if (!in_array((int)$filtros['id_departamento'], $departamentosPermitidosIds)) {
+                $filtros['id_departamento'] = !empty($departamentosPermitidosIds) ? $departamentosPermitidosIds[0] : -1;
+            }
+        } else {
+            $filtros['departamentos_permitidos'] = $departamentosPermitidosIds;
+        }
+
         $voluntarioModel = new VoluntarioModel();
         $data['voluntarios'] = $voluntarioModel->listaVoluntarios($filtros);
 
-        $departamentoModel = new DepartamentoModel();
-        $data['departamentos'] = $departamentoModel->getDepartamentosAtivos();
-        $data['filtros']       = $filtros;
+        $data['departamentos']              = $departamentosPermitidos;
+        $data['departamentosPermitidosIds'] = $departamentosPermitidosIds;
+        $data['filtros']                    = $filtros;
 
         $data['content_view'] = view('voluntario/voluntario-list', $data);
         return view('_layout', $data);
@@ -57,16 +70,23 @@ class Voluntario extends BaseController
             return redirect()->to('accessdeny');
         }
 
-        $areaModel        = new DepartamentoAreaModel();
-        $cultoPadraoModel = new CultoPadraoModel();
+        $areaModel               = new DepartamentoAreaModel();
+        $cultoPadraoModel        = new CultoPadraoModel();
+        $departamentoGestorModel = new DepartamentoGestorModel();
 
-        $data['departamentosComAreas'] = $areaModel->getTodasAreasAgrupadas();
-        $data['cultosPadrao']          = $cultoPadraoModel->getCultosPadraoAtivos();
-        $data['cultosSelecionadosIds'] = [];
-        $data['voluntario']            = null;
-        $data['areasSelecionadasIds']  = [];
-        $data['redesSociais']          = [];
-        $data['stats']                 = null;
+        $departamentosPermitidos    = $departamentoGestorModel->getDepartamentosPermitidosPorUsuario($data['usuario']);
+        $todasAreasAgrupadas        = $areaModel->getTodasAreasAgrupadas();
+        $departamentosPermitidosIds = array_column($departamentosPermitidos, 'id_departamento');
+
+        $data['departamentosPermitidos']    = $departamentosPermitidos;
+        $data['departamentosPermitidosIds'] = $departamentosPermitidosIds;
+        $data['departamentosComAreas']      = $todasAreasAgrupadas;
+        $data['cultosPadrao']               = $cultoPadraoModel->getCultosPadraoAtivos();
+        $data['cultosSelecionadosIds']      = [];
+        $data['voluntario']                 = null;
+        $data['areasSelecionadasIds']       = [];
+        $data['redesSociais']               = [];
+        $data['stats']                      = null;
 
         $data['content_view'] = view('voluntario/voluntario-form', $data);
         return view('_layout', $data);
@@ -94,16 +114,23 @@ class Voluntario extends BaseController
             return redirect()->to('voluntario');
         }
 
-        $voluntarioAreaModel  = new VoluntarioAreaModel();
-        $voluntarioCultoModel = new VoluntarioCultoModel();
-        $areaModel            = new DepartamentoAreaModel();
-        $cultoPadraoModel     = new CultoPadraoModel();
+        $voluntarioAreaModel     = new VoluntarioAreaModel();
+        $voluntarioCultoModel    = new VoluntarioCultoModel();
+        $areaModel               = new DepartamentoAreaModel();
+        $cultoPadraoModel        = new CultoPadraoModel();
+        $departamentoGestorModel = new DepartamentoGestorModel();
 
-        $data['voluntario']            = $voluntario;
-        $data['areasSelecionadasIds']  = $voluntarioAreaModel->getIdsAreasDoVoluntario($voluntario->id_voluntario);
-        $data['cultosSelecionadosIds'] = $voluntarioCultoModel->getIdsCultosDoVoluntario($voluntario->id_voluntario);
-        $data['cultosPadrao']          = $cultoPadraoModel->getCultosPadraoAtivos();
-        $data['departamentosComAreas'] = $areaModel->getTodasAreasAgrupadas();
+        $departamentosPermitidos    = $departamentoGestorModel->getDepartamentosPermitidosPorUsuario($data['usuario']);
+        $todasAreasAgrupadas        = $areaModel->getTodasAreasAgrupadas();
+        $departamentosPermitidosIds = array_column($departamentosPermitidos, 'id_departamento');
+
+        $data['voluntario']                 = $voluntario;
+        $data['departamentosPermitidos']    = $departamentosPermitidos;
+        $data['departamentosPermitidosIds'] = $departamentosPermitidosIds;
+        $data['areasSelecionadasIds']       = $voluntarioAreaModel->getIdsAreasDoVoluntario($voluntario->id_voluntario);
+        $data['cultosSelecionadosIds']      = $voluntarioCultoModel->getIdsCultosDoVoluntario($voluntario->id_voluntario);
+        $data['cultosPadrao']               = $cultoPadraoModel->getCultosPadraoAtivos();
+        $data['departamentosComAreas']      = $todasAreasAgrupadas;
 
         // Decodifica redes sociais se houver
         $redes = [];
@@ -224,10 +251,13 @@ class Voluntario extends BaseController
             $msg = 'Voluntário cadastrado com sucesso!';
         }
 
-        // Sincroniza Áreas / Departamentos vinculados
+        // Sincroniza Áreas / Departamentos vinculados respeitando os departamentos permitidos ao gestor
         $areaIds = $this->request->getPost('areas') ?: [];
-        $voluntarioAreaModel = new VoluntarioAreaModel();
-        $voluntarioAreaModel->sincronizarAreas($id_voluntario, (array)$areaIds);
+        $voluntarioAreaModel     = new VoluntarioAreaModel();
+        $departamentoGestorModel = new DepartamentoGestorModel();
+        $departamentosPermitidos = $departamentoGestorModel->getDepartamentosIdsPorUsuario((int)$data['usuario']->id_usuario);
+
+        $voluntarioAreaModel->sincronizarAreas($id_voluntario, (array)$areaIds, $departamentosPermitidos);
 
         // Sincroniza Disponibilidade de Cultos (N:N)
         $cultoIds = $this->request->getPost('cultos') ?: [];
@@ -316,6 +346,10 @@ class Voluntario extends BaseController
             return redirect()->to('accessdeny');
         }
 
+        $departamentoGestorModel = new DepartamentoGestorModel();
+        $departamentosPermitidos = $departamentoGestorModel->getDepartamentosPermitidosPorUsuario($data['usuario']);
+        $departamentosPermitidosIds = array_column($departamentosPermitidos, 'id_departamento');
+
         $filtros = [
             'periodo'              => $this->request->getGet('periodo') ?: 'mes_atual',
             'data_inicio'          => $this->request->getGet('data_inicio'),
@@ -328,19 +362,25 @@ class Voluntario extends BaseController
             'ordem'                => $this->request->getGet('ordem') ?: 'cancelamentos_desc'
         ];
 
+        if (!empty($filtros['id_departamento'])) {
+            if (!in_array((int)$filtros['id_departamento'], $departamentosPermitidosIds)) {
+                $filtros['id_departamento'] = !empty($departamentosPermitidosIds) ? $departamentosPermitidosIds[0] : -1;
+            }
+        } else {
+            $filtros['departamentos_permitidos'] = $departamentosPermitidosIds;
+        }
+
         $voluntarioModel = new VoluntarioModel();
         $relatorio = $voluntarioModel->getRelatorioDesempenho($filtros);
-
-        $departamentoModel = new DepartamentoModel();
-        $departamentos = $departamentoModel->getDepartamentosAtivos();
 
         $areaModel = new DepartamentoAreaModel();
         $areas = $areaModel->getTodasAreasAgrupadas();
 
-        $data['relatorio']     = $relatorio;
-        $data['departamentos'] = $departamentos;
-        $data['areas']         = $areas;
-        $data['filtros']       = $filtros;
+        $data['relatorio']                  = $relatorio;
+        $data['departamentos']              = $departamentosPermitidos;
+        $data['departamentosPermitidosIds'] = $departamentosPermitidosIds;
+        $data['areas']                      = $areas;
+        $data['filtros']                    = $filtros;
 
         $data['content_view']  = view('voluntario/relatorio-desempenho', $data);
         return view('_layout', $data);
@@ -413,4 +453,129 @@ class Voluntario extends BaseController
 
         return $this->response->setJSON(['status' => 'error', 'message' => 'Falha ao redefinir a senha do voluntário.']);
     }
+
+    /**
+     * AJAX: Verifica se o voluntário já existe no sistema pelo número de telefone
+     * GET /voluntario/verificarTelefone ou GET /api/voluntarios/verificar-telefone
+     */
+    public function verificarTelefone()
+    {
+        $telefone = $this->request->getGet('numero') 
+            ?: $this->request->getGet('telefone') 
+            ?: $this->request->getGet('telefone_whatsapp');
+
+        if (empty($telefone)) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'status'     => 'error',
+                'encontrado' => false,
+                'message'    => 'Número de telefone não informado.'
+            ]);
+        }
+
+        $voluntarioModel = new VoluntarioModel();
+        $voluntario = $voluntarioModel->buscarPorTelefone($telefone);
+
+        if (!$voluntario) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'status'     => 'not_found',
+                'encontrado' => false,
+                'message'    => 'Nenhum voluntário encontrado com este telefone.'
+            ]);
+        }
+
+        return $this->response->setStatusCode(200)->setJSON([
+            'status'     => 'success',
+            'encontrado' => true,
+            'voluntario' => [
+                'id_voluntario'      => (int)$voluntario->id_voluntario,
+                'nome'               => $voluntario->nome,
+                'nickname'           => $voluntario->nickname,
+                'email'              => $voluntario->email,
+                'telefone_whatsapp'  => $voluntario->telefone_whatsapp,
+                'foto_url'           => $voluntario->foto_url,
+                'nivel_conhecimento' => $voluntario->nivel_conhecimento,
+                'areas'              => $voluntario->areas ?? []
+            ]
+        ]);
+    }
+
+    /**
+     * AJAX: Vinculação rápida de voluntário existente a um departamento/sub-área
+     * POST /voluntario/vincularRapido ou POST /api/voluntarios/vincular-rapido
+     */
+    public function vincularRapido()
+    {
+        $data = $this->session();
+        if (empty($data['sys_action']->update) && empty($data['sys_action']->create)) {
+            return $this->response->setStatusCode(403)->setJSON([
+                'status'  => 'error',
+                'message' => 'Acesso negado.'
+            ]);
+        }
+
+        $id_voluntario   = (int)$this->request->getPost('id_voluntario');
+        $id_departamento = (int)$this->request->getPost('id_departamento');
+        $id_subarea      = (int)($this->request->getPost('id_subarea') ?: $this->request->getPost('id_area'));
+
+        if ($id_voluntario <= 0 || $id_departamento <= 0 || $id_subarea <= 0) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'status'  => 'error',
+                'message' => 'Campos obrigatórios inválidos (id_voluntario, id_departamento e id_subarea).'
+            ]);
+        }
+
+        // Valida se o usuário logado tem permissão para este departamento
+        $departamentoGestorModel = new DepartamentoGestorModel();
+        if (!$departamentoGestorModel->usuarioTemAcessoAoDepartamento($id_departamento, $data['usuario'])) {
+            return $this->response->setStatusCode(403)->setJSON([
+                'status'  => 'error',
+                'message' => 'Você não possui permissão para vincular voluntários a este departamento.'
+            ]);
+        }
+
+        $voluntarioModel = new VoluntarioModel();
+        $voluntario = $voluntarioModel->find($id_voluntario);
+        if (!$voluntario) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'status'  => 'error',
+                'message' => 'Voluntário não encontrado.'
+            ]);
+        }
+
+        $voluntarioAreaModel = new VoluntarioAreaModel();
+        $ok = $voluntarioAreaModel->vincularVoluntarioSubarea($id_voluntario, $id_departamento, $id_subarea);
+
+        if ($ok) {
+            return $this->response->setJSON([
+                'status'   => 'success',
+                'message'  => "Voluntário '{$voluntario->nome}' vinculado com sucesso!",
+                'redirect' => base_url('voluntario')
+            ]);
+        }
+
+        return $this->response->setStatusCode(500)->setJSON([
+            'status'  => 'error',
+            'message' => 'Erro ao vincular voluntário ao departamento/sub-área.'
+        ]);
+    }
+
+    /**
+     * AJAX: Retorna as sub-áreas ativas de um departamento
+     */
+    public function getSubareasPorDepartamento()
+    {
+        $id_departamento = (int)$this->request->getGet('id_departamento');
+        if ($id_departamento <= 0) {
+            return $this->response->setJSON(['status' => 'error', 'subareas' => []]);
+        }
+
+        $areaModel = new DepartamentoAreaModel();
+        $subareas = $areaModel->getAreasPorDepartamento($id_departamento, true);
+
+        return $this->response->setJSON([
+            'status'   => 'success',
+            'subareas' => $subareas
+        ]);
+    }
 }
+

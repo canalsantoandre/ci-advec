@@ -318,21 +318,31 @@ $idade = $isEdit && !empty($voluntario->data_nascimento) ? date_diff(date_create
                       <?php foreach ($departamentosComAreas as $dep) {
                         $corDep = !empty($dep->cor_identificacao) ? $dep->cor_identificacao : '#2563eb';
                         $totalAreasDep = count($dep->areas);
+                        $isPermitido = in_array((int)$dep->id_departamento, $departamentosPermitidosIds ?? []);
                       ?>
                         <div class="col-md-6">
-                          <div class="card border rounded-4 h-100 shadow-sm overflow-hidden dep-card-group" data-dep-id="<?= $dep->id_departamento ?>">
+                          <div class="card border rounded-4 h-100 shadow-sm overflow-hidden dep-card-group <?= !$isPermitido ? 'dep-locked' : '' ?>" data-dep-id="<?= $dep->id_departamento ?>" style="<?= !$isPermitido ? 'opacity: 0.55; position: relative;' : '' ?>" <?= !$isPermitido ? 'data-bs-toggle="tooltip" data-bs-placement="top" title="Acesso não permitido para o seu usuário"' : '' ?>>
                             <div class="card-header py-2 px-3 d-flex align-items-center justify-content-between" style="background-color: <?= esc($corDep) ?>15; border-left: 4px solid <?= esc($corDep) ?>;">
                               <div class="d-flex align-items-center gap-2">
                                 <span class="badge rounded-circle p-1" style="background-color: <?= esc($corDep) ?>; width: 10px; height: 10px;"></span>
                                 <span class="fw-bold text-body"><?= esc($dep->nome) ?></span>
+                                <?php if (!$isPermitido) { ?>
+                                  <i class="bi bi-lock-fill text-danger ms-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Acesso não permitido para o seu usuário"></i>
+                                <?php } ?>
                               </div>
                               <div class="d-flex align-items-center gap-1">
                                 <span class="badge rounded-pill me-1" style="background-color: <?= esc($corDep) ?>; color: #fff; font-size: 0.7rem;">
                                   <?= $totalAreasDep ?> áreas
                                 </span>
-                                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none fw-semibold" style="font-size: 0.75rem; color: <?= esc($corDep) ?>;" onclick="toggleTodasAreasDepartamento(<?= $dep->id_departamento ?>)" title="Marcar/Desmarcar todas deste departamento">
-                                  Alternar Todas
-                                </button>
+                                <?php if ($isPermitido) { ?>
+                                  <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none fw-semibold" style="font-size: 0.75rem; color: <?= esc($corDep) ?>;" onclick="toggleTodasAreasDepartamento(<?= $dep->id_departamento ?>)" title="Marcar/Desmarcar todas deste departamento">
+                                    Alternar Todas
+                                  </button>
+                                <?php } else { ?>
+                                  <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill fw-normal" style="font-size: 0.7rem;">
+                                    <i class="bi bi-lock-fill me-1"></i>Bloqueado
+                                  </span>
+                                <?php } ?>
                               </div>
                             </div>
 
@@ -342,10 +352,15 @@ $idade = $isEdit && !empty($voluntario->data_nascimento) ? date_diff(date_create
                                   <?php foreach ($dep->areas as $area) {
                                     $isChecked = in_array($area->id_area, $areasSelecionadasIds);
                                   ?>
-                                    <label class="custom-checkbox-card d-flex align-items-start gap-2 p-2 rounded-3 border user-select-none <?= $isChecked ? 'bg-primary-subtle border-primary' : 'bg-body' ?>" for="area_check_<?= $area->id_area ?>" style="cursor: pointer; transition: all 0.15s ease;">
-                                      <input class="form-check-input mt-1 flex-shrink-0 dep-area-checkbox" type="checkbox" name="areas[]" value="<?= $area->id_area ?>" id="area_check_<?= $area->id_area ?>" data-dep-id="<?= $dep->id_departamento ?>" <?= $isChecked ? 'checked' : '' ?> style="cursor: pointer;">
+                                    <label class="custom-checkbox-card d-flex align-items-start gap-2 p-2 rounded-3 border user-select-none <?= $isChecked ? 'bg-primary-subtle border-primary' : 'bg-body' ?>" for="area_check_<?= $area->id_area ?>" style="<?= $isPermitido ? 'cursor: pointer;' : 'cursor: not-allowed;' ?> transition: all 0.15s ease;" <?= !$isPermitido ? 'data-bs-toggle="tooltip" data-bs-placement="top" title="Acesso não permitido para o seu usuário"' : '' ?>>
+                                      <input class="form-check-input mt-1 flex-shrink-0 dep-area-checkbox" type="checkbox" name="areas[]" value="<?= $area->id_area ?>" id="area_check_<?= $area->id_area ?>" data-dep-id="<?= $dep->id_departamento ?>" <?= $isChecked ? 'checked' : '' ?> <?= !$isPermitido ? 'disabled' : '' ?> style="<?= $isPermitido ? 'cursor: pointer;' : 'cursor: not-allowed;' ?>">
                                       <div class="flex-grow-1">
-                                        <div class="fw-bold text-body small"><?= esc($area->nome_area) ?></div>
+                                        <div class="fw-bold text-body small d-flex align-items-center gap-1">
+                                          <?= esc($area->nome_area) ?>
+                                          <?php if (!$isPermitido) { ?>
+                                            <i class="bi bi-lock-fill text-muted" style="font-size: 0.75rem;"></i>
+                                          <?php } ?>
+                                        </div>
                                         <?php if (!empty($area->descricao)) { ?>
                                           <div class="text-secondary fw-normal" style="font-size: 0.75rem;"><?= esc($area->descricao) ?></div>
                                         <?php } ?>
@@ -725,11 +740,199 @@ $idade = $isEdit && !empty($voluntario->data_nascimento) ? date_diff(date_create
     atualizarContadorCultos();
   }
 
-  // Inicializa estado visual
+  // Inicializa tooltips e estado visual
   document.addEventListener('DOMContentLoaded', function() {
     atualizarContadorAreas();
     atualizarContadorCultos();
+
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    <?php if (!$isEdit) { ?>
+      // Validação de Telefone / Prevenção de Duplicidade no Novo Cadastro
+      const telInput = document.getElementById('telefone_whatsapp');
+      let debounceTimer = null;
+      let ultimoTelefoneVerificado = '';
+
+      function verificarTelefoneExistente() {
+        if (!telInput) return;
+        const val = telInput.value.trim();
+        const digitos = val.replace(/\D/g, '');
+
+        if (digitos.length < 10 || digitos === ultimoTelefoneVerificado) {
+          return;
+        }
+
+        ultimoTelefoneVerificado = digitos;
+
+        fetch('<?= base_url('voluntario/verificarTelefone') ?>?numero=' + encodeURIComponent(val), {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(response => {
+          if (response.ok) {
+            return response.json();
+          }
+          return null;
+        })
+        .then(data => {
+          if (data && data.encontrado && data.voluntario) {
+            abrirModalVoluntarioExistente(data.voluntario);
+          }
+        })
+        .catch(err => {
+          console.error('Erro ao verificar telefone:', err);
+        });
+      }
+
+      if (telInput) {
+        telInput.addEventListener('blur', verificarTelefoneExistente);
+        telInput.addEventListener('input', function() {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(verificarTelefoneExistente, 700);
+        });
+      }
+    <?php } ?>
   });
+
+  // Modal de Voluntário Existente & Vinculação Rápida
+  function abrirModalVoluntarioExistente(vol) {
+    document.getElementById('existente_id_voluntario').value = vol.id_voluntario;
+    document.getElementById('existente_nome').textContent = vol.nome;
+    document.getElementById('existente_email').textContent = vol.email || 'Não informado';
+    document.getElementById('existente_tel').textContent = vol.telefone_whatsapp || '-';
+    document.getElementById('existente_nivel').textContent = vol.nivel_conhecimento || 'JUNIOR';
+
+    const avatarEl = document.getElementById('existente_avatar');
+    if (avatarEl) {
+      avatarEl.src = vol.foto_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(vol.nome) + '&background=2563eb&color=fff&size=100&bold=true';
+    }
+
+    // Renderiza áreas já vinculadas
+    const containerAreas = document.getElementById('existente_areas_list');
+    if (containerAreas) {
+      if (vol.areas && vol.areas.length > 0) {
+        containerAreas.innerHTML = vol.areas.map(a => 
+          `<span class="badge rounded-pill text-white px-2 py-1" style="background-color: ${a.cor_identificacao || '#2563eb'}; font-size: 0.75rem;">
+            ${a.nome_departamento}: ${a.nome_area}
+          </span>`
+        ).join(' ');
+      } else {
+        containerAreas.innerHTML = '<span class="text-muted small">Nenhum departamento vinculado no momento.</span>';
+      }
+    }
+
+    // Carrega sub-áreas do primeiro departamento selecionado
+    carregarSubareasModalExistente();
+
+    const modalEl = document.getElementById('modalVoluntarioExistente');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+  }
+
+  function carregarSubareasModalExistente() {
+    const depSelect = document.getElementById('existente_id_departamento');
+    const subareaSelect = document.getElementById('existente_id_subarea');
+    if (!depSelect || !subareaSelect) return;
+
+    const idDep = depSelect.value;
+    if (!idDep) {
+      subareaSelect.innerHTML = '<option value="">Selecione primeiro um departamento</option>';
+      return;
+    }
+
+    subareaSelect.innerHTML = '<option value="">Carregando sub-áreas...</option>';
+    subareaSelect.disabled = true;
+
+    fetch('<?= base_url('voluntario/getSubareasPorDepartamento') ?>?id_departamento=' + idDep, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+      subareaSelect.disabled = false;
+      if (data && data.subareas && data.subareas.length > 0) {
+        subareaSelect.innerHTML = '<option value="">Selecione uma Sub-área *</option>' + 
+          data.subareas.map(s => `<option value="${s.id_area}">${s.nome_area}</option>`).join('');
+      } else {
+        subareaSelect.innerHTML = '<option value="">Nenhuma sub-área cadastrada</option>';
+      }
+    })
+    .catch(err => {
+      subareaSelect.disabled = false;
+      subareaSelect.innerHTML = '<option value="">Erro ao carregar sub-áreas</option>';
+    });
+  }
+
+  function submeterVinculacaoRapida() {
+    const idVoluntario   = document.getElementById('existente_id_voluntario').value;
+    const idDepartamento = document.getElementById('existente_id_departamento').value;
+    const idSubarea      = document.getElementById('existente_id_subarea').value;
+    const btn            = document.getElementById('btnConfirmarVinculacao');
+
+    if (!idDepartamento || !idSubarea) {
+      if (typeof USToast !== 'undefined' && USToast.show) {
+        USToast.show('warning', 'Campos Obrigatórios', 'Por favor, selecione o Departamento e a Sub-área.');
+      } else if (typeof usShowToast === 'function') {
+        usShowToast('warning', 'Campos Obrigatórios', 'Por favor, selecione o Departamento e a Sub-área.');
+      }
+      return;
+    }
+
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Vinculando...';
+
+    const formData = new FormData();
+    formData.append('id_voluntario', idVoluntario);
+    formData.append('id_departamento', idDepartamento);
+    formData.append('id_subarea', idSubarea);
+
+    fetch('<?= base_url('voluntario/vincularRapido') ?>', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+
+      const modalEl = document.getElementById('modalVoluntarioExistente');
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
+
+      if (data.status === 'success') {
+        if (typeof USToast !== 'undefined' && USToast.show) {
+          USToast.show('success', 'Vinculado com Sucesso', data.message || 'Voluntário vinculado com sucesso ao seu departamento.');
+        } else if (typeof usShowToast === 'function') {
+          usShowToast('success', 'Vinculado com Sucesso', data.message || 'Voluntário vinculado com sucesso ao seu departamento.');
+        }
+        setTimeout(() => {
+          window.location.href = data.redirect || '<?= base_url('voluntario') ?>';
+        }, 1200);
+      } else {
+        if (typeof USToast !== 'undefined' && USToast.show) {
+          USToast.show('error', 'Não foi possível vincular', data.message || 'Erro ao realizar vinculação.');
+        } else if (typeof usShowToast === 'function') {
+          usShowToast('error', 'Não foi possível vincular', data.message || 'Erro ao realizar vinculação.');
+        }
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      if (typeof USToast !== 'undefined' && USToast.show) {
+        USToast.show('error', 'Erro de Conexão', 'Falha ao comunicar com o servidor.');
+      } else if (typeof usShowToast === 'function') {
+        usShowToast('error', 'Erro de Conexão', 'Falha ao comunicar com o servidor.');
+      }
+    });
+  }
 
   // Dynamic Social Media Links
   function adicionarRedeSocial() {
@@ -804,32 +1007,28 @@ $idade = $isEdit && !empty($voluntario->data_nascimento) ? date_diff(date_create
         if (modal) modal.hide();
 
         if (data.status) {
-          if (typeof Swal !== 'undefined') {
-            Swal.fire({
-              icon: 'success',
-              title: 'Senha Resetada!',
-              html: `${data.message}<br><br><strong>Nova senha padrão:</strong> <code>${data.nova_senha_padrao}</code>`,
-              confirmButtonColor: '#2563eb'
-            });
-          } else {
-            alert(data.message + '\nNova senha padrão: ' + data.nova_senha_padrao);
+          const msg = (data.message || 'Senha resetada com sucesso!') + (data.nova_senha_padrao ? ' (Padrão: ' + data.nova_senha_padrao + ')' : '');
+          if (typeof USToast !== 'undefined' && USToast.show) {
+            USToast.show('success', 'Senha Redefinida', msg);
+          } else if (typeof usShowToast === 'function') {
+            usShowToast('success', 'Senha Redefinida', msg);
           }
         } else {
-          if (typeof Swal !== 'undefined') {
-            Swal.fire({
-              icon: 'error',
-              title: 'Erro',
-              text: data.message || 'Erro ao resetar senha.'
-            });
-          } else {
-            alert('Erro: ' + (data.message || 'Erro ao resetar senha.'));
+          if (typeof USToast !== 'undefined' && USToast.show) {
+            USToast.show('error', 'Erro', data.message || 'Erro ao resetar senha.');
+          } else if (typeof usShowToast === 'function') {
+            usShowToast('error', 'Erro', data.message || 'Erro ao resetar senha.');
           }
         }
       })
       .catch(err => {
         btn.disabled = false;
         btn.innerHTML = originalText;
-        alert('Erro de comunicação com o servidor.');
+        if (typeof USToast !== 'undefined' && USToast.show) {
+          USToast.show('error', 'Erro de Conexão', 'Falha ao comunicar com o servidor.');
+        } else if (typeof usShowToast === 'function') {
+          usShowToast('error', 'Erro de Conexão', 'Falha ao comunicar com o servidor.');
+        }
       });
   }
 </script>
@@ -861,6 +1060,96 @@ $idade = $isEdit && !empty($voluntario->data_nascimento) ? date_diff(date_create
           <i class="bi bi-check2-circle me-1"></i> Confirmar Reset
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Voluntário Já Existente & Vinculação Rápida -->
+<div class="modal fade" id="modalVoluntarioExistente" tabindex="-1" aria-labelledby="modalVoluntarioExistenteLabel" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header bg-primary text-white border-0 py-3">
+        <h5 class="modal-title fw-bold" id="modalVoluntarioExistenteLabel">
+          <i class="bi bi-person-check-fill me-2"></i> Voluntário Já Cadastrado no Sistema
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <!-- Alerta de Duplicidade Detectada -->
+        <div class="alert alert-warning border-0 shadow-xs rounded-3 d-flex align-items-center mb-4 p-3" role="alert">
+          <i class="bi bi-exclamation-triangle-fill fs-3 text-warning me-3"></i>
+          <div>
+            <div class="fw-bold text-dark">Este voluntário já está cadastrado no sistema.</div>
+            <div class="small text-muted">Para evitar cadastros duplicados, você pode vinculá-lo diretamente a uma sub-área do seu departamento.</div>
+          </div>
+        </div>
+
+        <!-- Card de Resumo do Voluntário Encontrado -->
+        <div class="card bg-body-tertiary border rounded-4 p-3 mb-4">
+          <div class="d-flex align-items-center gap-3">
+            <img src="" id="existente_avatar" class="rounded-circle shadow-xs border border-2 border-white" style="width: 70px; height: 70px; object-fit: cover;" alt="Foto">
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center gap-2">
+                <h5 class="fw-bold mb-0 text-body" id="existente_nome">-</h5>
+                <span class="badge bg-primary-subtle text-primary rounded-pill small" id="existente_nivel">-</span>
+              </div>
+              <div class="text-muted small mt-1">
+                <span class="me-3"><i class="bi bi-whatsapp text-success me-1"></i><span id="existente_tel">-</span></span>
+                <span><i class="bi bi-envelope text-primary me-1"></i><span id="existente_email">-</span></span>
+              </div>
+              <div class="mt-2" id="existente_areas_list">
+                <!-- Áreas atuais renderizadas via JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seção de Ação: Deseja vinculá-lo ao seu departamento? -->
+        <div class="card border border-primary-subtle rounded-4 p-3 bg-primary-subtle bg-opacity-10">
+          <h6 class="fw-bold text-primary mb-2">
+            <i class="bi bi-link-45deg me-1"></i> Deseja vinculá-lo ao seu departamento?
+          </h6>
+          <p class="text-secondary small mb-3">
+            Selecione o departamento e a sub-área desejados para adicionar este voluntário à sua equipe de liderança.
+          </p>
+
+          <input type="hidden" id="existente_id_voluntario" value="">
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="existente_id_departamento" class="form-label fw-semibold small">Departamento <span class="text-danger">*</span></label>
+              <select id="existente_id_departamento" class="form-select" onchange="carregarSubareasModalExistente()">
+                <?php if (!empty($departamentosPermitidos)) { ?>
+                  <?php foreach ($departamentosPermitidos as $dPerm) { ?>
+                    <option value="<?= $dPerm->id_departamento ?>"><?= esc($dPerm->nome) ?></option>
+                  <?php } ?>
+                <?php } else { ?>
+                  <option value="">Nenhum departamento permitido</option>
+                <?php } ?>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label for="existente_id_subarea" class="form-label fw-semibold small">Sub-área de Atuação <span class="text-danger">*</span></label>
+              <select id="existente_id_subarea" class="form-select">
+                <option value="">Selecione primeiro um departamento</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer border-0 p-3 bg-body-tertiary rounded-bottom-4 d-flex justify-content-between">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg me-1"></i> Cancelar
+        </button>
+        <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" id="btnConfirmarVinculacao" onclick="submeterVinculacaoRapida()">
+          <i class="bi bi-check2-circle me-1"></i> Vincular ao Meu Departamento
+        </button>
+      </div>
+
     </div>
   </div>
 </div>

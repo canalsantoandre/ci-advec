@@ -25,19 +25,23 @@ class Home extends BaseController
     {
         $data = $this->session();
 
-        if ($data['usuario']->content_view_default == 'sysadm') {
+        $viewDefault = $data['usuario']->content_view_default ?? '_main/boas_vindas';
+
+        if ($viewDefault === 'grade') {
+            $data['content_view'] = $this->grade($data);
+        } elseif ($viewDefault === 'sysadm') {
             $data['content_view'] = $this->sysadm($data);
         } else {
-
-            $data['content_view'] = $this->grade($data); //view($data['usuario']->content_view_default, $data);
+            $data['content_view'] = view($viewDefault, $data);
         }
+
         return view('_layout', $data);
     }
 
 
     public function sysadm($data)
     {
-        return  view($data['usuario']->content_view_default, $data);
+        return view($data['usuario']->content_view_default, $data);
     }
 
     public function grade($data, $ano = null, $mes = null)

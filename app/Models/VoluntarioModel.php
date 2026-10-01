@@ -49,6 +49,12 @@ class VoluntarioModel extends Model
         if (!empty($filtros['id_departamento'])) {
             $builder->join('tb_voluntario_departamento_area as vda', 'vda.id_voluntario = v.id_voluntario', 'inner');
             $builder->where('vda.id_departamento', (int)$filtros['id_departamento']);
+        } elseif (isset($filtros['departamentos_permitidos'])) {
+            if (empty($filtros['departamentos_permitidos'])) {
+                return [];
+            }
+            $builder->join('tb_voluntario_departamento_area as vda', 'vda.id_voluntario = v.id_voluntario', 'inner');
+            $builder->whereIn('vda.id_departamento', (array)$filtros['departamentos_permitidos']);
         }
 
         if (isset($filtros['status']) && $filtros['status'] !== '') {

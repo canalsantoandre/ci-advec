@@ -381,16 +381,12 @@
             USToast.show('success', 'Senha Redefinida', data.message);
           } else if (typeof usShowToast === 'function') {
             usShowToast('success', 'Senha Redefinida', data.message);
-          } else {
-            alert(data.message);
           }
         } else {
           if (typeof USToast !== 'undefined' && USToast.show) {
             USToast.show('error', 'Erro', data.message || 'Falha ao redefinir senha.');
           } else if (typeof usShowToast === 'function') {
             usShowToast('error', 'Erro', data.message || 'Falha ao redefinir senha.');
-          } else {
-            alert(data.message);
           }
         }
       })
@@ -399,6 +395,8 @@
         btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Confirmar Reset';
         if (typeof USToast !== 'undefined' && USToast.show) {
           USToast.show('error', 'Erro', 'Falha na conexão com o servidor.');
+        } else if (typeof usShowToast === 'function') {
+          usShowToast('error', 'Erro', 'Falha na conexão com o servidor.');
         }
       });
   }

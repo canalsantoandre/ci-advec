@@ -8,8 +8,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Pass-through padrão de requisições de rede
-  event.respondWith(fetch(event.request).catch(() => {
-    return fetch(event.request);
-  }));
+  // Deixa as requisições fluírem normalmente pela rede sem interceptação invasiva
+  return;
 });
+

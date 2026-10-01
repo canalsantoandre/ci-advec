@@ -164,6 +164,52 @@
               </div>
 
             </div>
+
+            <!-- Seção de Gestores do Departamento (Acesso ao Sistema) -->
+            <hr class="my-4 opacity-25">
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+              <div>
+                <h6 class="fw-bold text-primary mb-1">
+                  <i class="bi bi-shield-lock-fill me-1"></i> Gestores do Departamento (Usuários com Acesso)
+                </h6>
+                <p class="text-secondary small mb-0">Selecione os usuários do sistema que terão permissão para visualizar voluntários e gerenciar escalas deste departamento.</p>
+              </div>
+
+              <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="marcarTodosGestores(true)">
+                  Marcar Todos
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="marcarTodosGestores(false)">
+                  Limpar
+                </button>
+              </div>
+            </div>
+
+            <?php if (!empty($usuarios)) { ?>
+              <div class="row g-2">
+                <?php foreach ($usuarios as $u) {
+                  $isGestorChecked = in_array((int)$u->id_usuario, $gestoresIds ?? []);
+                ?>
+                  <div class="col-md-6 col-xl-4">
+                    <label class="d-flex align-items-center gap-2 p-2 rounded-3 border user-select-none h-100 <?= $isGestorChecked ? 'bg-primary-subtle border-primary' : 'bg-body' ?>" for="gestor_check_<?= $u->id_usuario ?>" style="cursor: pointer; transition: all 0.15s ease;">
+                      <input class="form-check-input mt-0 flex-shrink-0 gestor-checkbox" type="checkbox" name="gestores[]" value="<?= $u->id_usuario ?>" id="gestor_check_<?= $u->id_usuario ?>" <?= $isGestorChecked ? 'checked' : '' ?> style="cursor: pointer;">
+                      <div class="flex-grow-1 text-truncate">
+                        <div class="fw-bold text-body small text-truncate"><?= esc($u->nome) ?></div>
+                        <small class="text-muted" style="font-size: 0.72rem;">
+                          <i class="bi bi-person me-1"></i><?= esc($u->usuario) ?>
+                        </small>
+                      </div>
+                    </label>
+                  </div>
+                <?php } ?>
+              </div>
+            <?php } else { ?>
+              <div class="alert alert-secondary border-0 rounded-3 small mb-0">
+                Nenhum usuário ativo cadastrado no sistema.
+              </div>
+            <?php } ?>
+
           </div>
 
           <div class="card-footer bg-body py-3 d-flex justify-content-between align-items-center">
@@ -540,6 +586,37 @@
     tbody.innerHTML = html;
   }
 
+  function marcarTodosGestores(marcar) {
+    document.querySelectorAll('.gestor-checkbox').forEach(chk => {
+      chk.checked = marcar;
+      const parent = chk.closest('label');
+      if (parent) {
+        if (marcar) {
+          parent.classList.add('bg-primary-subtle', 'border-primary');
+          parent.classList.remove('bg-body');
+        } else {
+          parent.classList.remove('bg-primary-subtle', 'border-primary');
+          parent.classList.add('bg-body');
+        }
+      }
+    });
+  }
+
+  document.querySelectorAll('.gestor-checkbox').forEach(chk => {
+    chk.addEventListener('change', function() {
+      const parent = this.closest('label');
+      if (parent) {
+        if (this.checked) {
+          parent.classList.add('bg-primary-subtle', 'border-primary');
+          parent.classList.remove('bg-body');
+        } else {
+          parent.classList.remove('bg-primary-subtle', 'border-primary');
+          parent.classList.add('bg-body');
+        }
+      }
+    });
+  });
+
   function escapeHtml(text) {
     if (!text) return '';
     return String(text)
@@ -550,3 +627,4 @@
       .replace(/'/g, "&#039;");
   }
 </script>
+

@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\EscalaVoluntarioModel;
 use App\Models\DepartamentoModel;
 use App\Models\DepartamentoAreaModel;
+use App\Models\DepartamentoGestorModel;
 use App\Models\VoluntarioModel;
 use App\Models\VoluntarioAreaModel;
 use App\Models\VoluntarioCultoModel;
@@ -40,22 +41,26 @@ class Escala extends BaseController
             return redirect()->to('accessdeny');
         }
 
-        $departamentoModel     = new DepartamentoModel();
-        $departamentoAreaModel = new DepartamentoAreaModel();
-        $escalaModel           = new EscalaVoluntarioModel();
-        $voluntarioAreaModel   = new VoluntarioAreaModel();
-        $cultoPadraoModel      = new CultoPadraoModel();
+        $departamentoModel       = new DepartamentoModel();
+        $departamentoAreaModel   = new DepartamentoAreaModel();
+        $departamentoGestorModel = new DepartamentoGestorModel();
+        $escalaModel             = new EscalaVoluntarioModel();
+        $voluntarioAreaModel     = new VoluntarioAreaModel();
+        $cultoPadraoModel        = new CultoPadraoModel();
 
-        // 1. Departamentos Ativos
-        $departamentos = $departamentoModel->getDepartamentosAtivos();
+        // 1. Departamentos Permitidos ao Gestor
+        $isAdmin                    = DepartamentoGestorModel::isUserAdmin($data['usuario']);
+        $departamentos              = $departamentoGestorModel->getDepartamentosPermitidosPorUsuario($data['usuario']);
+        $departamentosPermitidosIds = array_column($departamentos, 'id_departamento');
+
         if (empty($departamentos)) {
-            session()->setFlashdata('error', 'Nenhum departamento cadastrado. Cadastre um departamento primeiro.');
-            return redirect()->to('departamento/novo');
+            session()->setFlashdata('error', 'Seu usuário não possui acesso a nenhum departamento.');
+            return redirect()->to('voluntario');
         }
 
-        // Se departamento não foi especificado na rota, usa o primeiro departamento ativo
+        // Se departamento não foi especificado na rota ou não for permitido, usa o primeiro departamento permitido
         $id_departamento = (int)$id_departamento;
-        if ($id_departamento <= 0) {
+        if ($id_departamento <= 0 || !in_array($id_departamento, $departamentosPermitidosIds)) {
             $id_departamento = (int)$departamentos[0]->id_departamento;
         }
 
@@ -245,6 +250,12 @@ class Escala extends BaseController
                 return $this->response->setJSON(['status' => 'error', 'message' => 'Selecione a data, culto, sub-área e pelo menos um voluntário.']);
             }
 
+            // Valida permissão do gestor para o departamento
+            $departamentoGestorModel = new DepartamentoGestorModel();
+            if (!$departamentoGestorModel->usuarioTemAcessoAoDepartamento($id_departamento, $data['usuario'])) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Você não possui permissão para gerenciar escalas deste departamento.']);
+            }
+
             $voluntarioModel = new VoluntarioModel();
             $escalaModel     = new EscalaVoluntarioModel();
             $db              = db_connect();
@@ -362,10 +373,22 @@ class Escala extends BaseController
      */
     public function getVoluntariosPorArea()
     {
+        $data = $this->session();
         $id_departamento = (int)$this->request->getGet('id_departamento');
         $id_area         = (int)$this->request->getGet('id_area');
         $data_culto      = (string)$this->request->getGet('data_culto');
         $id_culto_padrao = (int)$this->request->getGet('id_culto_padrao');
+
+        // Valida se o gestor tem acesso ao departamento
+        $departamentoGestorModel = new DepartamentoGestorModel();
+        if (!$departamentoGestorModel->usuarioTemAcessoAoDepartamento($id_departamento, $data['usuario'])) {
+            return $this->response->setJSON([
+                'status'              => 'error',
+                'message'             => 'Acesso negado para este departamento.',
+                'vinculados_area'     => [],
+                'outros_departamento' => []
+            ]);
+        }
 
         $anoCulto = !empty($data_culto) ? (int)date('Y', strtotime($data_culto)) : (int)date('Y');
         $mesCulto = !empty($data_culto) ? (int)date('m', strtotime($data_culto)) : (int)date('m');
@@ -431,7 +454,19 @@ class Escala extends BaseController
             return redirect()->to('accessdeny');
         }
 
+        $departamentoGestorModel    = new DepartamentoGestorModel();
+        $departamentosPermitidos    = $departamentoGestorModel->getDepartamentosPermitidosPorUsuario($data['usuario']);
+        $departamentosPermitidosIds = array_column($departamentosPermitidos, 'id_departamento');
+
+        if (empty($departamentosPermitidos)) {
+            return redirect()->to('accessdeny');
+        }
+
         $id_departamento = (int)$id_departamento;
+        if ($id_departamento <= 0 || !in_array($id_departamento, $departamentosPermitidosIds)) {
+            $id_departamento = (int)$departamentosPermitidos[0]->id_departamento;
+        }
+
         $ano = (int)($ano ?: date('Y'));
         $mes = (int)($mes ?: date('m'));
 
@@ -442,8 +477,8 @@ class Escala extends BaseController
 
         $departamento = $departamentoModel->find($id_departamento);
         if (!$departamento) {
-            $departamento = $departamentoModel->first();
-            $id_departamento = $departamento ? $departamento->id_departamento : 1;
+            $departamento = $departamentosPermitidos[0];
+            $id_departamento = $departamento->id_departamento;
         }
 
         $areas = $departamentoAreaModel->getAreasPorDepartamento($id_departamento, true);

@@ -47,16 +47,16 @@
                     </p>
                 </div>
             </div>
-            
+
             <div class="col-lg-6">
                 <div class="p-3 app-widget-card h-100 d-flex flex-column justify-content-between">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="fw-semibold text-theme-secondary small text-uppercase tracking-wider">Uso do Plano</span>
                         <span class="fw-bold card-title-text"><?= esc($connectionsCount) ?> / <?= esc($planLimit) ?> conexões</span>
                     </div>
-                    <?php 
-                        $percent = $planLimit > 0 ? min(100, ($connectionsCount / $planLimit) * 100) : 0;
-                        $available = max(0, $planLimit - $connectionsCount);
+                    <?php
+                    $percent = $planLimit > 0 ? min(100, ($connectionsCount / $planLimit) * 100) : 0;
+                    $available = max(0, $planLimit - $connectionsCount);
                     ?>
                     <div class="progress-bar-custom mb-3">
                         <div class="progress-fill <?= $percent >= 100 ? 'bg-danger' : '' ?>" style="width: <?= esc($percent) ?>%"></div>
@@ -97,34 +97,34 @@
                 </div>
             <?php else: ?>
                 <?php foreach ($connections as $conn): ?>
-                    <?php 
-                        $statusClass = 'secondary';
-                        $statusText = 'Desconhecido';
-                        $statusIcon = 'question-circle';
+                    <?php
+                    $statusClass = 'secondary';
+                    $statusText = 'Desconhecido';
+                    $statusIcon = 'question-circle';
 
-                        switch ($conn['status']) {
-                            case 'connected':
-                                $statusClass = 'connected';
-                                $statusText = 'Conectado';
-                                $statusIcon = 'check-circle-fill';
-                                break;
-                            case 'waiting_qr':
-                                $statusClass = 'waiting_qr';
-                                $statusText = 'Aguardando Conexão';
-                                $statusIcon = 'qr-code-scan';
-                                break;
-                            case 'disconnected':
-                                $statusClass = 'disconnected';
-                                $statusText = 'Desconectado';
-                                $statusIcon = 'x-circle-fill';
-                                break;
-                            case 'configuring':
-                            case 'configured':
-                                $statusClass = 'configured';
-                                $statusText = 'Aguardando ação...';
-                                $statusIcon = 'hourglass-split';
-                                break;
-                        }
+                    switch ($conn['status']) {
+                        case 'connected':
+                            $statusClass = 'connected';
+                            $statusText = 'Conectado';
+                            $statusIcon = 'check-circle-fill';
+                            break;
+                        case 'waiting_qr':
+                            $statusClass = 'waiting_qr';
+                            $statusText = 'Aguardando Conexão';
+                            $statusIcon = 'qr-code-scan';
+                            break;
+                        case 'disconnected':
+                            $statusClass = 'disconnected';
+                            $statusText = 'Desconectado';
+                            $statusIcon = 'x-circle-fill';
+                            break;
+                        case 'configuring':
+                        case 'configured':
+                            $statusClass = 'configured';
+                            $statusText = 'Aguardando ação...';
+                            $statusIcon = 'hourglass-split';
+                            break;
+                    }
                     ?>
                     <div class="col-md-6 col-lg-4 connection-card-wrapper" id="conn-card-<?= esc($conn['id']) ?>">
                         <div class="card-whatsapp-platform h-100 p-3 d-flex flex-column justify-content-between">
@@ -143,7 +143,7 @@
                                             <h5 class="fw-bold card-title-text mb-0 text-truncate" title="<?= esc($conn['name'] ?? 'WhatsApp') ?>">
                                                 <?= esc($conn['name'] ?? 'WhatsApp') ?>
                                             </h5>
-                                            
+
                                             <!-- Nome da Instância para n8n e integrações -->
                                             <div class="my-1">
                                                 <div class="instance-tag-wrapper" title="Nome da Instância para uso no n8n e integrações">
@@ -156,7 +156,7 @@
                                             </div>
 
                                             <div class="text-theme-secondary small fw-medium text-truncate" id="phone-<?= esc($conn['id']) ?>">
-                                                <?= !empty($conn['phone']) ? '+'.esc($conn['phone']) : '<span class="text-theme-muted">Sem número vinculado</span>' ?>
+                                                <?= !empty($conn['phone']) ? '+' . esc($conn['phone']) : '<span class="text-theme-muted">Sem número vinculado</span>' ?>
                                             </div>
                                         </div>
                                     </div>
@@ -190,7 +190,9 @@
                                                     <i class="bi bi-plug me-2"></i>Desconectar
                                                 </a>
                                             </li>
-                                            <li><hr class="dropdown-divider my-1"></li>
+                                            <li>
+                                                <hr class="dropdown-divider my-1">
+                                            </li>
                                             <li>
                                                 <a class="dropdown-item text-danger" href="#" onclick="deleteInstance(<?= esc($conn['id']) ?>)">
                                                     <i class="bi bi-trash me-2"></i>Remover Conexão
@@ -199,20 +201,20 @@
                                         </ul>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Status Badge -->
                                 <div class="mb-3">
                                     <span class="badge-custom badge-<?= esc($statusClass) ?> w-100" id="badge-<?= esc($conn['id']) ?>" data-status="<?= esc($conn['status']) ?>">
-                                        <i class="bi bi-<?= esc($statusIcon) ?>" id="badge-icon-<?= esc($conn['id']) ?>"></i> 
+                                        <i class="bi bi-<?= esc($statusIcon) ?>" id="badge-icon-<?= esc($conn['id']) ?>"></i>
                                         <span id="badge-text-<?= esc($conn['id']) ?>"><?= esc($statusText) ?></span>
                                     </span>
                                 </div>
                             </div>
-                            
+
                             <!-- Bottom Footer info -->
                             <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-10">
                                 <span class="text-theme-muted d-flex align-items-center gap-1" style="font-size: 0.78rem;" id="last-conn-<?= esc($conn['id']) ?>">
-                                    <i class="bi bi-clock"></i> 
+                                    <i class="bi bi-clock"></i>
                                     <?= !empty($conn['last_connection']) ? date('d/m/Y H:i', strtotime($conn['last_connection'])) : 'Nunca conectado' ?>
                                 </span>
                                 <button class="btn btn-sm btn-card-footer py-1 px-2" onclick="exportJSON(<?= esc($conn['id']) ?>)" title="Exportar Configuração">
@@ -241,7 +243,7 @@
                 <p class="text-theme-secondary small mb-4">
                     Defina um nome amigável para identificar esse número ou setor (ex: Secretaria, Pastoral, Geral). A instância técnica na Evolution API será gerada de forma automática.
                 </p>
-                
+
                 <div class="mb-3">
                     <label for="connection_name" class="form-label fw-semibold card-title-text">Nome da conexão <span class="text-danger">*</span></label>
                     <input type="text" class="form-control form-control-lg" id="connection_name" placeholder="ex: WhatsApp ADVEC Principal" autocomplete="off">
@@ -272,7 +274,7 @@
                     <div class="spinner-border text-primary mb-3" role="status"></div>
                     <p class="text-theme-secondary mb-0">Carregando QR Code...</p>
                 </div>
-                
+
                 <div class="instruction-box text-start">
                     <p class="fw-semibold card-title-text mb-2 fs-6 d-flex align-items-center gap-2">
                         <i class="bi bi-phone text-success"></i> Siga os passos no celular:
@@ -298,4 +300,4 @@
 <script>
     window.baseUrl = '<?= rtrim(base_url(), '/') ?>';
 </script>
-<script src="<?= base_url('assets/js/whatsapp.js') ?>"></script>
+<script src="<?= base_url('assets/js/whatsapp.js') ?>?v=<?= date('Hi') ?>"></script>
