@@ -200,6 +200,21 @@ class Escala extends BaseController
         $scheduleResourceModel = new ScheduleResourceModel();
         $recursosResumo = $scheduleResourceModel->getResumoRecursosMes((int)$id_departamento, $dataInicioMes, $dataFimMes);
 
+        // 9. Informações de Data e Meses Anteriores com Escala
+        $hojeIso            = date('Y-m-d');
+        $anoAtual           = (int)date('Y');
+        $mesAtual           = (int)date('m');
+        $isAnoAtual         = ($ano === $anoAtual);
+        $isMesAtual         = ($ano === $anoAtual && $mes === $mesAtual);
+        $isMesPassado       = ($ano < $anoAtual || ($ano === $anoAtual && $mes < $mesAtual));
+        $podeEditarPassado  = !empty($data['sys_action']->update_past);
+
+        // Atualização automática de omissões retroativas
+        $escalaModel->marcarOmissoesPassadas();
+
+        // Busca apenas os meses passados que possuem escalas para o departamento no ano
+        $mesesPassadosComEscala = $escalaModel->getMesesPassadosComEscala($id_departamento, $ano);
+
         $data['departamentos']            = $departamentos;
         $data['id_departamento']          = $id_departamento;
         $data['departamentoSelecionado']  = $departamentoSelecionado;
@@ -217,6 +232,16 @@ class Escala extends BaseController
         $data['voluntariosDepartamento']  = $voluntariosDoDepartamento;
         $data['recursosContagemPorCulto'] = $recursosResumo['por_culto'];
         $data['recursosContagemPorArea']  = $recursosResumo['por_area'];
+
+        // Variáveis de Controle de UI / Bloqueio Retroativo
+        $data['hojeIso']                  = $hojeIso;
+        $data['anoAtual']                 = $anoAtual;
+        $data['mesAtual']                 = $mesAtual;
+        $data['isAnoAtual']               = $isAnoAtual;
+        $data['isMesAtual']               = $isMesAtual;
+        $data['isMesPassado']             = $isMesPassado;
+        $data['podeEditarPassado']        = $podeEditarPassado;
+        $data['mesesPassadosComEscala']   = $mesesPassadosComEscala;
 
         $data['content_view'] = view('escala/escala-grade', $data);
         return view('_layout', $data);
@@ -238,6 +263,15 @@ class Escala extends BaseController
             $id_departamento = (int)$this->request->getPost('id_departamento');
             $id_area         = (int)$this->request->getPost('id_area');
             $observacao      = trim((string)$this->request->getPost('observacao'));
+
+            // Validação de Bloqueio de Edição Retroativa
+            $hojeIso = date('Y-m-d');
+            if (!empty($data_culto) && $data_culto < $hojeIso && empty($data['sys_action']->update_past)) {
+                return $this->response->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Bloqueio Retroativo: Você não possui permissão para cadastrar ou editar escalas em datas passadas.'
+                ]);
+            }
 
             // Trata múltiplos IDs de voluntários recebidos via array ou string separada por vírgula
             $rawVoluntarios = $this->request->getPost('id_voluntarios') ?: $this->request->getPost('id_voluntario');
@@ -353,6 +387,21 @@ class Escala extends BaseController
             }
 
             $escalaModel = new EscalaVoluntarioModel();
+            $escala = $escalaModel->find($id_escala_voluntario);
+
+            if (!$escala) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Escala não encontrada.']);
+            }
+
+            // Validação de Bloqueio Retroativo
+            $hojeIso = date('Y-m-d');
+            if (!empty($escala->data_culto) && $escala->data_culto < $hojeIso && empty($data['sys_action']->update_past)) {
+                return $this->response->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Bloqueio Retroativo: Você não possui permissão para remover escalas de datas passadas.'
+                ]);
+            }
+
             $escalaModel->removerEscala($id_escala_voluntario);
 
             return $this->response->setJSON(['status' => 'success', 'message' => 'Voluntário removido da escala com sucesso!']);
@@ -376,6 +425,21 @@ class Escala extends BaseController
             $status_presenca      = (int)$this->request->getPost('status_presenca');
 
             $escalaModel = new EscalaVoluntarioModel();
+            $escala = $escalaModel->find($id_escala_voluntario);
+
+            if (!$escala) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Escala não encontrada.']);
+            }
+
+            // Validação de Bloqueio Retroativo
+            $hojeIso = date('Y-m-d');
+            if (!empty($escala->data_culto) && $escala->data_culto < $hojeIso && empty($data['sys_action']->update_past)) {
+                return $this->response->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Bloqueio Retroativo: Você não possui permissão para alterar presença em escalas de datas passadas.'
+                ]);
+            }
+
             $escalaModel->alternarPresenca($id_escala_voluntario, $status_presenca);
 
             return $this->response->setJSON(['status' => 'success', 'message' => 'Status de presença atualizado!']);

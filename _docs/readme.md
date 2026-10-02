@@ -260,6 +260,42 @@ flowchart TD
 
 ---
 
+### 9. Avatar Stack (Facepile) & Modal de Participantes da Equipe
+- **Facepile no Card de Escala ([`agenda.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/portal_voluntario/agenda.php))**:
+  - Exibe miniaturas circulares sobrepostas dos voluntários escalados para o mesmo dia e culto, com recorte estético adaptado ao Dark/Light mode (`border: 2px solid var(--portal-card-bg)`).
+  - Indicador numérico `+X` quando o número de participantes excede 3 membros.
+  - Regra de negócio: o próprio voluntário logado é filtrado e não aparece em sua própria pilha/modal de equipe.
+- **Modal / Bottom Sheet de Contatos & Senioridade**:
+  - Layout refinado com tipografia equilibrada (sem tabelas pesadas), cards limpos para cada membro da equipe.
+  - Exibição de função e nível de senioridade (ex: *Iniciante, Intermediário, Avançado*).
+  - Ações rápidas de contato: botão direto para WhatsApp (`https://wa.me/...`) e ícones clicáveis das redes sociais cadastradas pelo voluntário.
+
+### 10. Gestão de Escalas: Filtro de Dias, Navegação & Bloqueio Retroativo
+- **Filtro Inteligente de Dias no Mês Corrente ([`escala-grade.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/escala/escala-grade.php))**:
+  - No mês atual, renderiza por padrão apenas os cultos a partir da data de hoje (`data >= hoje`).
+  - Switch interativo *"Exibir dias anteriores (X)"* permite ao gestor alternar a visualização dos dias passados sob demanda sem recarregar a página.
+  - Em meses anteriores selecionados no histórico, todos os dias do mês são exibidos automaticamente.
+- **Navegação Otimizada de Meses**:
+  - Barra superior exibe o mês atual e meses futuros para planejamento.
+  - Dropdown *"Meses anteriores"* lista exclusivamente meses passados que possuem escalas registradas no banco de dados.
+  - Paleta com alto contraste (Slate/Cyan/Índigo) eliminando sobreposição visual entre abas e ícones.
+- **Bloqueio de Edição Retroativa & Ação `update_past` ([`Escala.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Controllers/Escala.php))**:
+  - Cultos com data anterior à data atual (`data < hoje`) entram em modo leitura estrito.
+  - Usuários sem a permissão `update_past` são impedidos de adicionar voluntários, trocar sub-áreas, excluir membros ou registrar presenças retroativas.
+  - Na grade de escalas, a coluna de Ações exibe o status centralizado `🔒 Encerrado` para usuários sem permissão especial.
+- **Penalização de Omissão no Ranking / Gamificação ([`PortalVoluntario.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Controllers/PortalVoluntario.php))**:
+  - Voluntários não podem confirmar ou recusar escalas após a realização do culto.
+  - Escalas passadas pendentes de resposta são tratadas como omissão/falta (`NAO_CONFIRMADO`), aplicando penalização de **-25 pontos** no Score de Fidelidade / Ranking.
+
+### 11. Gestão Dinâmica de Ações de Módulos (SysModulo)
+- **Componente Interativo de Tags ([`sys-modulo-form.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/_acesso/sys_modulo/sys-modulo-form.php))**:
+  - Substituição de checkboxes estáticos por input dinâmico de Tags/Chips.
+  - Permite digitação livre de novas ações (ex: `update_past`, `export`, `approve`) com normalização automática para `snake_case`.
+  - Pílulas com sugestões rápidas (`read`, `create`, `update`, `delete`, `update_past`) para adição com 1 clique.
+  - Sincronização automática com a tabela `tb_sys_modulo_acao` e vinculação imediata das novas ações ao perfil de Administrador (`SysAdm`).
+
+---
+
 ## 🗄️ 5. Scripts de Banco de Dados (`scripts_deploys/`)
 
 | Script de Deploy | Script de Rollback | Descrição |
@@ -270,5 +306,8 @@ flowchart TD
 | [`30092026_modulo_webhooks_e_otp.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/30092026_modulo_webhooks_e_otp.sql) | `30092026_modulo_webhooks_e_otp_rollback.sql` | Tabela `tb_webhook`, colunas de OTP e ativação de troca |
 | [`01102026_controle_acesso_departamento_gestor.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/01102026_controle_acesso_departamento_gestor.sql) | `01102026_controle_acesso_departamento_gestor_rollback.sql` | Tabela `tb_departamento_gestor` para controle de acesso departamental |
 | [`01102026_resource_library_tables.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/01102026_resource_library_tables.sql) | `01102026_resource_library_tables_rollback.sql` | Tabelas `resource_types`, `resources`, `collections`, `collection_resources`, `schedule_resources` |
+| [`02102026_avatar_stack_participantes_escala.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/02102026_avatar_stack_participantes_escala.sql) | `02102026_avatar_stack_participantes_escala_rollback.sql` | Índices para otimização da consulta de participantes da equipe |
+| [`02102026_gestao_escalas_bloqueio_retroativo_ranking.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/02102026_gestao_escalas_bloqueio_retroativo_ranking.sql) | `02102026_gestao_escalas_bloqueio_retroativo_ranking_rollback.sql` | Cadastro da permissão `update_past` no módulo de escalas e índices de status/pontuação |
+
 
 

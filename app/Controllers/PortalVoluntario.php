@@ -339,7 +339,11 @@ class PortalVoluntario extends BaseController
         if ($mes > 12) $mes = 12;
 
         $escalaModel = new EscalaVoluntarioModel();
+        // Sincroniza omissões passadas
+        $escalaModel->marcarOmissoesPassadas();
+
         $escalas = $escalaModel->getEscalasDoVoluntario($voluntario->id_voluntario, $ano, $mes);
+        $participantesMap = $escalaModel->getParticipantesEscalasEmLote($escalas);
 
         // Agrupamento e contadores
         $totalMes      = count($escalas);
@@ -349,7 +353,7 @@ class PortalVoluntario extends BaseController
 
         $scheduleResourceModel = new \App\Models\ScheduleResourceModel();
         foreach ($escalas as &$esc) {
-            $conf = strtoupper((string)$esc->status_confirmacao);
+            $conf = strtoupper((string)($esc->status_confirmacao ?: 'PENDENTE'));
             if ($conf === 'CONFIRMADO') {
                 $totalConfirmadas++;
             } elseif ($conf === 'RECUSADO') {
@@ -357,6 +361,13 @@ class PortalVoluntario extends BaseController
             } else {
                 $totalPendentes++;
             }
+
+            // Participantes da mesma escala/culto/departamento (excluindo o próprio voluntário logado)
+            $chave = $esc->data_culto . '_' . (int)($esc->id_culto_padrao ?? 0) . '_' . (int)$esc->id_departamento;
+            $todosDoCulto = $participantesMap[$chave] ?? [];
+            $esc->participantes = array_values(array_filter($todosDoCulto, function($p) use ($voluntario) {
+                return (int)$p->id_voluntario !== (int)$voluntario->id_voluntario;
+            }));
 
             // Carrega lista de materiais anexados para este culto e departamento (Geral + Sub-área em que o voluntário atua)
             $esc->recursos = $scheduleResourceModel->getRecursosDoCulto(
@@ -405,6 +416,20 @@ class PortalVoluntario extends BaseController
         }
 
         $escalaModel = new EscalaVoluntarioModel();
+        $escala = $escalaModel->find($id_escala_voluntario);
+
+        if (!$escala || (int)$escala->id_voluntario !== (int)$voluntario->id_voluntario) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Escala não encontrada.']);
+        }
+
+        // Bloqueio de ação tardia se a data do evento já passou
+        if (!empty($escala->data_culto) && $escala->data_culto < date('Y-m-d')) {
+            return $this->response->setJSON([
+                'status'  => 'error',
+                'message' => 'O prazo para confirmação desta escala expirou, pois a data do evento já passou.'
+            ]);
+        }
+
         $ok = $escalaModel->responderEscala($id_escala_voluntario, $voluntario->id_voluntario, 'CONFIRMADO');
 
         if ($ok) {
@@ -439,6 +464,20 @@ class PortalVoluntario extends BaseController
         }
 
         $escalaModel = new EscalaVoluntarioModel();
+        $escala = $escalaModel->find($id_escala_voluntario);
+
+        if (!$escala || (int)$escala->id_voluntario !== (int)$voluntario->id_voluntario) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Escala não encontrada.']);
+        }
+
+        // Bloqueio de ação tardia se a data do evento já passou
+        if (!empty($escala->data_culto) && $escala->data_culto < date('Y-m-d')) {
+            return $this->response->setJSON([
+                'status'  => 'error',
+                'message' => 'O prazo para desmarcação desta escala expirou, pois a data do evento já passou.'
+            ]);
+        }
+
         $ok = $escalaModel->responderEscala($id_escala_voluntario, $voluntario->id_voluntario, 'RECUSADO', $justificativa);
 
         if ($ok) {

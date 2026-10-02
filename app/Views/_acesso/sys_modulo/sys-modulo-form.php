@@ -94,23 +94,70 @@
                 </div>
               </div>
 
-              <!-- Ações Suportadas -->
+              <!-- Ações Suportadas pelo Módulo (Tags Dinâmicas) -->
               <div class="mb-4">
-                <label class="form-label fw-semibold">Ações Suportadas pelo Módulo</label>
-                <p class="text-secondary small mb-2">Marque as permissões específicas que este módulo suportará para os perfis de acesso:</p>
-                <div class="d-flex flex-wrap gap-3 p-3 bg-light rounded-3 border">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                  <label class="form-label fw-semibold mb-0">
+                    <i class="bi bi-tags-fill text-primary me-1"></i> Ações Suportadas pelo Módulo
+                  </label>
+                  <small class="text-muted">Ação base <code class="text-primary fw-bold">read</code> é mandatória</small>
+                </div>
+                <p class="text-secondary small mb-3">
+                  Defina as permissões específicas que este módulo suporta. Digite o nome da ação (ex: <code>update_past</code>, <code>export</code>, <code>print</code>) e pressione <kbd>Enter</kbd> ou clique em Adicionar.
+                </p>
+
+                <!-- Input para Nova Ação -->
+                <div class="input-group mb-3">
+                  <span class="input-group-text bg-body-tertiary border-end-0"><i class="bi bi-plus-circle-fill text-primary"></i></span>
+                  <input type="text" id="inputNovaAcao" class="form-control font-monospace border-start-0" placeholder="Digite uma nova ação (ex: update_past, reset_password)..." autocomplete="off">
+                  <button type="button" class="btn btn-primary px-3 fw-semibold d-inline-flex align-items-center gap-1" id="btnAdicionarAcao">
+                    <i class="bi bi-plus-lg"></i> Adicionar Ação
+                  </button>
+                </div>
+
+                <!-- Container Visual das Tags Cadastradas -->
+                <div class="p-3 bg-body-tertiary rounded-4 border" style="min-height: 80px;">
+                  <div class="d-flex flex-wrap gap-2 align-items-center" id="containerTagsAcoes">
+                    <?php 
+                    $acoesExistentes = !empty($acoesModulo) ? $acoesModulo : ['read', 'create', 'update', 'delete'];
+                    if (!in_array('read', $acoesExistentes)) {
+                      array_unshift($acoesExistentes, 'read');
+                    }
+                    $acoesExistentes = array_values(array_unique($acoesExistentes));
+
+                    foreach ($acoesExistentes as $acTag) { 
+                      $isRead = ($acTag === 'read');
+                    ?>
+                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill py-2 px-3 fw-bold font-monospace d-inline-flex align-items-center gap-2 shadow-xs tag-item" data-acao="<?= esc($acTag) ?>" style="font-size: 0.85rem;">
+                        <i class="bi bi-key-fill"></i>
+                        <span><?= esc($acTag) ?></span>
+                        <?php if (!$isRead) { ?>
+                          <button type="button" class="btn-close btn-close-sm p-0 ms-1 btn-remover-tag" style="font-size: 0.65rem;" title="Remover ação <?= esc($acTag) ?>" aria-label="Remover"></button>
+                        <?php } else { ?>
+                          <span class="badge bg-primary text-white rounded-circle p-0 d-inline-flex align-items-center justify-content-center" style="width: 14px; height: 14px; font-size: 0.60rem;" title="Ação de leitura padrão">*</span>
+                        <?php } ?>
+                      </span>
+                    <?php } ?>
+                  </div>
+
+                  <!-- Container para inputs hidden submetidos via form -->
+                  <div id="hiddenInputsContainer">
+                    <?php foreach ($acoesExistentes as $acTag) { ?>
+                      <input type="hidden" name="modulo_acoes[]" value="<?= esc($acTag) ?>" id="hidden_acao_<?= esc($acTag) ?>">
+                    <?php } ?>
+                  </div>
+                </div>
+
+                <!-- Atalhos / Sugestões de Ações Frequentes -->
+                <div class="mt-2 pt-1 d-flex align-items-center gap-2 flex-wrap">
+                  <small class="text-muted fw-semibold" style="font-size: 0.75rem;">Sugestões rápidas:</small>
                   <?php 
-                  $todasAcoes = ['read' => 'Visualizar (read)', 'create' => 'Incluir (create)', 'update' => 'Editar (update)', 'delete' => 'Excluir (delete)', 'reset_password' => 'Resetar Senha', 'linkfotos_visualizar' => 'Ver Fotos'];
-                  foreach ($todasAcoes as $key => $label) { 
-                    $checked = in_array($key, $acoesModulo) || $key === 'read';
-                    $disabled = ($key === 'read');
+                  $sugestoes = ['create', 'update', 'delete', 'update_past', 'reset_password', 'export', 'print', 'linkfotos_visualizar', 'linkfotos_inserir', 'linkfotos_excluir'];
+                  foreach ($sugestoes as $sug) {
                   ?>
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" name="modulo_acoes[]" value="<?= $key ?>" id="chkAcao_<?= $key ?>" <?= $checked ? 'checked' : '' ?> <?= $disabled ? 'onclick="return false;"' : '' ?>>
-                      <label class="form-check-label small fw-semibold" for="chkAcao_<?= $key ?>">
-                        <?= $label ?>
-                      </label>
-                    </div>
+                    <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill py-0.5 px-2 font-monospace small btn-sugestao-acao" data-sugestao="<?= $sug ?>" style="font-size: 0.72rem;">
+                      + <?= $sug ?>
+                    </button>
                   <?php } ?>
                 </div>
               </div>
@@ -132,3 +179,116 @@
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const inputNovaAcao        = document.getElementById('inputNovaAcao');
+  const btnAdicionarAcao     = document.getElementById('btnAdicionarAcao');
+  const containerTags        = document.getElementById('containerTagsAcoes');
+  const hiddenContainer      = document.getElementById('hiddenInputsContainer');
+
+  function normalizarAcao(texto) {
+    if (!texto) return '';
+    return texto.toLowerCase().trim()
+      .replace(/[\s\-]+/g, '_')
+      .replace(/[^a-z0-9_]/g, '');
+  }
+
+  function adicionarAcao(nomeAcao) {
+    const acaoSlug = normalizarAcao(nomeAcao);
+    if (!acaoSlug) return;
+
+    // Evita duplicatas
+    if (document.getElementById(`hidden_acao_${acaoSlug}`)) {
+      if (typeof USToast !== 'undefined' && USToast.show) {
+        USToast.show('warning', 'Ação já existe', `A ação "${acaoSlug}" já está na lista.`);
+      }
+      inputNovaAcao.value = '';
+      return;
+    }
+
+    // Cria Tag Visual
+    const tagSpan = document.createElement('span');
+    tagSpan.className = 'badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill py-2 px-3 fw-bold font-monospace d-inline-flex align-items-center gap-2 shadow-xs tag-item';
+    tagSpan.setAttribute('data-acao', acaoSlug);
+    tagSpan.style.fontSize = '0.85rem';
+    tagSpan.innerHTML = `
+      <i class="bi bi-key-fill"></i>
+      <span>${escapeHtml(acaoSlug)}</span>
+      <button type="button" class="btn-close btn-close-sm p-0 ms-1 btn-remover-tag" style="font-size: 0.65rem;" title="Remover ação ${escapeHtml(acaoSlug)}" aria-label="Remover"></button>
+    `;
+
+    // Cria Input Hidden
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.name = 'modulo_acoes[]';
+    hiddenInput.value = acaoSlug;
+    hiddenInput.id = `hidden_acao_${acaoSlug}`;
+
+    containerTags.appendChild(tagSpan);
+    hiddenContainer.appendChild(hiddenInput);
+
+    inputNovaAcao.value = '';
+    inputNovaAcao.focus();
+  }
+
+  function removerAcao(acaoSlug) {
+    if (acaoSlug === 'read') return; // Read é protegido
+
+    const tag = containerTags.querySelector(`.tag-item[data-acao="${acaoSlug}"]`);
+    if (tag) tag.remove();
+
+    const hiddenInput = document.getElementById(`hidden_acao_${acaoSlug}`);
+    if (hiddenInput) hiddenInput.remove();
+  }
+
+  // Event listener no botão de Adicionar
+  btnAdicionarAcao?.addEventListener('click', function(e) {
+    e.preventDefault();
+    adicionarAcao(inputNovaAcao.value);
+  });
+
+  // Event listener para Enter, vírgula e espaço no input
+  inputNovaAcao?.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      adicionarAcao(this.value);
+    } else if (e.key === ',' || e.key === ' ') {
+      e.preventDefault();
+      adicionarAcao(this.value);
+    }
+  });
+
+  // Event delegation para remoção de tags
+  containerTags?.addEventListener('click', function(e) {
+    const btnRemover = e.target.closest('.btn-remover-tag');
+    if (btnRemover) {
+      e.preventDefault();
+      const tagItem = btnRemover.closest('.tag-item');
+      if (tagItem) {
+        const acao = tagItem.getAttribute('data-acao');
+        removerAcao(acao);
+      }
+    }
+  });
+
+  // Sugestões de ações rápidas
+  document.querySelectorAll('.btn-sugestao-acao').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const sug = this.getAttribute('data-sugestao');
+      adicionarAcao(sug);
+    });
+  });
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+});
+</script>

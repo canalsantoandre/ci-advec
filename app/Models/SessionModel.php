@@ -32,6 +32,7 @@ class SessionModel extends Model{
         $obj->read = is_int(array_search('read', $action)) || $isSysAdm;
         $obj->update= is_int(array_search('update', $action)) || $isSysAdm;
         $obj->delete= is_int(array_search('delete', $action)) || $isSysAdm;
+        $obj->update_past = is_int(array_search('update_past', $action)) || $isSysAdm;
 
         // -> convidado
         $obj->linkfotos_inserir= is_int(array_search('linkfotos_inserir', $action)) || $isSysAdm;

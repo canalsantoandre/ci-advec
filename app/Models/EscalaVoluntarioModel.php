@@ -233,7 +233,73 @@ class EscalaVoluntarioModel extends Model
     }
 
     /**
+     * Retorna os meses anteriores do ano que possuem escalas cadastradas para o departamento
+     *
+     * @param int $id_departamento
+     * @param int $ano
+     * @return array Lista de números dos meses (ex: [1, 2, 8])
+     */
+    public function getMesesPassadosComEscala(int $id_departamento, int $ano): array
+    {
+        if ($id_departamento <= 0 || $ano <= 0) {
+            return [];
+        }
+
+        $anoAtual = (int)date('Y');
+        $mesAtual = (int)date('m');
+
+        $db = db_connect();
+        $builder = $db->table($this->table);
+        $builder->select('DISTINCT MONTH(data_culto) as mes');
+        $builder->where('id_departamento', $id_departamento);
+        $builder->where('YEAR(data_culto)', $ano);
+
+        if ($ano === $anoAtual) {
+            // No ano atual, traz apenas meses estritamente anteriores ao mês atual (< mês atual)
+            $builder->where('MONTH(data_culto) <', $mesAtual);
+        } else {
+            // Em anos anteriores, traz todos os meses com escala do ano
+            $primeiroDiaAnoAtual = sprintf('%04d-01-01', $anoAtual);
+            $builder->where('data_culto <', $primeiroDiaAnoAtual);
+        }
+
+        $builder->orderBy('mes', 'ASC');
+
+        $rows = $builder->get()->getResult('object');
+        return array_map(function($r) {
+            return (int)$r->mes;
+        }, $rows);
+    }
+
+    /**
+     * Rotina de Validação Automática: Marca escalas passadas que permaneceram 'PENDENTE' como 'NAO_CONFIRMADO' (Omissão/Falta)
+     *
+     * @return int Total de registros atualizados
+     */
+    public function marcarOmissoesPassadas(): int
+    {
+        $hojeIso = date('Y-m-d');
+        $db = db_connect();
+
+        $builder = $db->table($this->table);
+        $builder->where('data_culto <', $hojeIso);
+        $builder->groupStart()
+            ->where('status_confirmacao', 'PENDENTE')
+            ->orWhere('status_confirmacao IS NULL')
+            ->orWhere('status_confirmacao', '')
+        ->groupEnd();
+
+        $builder->update([
+            'status_confirmacao' => 'NAO_CONFIRMADO',
+            'status_presenca'    => 0
+        ]);
+
+        return $db->affectedRows();
+    }
+
+    /**
      * Resposta do voluntário para uma escala (CONFIRMADO ou RECUSADO com justificativa)
+     * Bloqueia qualquer tentativa tardia de resposta caso a data do culto já tenha passado.
      */
     public function responderEscala($id_escala_voluntario, $id_voluntario, $status_confirmacao, $justificativa = null)
     {
@@ -250,6 +316,11 @@ class EscalaVoluntarioModel extends Model
             return false;
         }
 
+        // Bloqueia se a escala já ocorreu (data no passado)
+        if (!empty($escala->data_culto) && $escala->data_culto < date('Y-m-d')) {
+            return false;
+        }
+
         $dadosUpdate = [
             'status_confirmacao'   => $status_confirmacao,
             'status_presenca'      => ($status_confirmacao === 'CONFIRMADO' ? 1 : ($status_confirmacao === 'RECUSADO' ? 0 : 2)),
@@ -258,5 +329,84 @@ class EscalaVoluntarioModel extends Model
         ];
 
         return $this->update((int)$id_escala_voluntario, $dadosUpdate);
+    }
+
+    /**
+     * Retorna os participantes escalados para os mesmos cultos e departamentos em lote (sem problema N+1)
+     *
+     * @param array $escalas
+     * @return array Mapa indexado pela chave 'data_culto_id_cultopadrao_id_departamento'
+     */
+    public function getParticipantesEscalasEmLote(array $escalas): array
+    {
+        if (empty($escalas)) {
+            return [];
+        }
+
+        $db = db_connect();
+        $builder = $db->table('tb_escala_voluntario as ev');
+        $builder->select('
+            ev.id_escala_voluntario,
+            ev.data_culto,
+            ev.id_culto_padrao,
+            ev.id_culto,
+            ev.id_departamento,
+            ev.id_area,
+            ev.id_voluntario,
+            ev.status_confirmacao,
+            ev.status_presenca,
+            v.nome as nome_completo,
+            COALESCE(NULLIF(TRIM(v.nickname), ""), SUBSTRING_INDEX(TRIM(v.nome), " ", 1)) as primeiro_nome,
+            v.nickname as apelido,
+            v.foto_url,
+            v.telefone_whatsapp,
+            v.nivel_conhecimento,
+            v.redes_sociais,
+            a.nome_area as sub_area
+        ');
+        $builder->join('tb_voluntario as v', 'v.id_voluntario = ev.id_voluntario', 'inner');
+        $builder->join('tb_departamento_area as a', 'a.id_area = ev.id_area', 'inner');
+
+        $builder->groupStart();
+        $chavesAdicionadas = [];
+        foreach ($escalas as $esc) {
+            $dataCulto = $esc->data_culto;
+            $idCultoPadrao = (int)($esc->id_culto_padrao ?? 0);
+            $idDep = (int)$esc->id_departamento;
+
+            $chave = $dataCulto . '_' . $idCultoPadrao . '_' . $idDep;
+            if (isset($chavesAdicionadas[$chave])) {
+                continue;
+            }
+            $chavesAdicionadas[$chave] = true;
+
+            $builder->orGroupStart()
+                ->where('ev.data_culto', $dataCulto)
+                ->where('ev.id_culto_padrao', $idCultoPadrao)
+                ->where('ev.id_departamento', $idDep)
+                ->groupStart()
+                    ->where('ev.status_confirmacao !=', 'RECUSADO')
+                    ->orWhere('ev.status_confirmacao IS NULL')
+                ->groupEnd()
+                ->groupEnd();
+        }
+        $builder->groupEnd();
+
+        $builder->orderBy('a.nome_area', 'ASC');
+        $builder->orderBy('v.nome', 'ASC');
+
+        $rows = $builder->get()->getResult('object');
+
+        // Mapeia por chave identificadora
+        $mapa = [];
+        foreach ($rows as $row) {
+            $chave = $row->data_culto . '_' . (int)($row->id_culto_padrao ?? 0) . '_' . (int)$row->id_departamento;
+            if (!isset($mapa[$chave])) {
+                $mapa[$chave] = [];
+            }
+            $mapa[$chave][] = $row;
+        }
+
+        return $mapa;
     }
 }

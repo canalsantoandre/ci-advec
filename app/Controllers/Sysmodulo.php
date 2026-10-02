@@ -248,18 +248,26 @@ class Sysmodulo extends BaseController
                 ]);
         }
 
-        // Atualizar Ações do Módulo
+        // Atualizar Ações do Módulo na tb_sys_modulo_acao
         $db->table('tb_sys_modulo_acao')->where('id_modulo', $id_modulo)->delete();
 
         $acoesArr = ['read'];
-        if (!empty($acoesInput) && is_array($acoesInput)) {
-            $acoesArr = array_unique(array_merge($acoesArr, $acoesInput));
+        if (!empty($acoesInput)) {
+            $rawAcoes = is_array($acoesInput) ? $acoesInput : explode(',', (string)$acoesInput);
+            foreach ($rawAcoes as $acItem) {
+                $slug = strtolower(trim((string)$acItem));
+                $slug = preg_replace('/[^a-z0-9_]/', '', $slug);
+                if (!empty($slug)) {
+                    $acoesArr[] = $slug;
+                }
+            }
         }
+        $acoesArr = array_values(array_unique($acoesArr));
 
         foreach ($acoesArr as $acao) {
             $db->table('tb_sys_modulo_acao')->insert([
                 'id_modulo'   => $id_modulo,
-                'modulo_acao' => trim($acao)
+                'modulo_acao' => $acao
             ]);
         }
 

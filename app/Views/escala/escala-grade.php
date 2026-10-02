@@ -31,6 +31,22 @@ if (!empty($diasGrade)) {
 }
 sort($titulosCultosMes);
 
+$hojeIso           = !empty($hojeIso) ? $hojeIso : date('Y-m-d');
+$isMesAtual        = isset($isMesAtual) ? $isMesAtual : ($ano == (int)date('Y') && $mes == (int)date('m'));
+$isMesPassado      = isset($isMesPassado) ? $isMesPassado : ($ano < (int)date('Y') || ($ano == (int)date('Y') && $mes < (int)date('m')));
+$podeEditarPassado = !empty($podeEditarPassado) || !empty($sys_action->update_past);
+$mesesPassadosComEscala = isset($mesesPassadosComEscala) && is_array($mesesPassadosComEscala) ? $mesesPassadosComEscala : [];
+
+// Contagem de dias passados no mês visualizado
+$totalDiasPassados = 0;
+if (!empty($diasGrade)) {
+  foreach ($diasGrade as $dItem) {
+    if ($dItem['data_iso'] < $hojeIso) {
+      $totalDiasPassados++;
+    }
+  }
+}
+
 if (!function_exists('formatarNomeExibicaoGrade')) {
   function formatarNomeExibicaoGrade($nomeCompleto, $nickname = null)
   {
@@ -54,6 +70,132 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
 
   [data-bs-theme="dark"] .table-warning-custom {
     background-color: rgba(120, 53, 15, 0.2) !important;
+  }
+
+  /* Estilos para Dias Passados (Histórico) */
+  .linha-dia-passado {
+    background-color: rgba(241, 245, 249, 0.65) !important;
+    transition: opacity 0.25s ease, background-color 0.25s ease;
+  }
+
+  [data-bs-theme="dark"] .linha-dia-passado {
+    background-color: rgba(15, 23, 42, 0.45) !important;
+  }
+
+  .linha-dia-passado td {
+    opacity: 0.90;
+  }
+
+  .linha-dia-passado:hover td {
+    opacity: 1;
+  }
+
+  .badge-past-locked {
+    background: rgba(100, 116, 139, 0.12);
+    color: #64748b;
+    border: 1px solid rgba(100, 116, 139, 0.25);
+    font-size: 0.72rem;
+  }
+
+  [data-bs-theme="dark"] .badge-past-locked {
+    background: rgba(148, 163, 184, 0.12);
+    color: #94a3b8;
+    border-color: rgba(148, 163, 184, 0.25);
+  }
+
+  /* Estilos para Botão e Menu de Meses Anteriores com Alto Contraste */
+  .btn-meses-anteriores {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+    color: #f8fafc !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-meses-anteriores:hover {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+    border-color: #38bdf8 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.35);
+  }
+
+  .btn-meses-anteriores .icon-history {
+    color: #38bdf8 !important;
+    /* Cyan vibrante de altíssimo contraste */
+    font-size: 0.95rem;
+    transition: transform 0.25s ease;
+  }
+
+  .btn-meses-anteriores:hover .icon-history {
+    transform: rotate(-30deg) scale(1.15);
+  }
+
+  .btn-meses-anteriores .badge-count {
+    background-color: #38bdf8 !important;
+    color: #0f172a !important;
+    font-weight: 800;
+  }
+
+  /* Dropdown Menu de Histórico */
+  .dropdown-history-menu {
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-radius: 0.85rem !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18) !important;
+    min-width: 220px;
+    padding: 0.4rem;
+  }
+
+  [data-bs-theme="dark"] .dropdown-history-menu {
+    background-color: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+  }
+
+  .dropdown-history-menu .dropdown-header {
+    font-size: 0.72rem;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+    color: #64748b;
+    padding: 0.4rem 0.75rem 0.25rem;
+  }
+
+  [data-bs-theme="dark"] .dropdown-history-menu .dropdown-header {
+    color: #94a3b8;
+  }
+
+  .dropdown-history-item {
+    border-radius: 0.6rem;
+    padding: 0.55rem 0.85rem;
+    font-weight: 600;
+    color: #1e293b;
+    transition: all 0.15s ease;
+  }
+
+  [data-bs-theme="dark"] .dropdown-history-item {
+    color: #f1f5f9;
+  }
+
+  .dropdown-history-item:hover {
+    background-color: #e0e7ff !important;
+    color: #3730a3 !important;
+  }
+
+  [data-bs-theme="dark"] .dropdown-history-item:hover {
+    background-color: rgba(99, 102, 241, 0.25) !important;
+    color: #c7d2fe !important;
+  }
+
+  .dropdown-history-item.active {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    color: #ffffff !important;
+  }
+
+  /* Aba de Mês Passado Selecionado */
+  .btn-mes-passado-ativo {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 3px 10px rgba(79, 70, 229, 0.35);
   }
 
   .slot-area-box {
@@ -439,26 +581,32 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     background: linear-gradient(135deg, #ff0033 0%, #b3001e 100%);
     color: #fff;
   }
+
   .cover-gradient-audio {
     background: linear-gradient(135deg, #1db954 0%, #107c34 100%);
     color: #fff;
   }
+
   .cover-gradient-spotify {
     background: linear-gradient(135deg, #1db954 0%, #191414 100%);
     color: #fff;
   }
+
   .cover-gradient-pdf {
     background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
     color: #fff;
   }
+
   .cover-gradient-link {
     background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
     color: #fff;
   }
+
   .cover-gradient-text {
     background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
     color: #fff;
   }
+
   .cover-gradient-collection {
     background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
     color: #fff;
@@ -470,6 +618,7 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     border: 1px solid rgba(16, 185, 129, 0.25);
     font-weight: 600;
   }
+
   [data-bs-theme="dark"] .badge-global-origin {
     background: rgba(16, 185, 129, 0.2);
     color: #34d399;
@@ -482,6 +631,7 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     border: 1px solid rgba(99, 102, 241, 0.2);
     font-weight: 600;
   }
+
   [data-bs-theme="dark"] .badge-dep-origin {
     background: rgba(99, 102, 241, 0.2);
     color: #a5b4fc;
@@ -498,12 +648,15 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     color: var(--bs-body-color);
     transition: all 0.2s ease;
   }
-  .pill-filter-btn:hover, .pill-filter-btn.active {
+
+  .pill-filter-btn:hover,
+  .pill-filter-btn.active {
     background: var(--bs-primary);
     color: #fff;
     border-color: var(--bs-primary);
     box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.3);
   }
+
   [data-bs-theme="dark"] .pill-filter-btn {
     border-color: rgba(255, 255, 255, 0.1);
     background: #181b20;
@@ -516,6 +669,7 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     font-weight: 600;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
+
   .btn-attach-music:hover {
     transform: scale(1.05);
   }
@@ -606,30 +760,95 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     </div>
 
     <!-- ========================================== -->
-    <!-- 2. NAVEGAÇÃO DE MESES E ANO (ESTILO TABS) -->
+    <!-- 2. NAVEGAÇÃO DE MESES E ANO (ESTILO TABS INTELIGENTE) -->
     <!-- ========================================== -->
-    <div class="card bg-body-tertiary border-0 rounded-4 shadow-sm mb-4">
-      <div class="card-body p-2 overflow-auto">
-        <div class="d-flex align-items-center justify-content-between flex-nowrap gap-2">
+    <?php
+    $anoAtualReal = (int)date('Y');
+    $mesAtualReal = (int)date('m');
+    $isAnoCorrente = ($ano === $anoAtualReal);
+    ?>
+    <div class="card bg-body-tertiary border-0 rounded-4 shadow-sm mb-4" style="overflow: visible; position: relative; z-index: 20;">
+      <div class="card-body p-2" style="overflow: visible;">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
 
-          <!-- Abas dos Meses -->
-          <div class="d-flex align-items-center gap-1 flex-nowrap">
-            <?php for ($m = 1; $m <= 12; $m++) {
-              $isActive = ($m == $mes);
-            ?>
-              <a href="<?= base_url("escala/grade/{$id_departamento}/{$ano}/{$m}") ?>" class="btn btn-sm rounded-pill px-3 fw-bold text-nowrap <?= $isActive ? 'btn-primary shadow-sm' : 'btn-outline-secondary border-0' ?>">
-                <?= $mesesNomes[$m] ?>-<?= $ano ?>
-              </a>
+          <!-- Abas dos Meses e Dropdown -->
+          <div class="d-flex align-items-center gap-1 flex-wrap">
+
+            <?php if ($isAnoCorrente) { ?>
+              <!-- Dropdown de Meses Anteriores com Escala Cadastrada (Alto Contraste) -->
+              <div class="dropdown me-1 position-relative" style="z-index: 25;">
+                <?php if (!empty($mesesPassadosComEscala)) { ?>
+                  <button class="btn btn-sm btn-meses-anteriores rounded-pill px-3 fw-semibold dropdown-toggle d-inline-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" title="Visualizar meses passados que possuem escalas cadastradas">
+                    <i class="bi bi-clock-history icon-history"></i> Meses anteriores
+                    <span class="badge badge-count rounded-pill px-2 py-0.5 ms-0.5" style="font-size: 0.72rem;"><?= count($mesesPassadosComEscala) ?></span>
+                  </button>
+                  <ul class="dropdown-menu dropdown-history-menu mt-1">
+                    <li class="dropdown-header text-uppercase d-flex align-items-center gap-1">
+                      <i class="bi bi-folder2-open text-warning"></i> Meses com Escala (<?= $ano ?>)
+                    </li>
+                    <?php foreach ($mesesPassadosComEscala as $mPassado) {
+                      $isItemActive = ($mPassado == $mes);
+                    ?>
+                      <li>
+                        <a class="dropdown-item dropdown-history-item d-flex align-items-center justify-content-between gap-3 <?= $isItemActive ? 'active' : '' ?>" href="<?= base_url("escala/grade/{$id_departamento}/{$ano}/{$mPassado}") ?>">
+                          <span class="d-inline-flex align-items-center">
+                            <i class="bi bi-calendar2-range me-2 <?= $isItemActive ? 'text-white' : 'text-primary' ?>"></i>
+                            <?= $mesesNomes[$mPassado] ?> - <?= $ano ?>
+                          </span>
+                          <span class="badge <?= $isItemActive ? 'bg-white text-primary' : 'bg-primary-subtle text-primary' ?> rounded-pill" style="font-size: 0.68rem;">Histórico</span>
+                        </a>
+                      </li>
+                    <?php } ?>
+                  </ul>
+                <?php } else { ?>
+                  <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold opacity-60 d-inline-flex align-items-center gap-1" type="button" disabled title="Nenhum mês anterior possui escalas cadastradas neste departamento">
+                    <i class="bi bi-clock-history"></i> Meses anteriores
+                  </button>
+                <?php } ?>
+              </div>
+
+              <!-- Se o gestor navegou para um mês passado, exibe a aba desse mês passado em destaque com cor diferenciada -->
+              <?php if ($mes < $mesAtualReal) { ?>
+                <a href="<?= base_url("escala/grade/{$id_departamento}/{$ano}/{$mes}") ?>" class="btn btn-sm btn-mes-passado-ativo rounded-pill px-3 fw-bold text-nowrap d-inline-flex align-items-center gap-1">
+                  <i class="bi bi-archive-fill"></i> <?= $mesesNomes[$mes] ?>-<?= $ano ?>
+                  <span class="badge bg-white text-dark rounded-pill ms-1" style="font-size: 0.65rem;">Histórico</span>
+                </a>
+                <div class="vr mx-1 opacity-25" style="height: 24px;"></div>
+              <?php } ?>
+
+              <!-- Meses a partir do Mês Atual até o fim do ano -->
+              <?php for ($m = $mesAtualReal; $m <= 12; $m++) {
+                $isActive = ($m == $mes);
+                $isCurrentMonth = ($m == $mesAtualReal);
+              ?>
+                <a href="<?= base_url("escala/grade/{$id_departamento}/{$ano}/{$m}") ?>" class="btn btn-sm rounded-pill px-3 fw-bold text-nowrap <?= $isActive ? 'btn-primary shadow-sm' : 'btn-outline-secondary border-0' ?>">
+                  <?= $mesesNomes[$m] ?>-<?= $ano ?>
+                  <?php if ($isCurrentMonth && !$isActive) { ?>
+                    <span class="badge bg-primary-subtle text-primary rounded-pill ms-1" style="font-size: 0.65rem;">Atual</span>
+                  <?php } ?>
+                </a>
+              <?php } ?>
+
+            <?php } else { ?>
+              <!-- Ano Passado ou Futuro: Exibe os 12 meses normalmente -->
+              <?php for ($m = 1; $m <= 12; $m++) {
+                $isActive = ($m == $mes);
+              ?>
+                <a href="<?= base_url("escala/grade/{$id_departamento}/{$ano}/{$m}") ?>" class="btn btn-sm rounded-pill px-3 fw-bold text-nowrap <?= $isActive ? 'btn-primary shadow-sm' : 'btn-outline-secondary border-0' ?>">
+                  <?= $mesesNomes[$m] ?>-<?= $ano ?>
+                </a>
+              <?php } ?>
             <?php } ?>
+
           </div>
 
           <!-- Seletor de Ano -->
-          <div class="d-flex align-items-center gap-2 ms-3 flex-nowrap">
-            <a href="<?= base_url("escala/grade/{$id_departamento}/" . ($ano - 1) . "/{$mes}") ?>" class="btn btn-outline-secondary btn-sm rounded-circle" title="Ano Anterior">
+          <div class="d-flex align-items-center gap-2 ms-auto flex-nowrap">
+            <a href="<?= base_url("escala/grade/{$id_departamento}/" . ($ano - 1) . "/{$mes}") ?>" class="btn btn-outline-secondary btn-sm rounded-circle shadow-xs" title="Ano Anterior">
               <i class="bi bi-chevron-left"></i>
             </a>
             <span class="fw-bold fs-6 text-primary"><?= $ano ?></span>
-            <a href="<?= base_url("escala/grade/{$id_departamento}/" . ($ano + 1) . "/{$mes}") ?>" class="btn btn-outline-secondary btn-sm rounded-circle" title="Próximo Ano">
+            <a href="<?= base_url("escala/grade/{$id_departamento}/" . ($ano + 1) . "/{$mes}") ?>" class="btn btn-outline-secondary btn-sm rounded-circle shadow-xs" title="Próximo Ano">
               <i class="bi bi-chevron-right"></i>
             </a>
           </div>
@@ -727,6 +946,30 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
       </div>
     </div>
 
+    <!-- Banner de Modo Histórico / Mês Encerrado -->
+    <?php if ($isMesPassado) { ?>
+      <div class="alert alert-secondary border-0 rounded-4 shadow-sm mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2 py-2 px-3">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-archive-fill text-primary fs-5"></i>
+          <div>
+            <strong class="text-body d-block small fw-bold">Mês Encerrado - Visualização de Histórico</strong>
+            <small class="text-muted">Exibindo todos os registros passados de <?= sprintf('%02d', $mes) ?>/<?= $ano ?>.</small>
+          </div>
+        </div>
+        <div>
+          <?php if (!$podeEditarPassado) { ?>
+            <span class="badge bg-body-secondary text-secondary border rounded-pill px-3 py-1.5 small fw-semibold">
+              <i class="bi bi-lock-fill me-1"></i> Modo Somente Leitura
+            </span>
+          <?php } else { ?>
+            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-1.5 small fw-bold">
+              <i class="bi bi-shield-check me-1"></i> Edição Retroativa Liberada (SysAdm)
+            </span>
+          <?php } ?>
+        </div>
+      </div>
+    <?php } ?>
+
     <!-- Barra de Filtros Rápidos da Tabela -->
     <div class="card border-0 shadow-sm rounded-4 mb-4">
       <div class="card-body p-3">
@@ -746,13 +989,13 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
             </div>
           </div>
 
-          <!-- Filtros de Linhas e Seletor de Culto -->
+          <!-- Filtros de Linhas, Seletor de Culto e Toggle de Dias Passados -->
           <div class="d-flex align-items-center gap-2 flex-wrap">
             <span class="small fw-bold text-secondary me-1"><i class="bi bi-funnel-fill me-1"></i> Filtrar Grade:</span>
 
             <!-- Seletor de Culto Específico -->
             <div class="me-1">
-              <select id="selectFiltroCulto" class="form-select form-select-sm rounded-pill px-3 fw-semibold bg-body border-primary shadow-sm" style="min-width: 220px;" title="Filtrar ocorrências por tipo de culto">
+              <select id="selectFiltroCulto" class="form-select form-select-sm rounded-pill px-3 fw-semibold bg-body border-primary shadow-sm" style="min-width: 200px;" title="Filtrar ocorrências por tipo de culto">
                 <option value="">🎯 Todos os Cultos (<?= $totalCultosMes ?>)</option>
                 <?php foreach ($titulosCultosMes as $nomeCulto) { ?>
                   <option value="<?= esc($nomeCulto) ?>"><?= esc($nomeCulto) ?></option>
@@ -775,6 +1018,17 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
             <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 btnFilterRow" data-filter="fim_semana">
               Fins de Semana
             </button>
+
+            <!-- Toggle Inteligente de Dias Anteriores no Mês Atual -->
+            <?php if ($isMesAtual && $totalDiasPassados > 0) { ?>
+              <div class="form-check form-switch d-inline-flex align-items-center gap-2 mb-0 px-3 py-1 bg-body border rounded-pill shadow-xs ms-lg-2" style="min-height: 31px;">
+                <input class="form-check-input ms-0 mt-0" type="checkbox" role="switch" id="toggleDiasAnteriores" style="cursor: pointer; width: 2.2em; height: 1.15em;">
+                <label class="form-check-label small fw-semibold text-secondary user-select-none" for="toggleDiasAnteriores" style="cursor: pointer;">
+                  <i class="bi bi-clock-history me-1 text-primary"></i> Exibir dias anteriores
+                  <span class="badge bg-secondary-subtle text-secondary rounded-pill ms-1" style="font-size: 0.7rem;"><?= $totalDiasPassados ?></span>
+                </label>
+              </div>
+            <?php } ?>
           </div>
 
         </div>
@@ -810,6 +1064,10 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
                 $isFimSemana = $dia['is_fim_semana'];
                 $bgClass = $isFimSemana ? 'table-warning-custom' : '';
                 $temCulto = !empty($dia['cultos_agendados']);
+                $isDiaPassado = ($dia['data_iso'] < $hojeIso);
+                $isOcultoInicial = ($isMesAtual && $isDiaPassado);
+                $rowPastClass = $isDiaPassado ? 'linha-dia-passado' : '';
+                $styleOculto = $isOcultoInicial ? 'display: none;' : '';
 
                 if ($temCulto) {
                   foreach ($dia['cultos_agendados'] as $c) {
@@ -818,11 +1076,24 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
                     $statusFiltro = $temEscalaNoCulto ? 'com_escala' : 'sem_escala';
                     $dataCultosAttr = trim((string)$c->titulo_culto);
               ?>
-                    <tr class="grade-row <?= $bgClass ?>" data-status-escala="<?= $statusFiltro ?>" data-is-weekend="<?= $isFimSemana ? '1' : '0' ?>" data-cultos="<?= esc($dataCultosAttr) ?>">
+                    <tr class="grade-row <?= $bgClass ?> <?= $rowPastClass ?>" data-status-escala="<?= $statusFiltro ?>" data-is-weekend="<?= $isFimSemana ? '1' : '0' ?>" data-cultos="<?= esc($dataCultosAttr) ?>" data-is-past="<?= $isDiaPassado ? '1' : '0' ?>" style="<?= $styleOculto ?>">
 
                       <!-- Dia -->
                       <td class="text-center fw-bold font-monospace fs-6">
                         <?= $dia['data_formatada'] ?>
+                        <?php if ($isDiaPassado) { ?>
+                          <div class="mt-1">
+                            <?php if ($podeEditarPassado) { ?>
+                              <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0.5" style="font-size: 0.65rem;" title="Edição retroativa permitida">
+                                <i class="bi bi-pencil-square me-0.5"></i> Retroativo
+                              </span>
+                            <?php } else { ?>
+                              <span class="badge bg-body-secondary text-muted rounded-pill px-2 py-0.5" style="font-size: 0.65rem;" title="Data encerrada (somente leitura)">
+                                Encerrado
+                              </span>
+                            <?php } ?>
+                          </div>
+                        <?php } ?>
                       </td>
 
                       <!-- Dia Semana -->
@@ -864,13 +1135,14 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
                             }
 
                             $isPreenchido = !empty($escalasAtivas);
+                            $permiteEditarEsteSlot = (!$isDiaPassado || $podeEditarPassado);
                           ?>
                             <div class="slot-area-box <?= $isPreenchido ? 'filled' : '' ?>">
                               <div class="d-flex justify-content-between align-items-center mb-1">
                                 <strong class="small text-primary-emphasis" style="font-size: 0.75rem;">
                                   <i class="bi bi-grid me-1"></i><?= esc($area->nome_area) ?>
                                 </strong>
-                                <?php if ($isPreenchido && !empty($sys_action->create)) { ?>
+                                <?php if ($isPreenchido && !empty($sys_action->create) && $permiteEditarEsteSlot) { ?>
                                   <button type="button" class="btn btn-xs btn-outline-primary rounded-circle p-0 d-inline-flex align-items-center justify-content-center"
                                     style="width: 18px; height: 18px; font-size: 0.75rem;"
                                     onclick="abrirModalEscalar('<?= $c->data_culto ?>', <?= $c->id_culto_padrao ?>, '<?= esc($c->titulo_culto) ?> - <?= $dia['data_formatada'] ?>', <?= $area->id_area ?>)"
@@ -904,8 +1176,19 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
                                           <span class="text-success small" data-bs-toggle="tooltip" title="Agenda Aceita pelo Voluntário" style="font-size: 0.85rem;">
                                             <i class="bi bi-hand-thumbs-up-fill"></i>
                                           </span>
-                                          <span class="badge btn-presence-toggle <?= $isPresente ? 'bg-success' : 'bg-danger' ?>" onclick="togglePresenca(<?= $esc->id_escala_voluntario ?>, <?= $isPresente ? 0 : 1 ?>)" title="Clique para alternar presença">
-                                            <?= $isPresente ? 'Pres.' : 'Aus.' ?>
+                                          <?php if ($permiteEditarEsteSlot) { ?>
+                                            <span class="badge btn-presence-toggle <?= $isPresente ? 'bg-success' : 'bg-danger' ?>" onclick="togglePresenca(<?= $esc->id_escala_voluntario ?>, <?= $isPresente ? 0 : 1 ?>)" title="Clique para alternar presença">
+                                              <?= $isPresente ? 'Pres.' : 'Aus.' ?>
+                                            </span>
+                                          <?php } else { ?>
+                                            <span class="badge <?= $isPresente ? 'bg-success' : 'bg-danger' ?> opacity-75" style="cursor: not-allowed;" title="Presença finalizada (Histórico bloqueado)">
+                                              <?= $isPresente ? 'Pres.' : 'Aus.' ?>
+                                            </span>
+                                          <?php } ?>
+                                        <?php } elseif ($conf === 'NAO_CONFIRMADO') { ?>
+                                          <!-- Voluntário Omitiu / Não Confirmou no Passado (Falta) -->
+                                          <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-1.5 py-0.5 d-inline-flex align-items-center gap-1" data-bs-toggle="tooltip" title="Não confirmou até a data do evento (Omissão/Falta)">
+                                            <i class="bi bi-exclamation-octagon-fill text-danger" style="font-size: 0.75rem;"></i> Falta
                                           </span>
                                         <?php } else { ?>
                                           <!-- Voluntário Pendente: Ampulheta com Efeito Pulsante -->
@@ -914,7 +1197,7 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
                                           </span>
                                         <?php } ?>
 
-                                        <?php if (!empty($sys_action->delete)) { ?>
+                                        <?php if (!empty($sys_action->delete) && $permiteEditarEsteSlot) { ?>
                                           <button type="button" class="btn btn-link btn-sm text-danger p-0 ms-1" onclick="removerEscalaAjax(<?= $esc->id_escala_voluntario ?>)" title="Remover da Escala">
                                             <i class="bi bi-x-circle-fill"></i>
                                           </button>
@@ -924,7 +1207,7 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
                                   <?php } ?>
                                 </div>
 
-                                <?php if (!empty($sys_action->create)) { ?>
+                                <?php if (!empty($sys_action->create) && $permiteEditarEsteSlot) { ?>
                                   <div class="mt-1 pt-1 text-center">
                                     <button type="button" class="btn btn-sm btn-link text-primary text-decoration-none p-0 small fw-semibold d-inline-flex align-items-center gap-1"
                                       style="font-size: 0.72rem;"
@@ -936,16 +1219,20 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
                                 <?php } ?>
                               <?php } else { ?>
                                 <!-- Slot Vago / Disponível para Escalar -->
-                                <?php if (!empty($sys_action->create)) { ?>
+                                <?php if (!empty($sys_action->create) && $permiteEditarEsteSlot) { ?>
                                   <button type="button" class="btn btn-sm btn-outline-primary rounded-pill py-0 px-2 small w-100 text-nowrap" onclick="abrirModalEscalar('<?= $c->data_culto ?>', <?= $c->id_culto_padrao ?>, '<?= esc($c->titulo_culto) ?> - <?= $dia['data_formatada'] ?>', <?= $area->id_area ?>)">
                                     <i class="bi bi-plus me-1"></i> Escalar
                                   </button>
                                 <?php } else { ?>
-                                  <small class="text-muted fst-italic">Vago</small>
+                                  <?php if ($isDiaPassado) { ?>
+                                    <span class="badge badge-past-locked rounded-pill px-2 py-1"><i class="bi bi-lock-fill me-1"></i>Encerrado</span>
+                                  <?php } else { ?>
+                                    <small class="text-muted fst-italic">Vago</small>
+                                  <?php } ?>
                                 <?php } ?>
                               <?php } ?>
 
-                              <!-- Registro Discreto de Recusas para este slot (Joia para baixo sem poluir o calendário) -->
+                              <!-- Registro Discreto de Recusas para este slot -->
                               <?php if (!empty($escalasRecusadas)) { ?>
                                 <div class="d-flex flex-wrap gap-1 mt-1 pt-1 border-top border-secondary-subtle">
                                   <?php foreach ($escalasRecusadas as $escRec) {
@@ -959,7 +1246,7 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
                                       style="font-size: 0.65rem;">
                                       <i class="bi bi-hand-thumbs-down-fill text-danger"></i>
                                       <span class="text-truncate" style="max-width: 85px; text-decoration: line-through;"><?= esc($nomeRec) ?></span>
-                                      <?php if (!empty($sys_action->delete)) { ?>
+                                      <?php if (!empty($sys_action->delete) && $permiteEditarEsteSlot) { ?>
                                         <button type="button" class="btn btn-link btn-sm text-danger p-0 ms-0.5" onclick="removerEscalaAjax(<?= $escRec->id_escala_voluntario ?>)" title="Excluir Registro de Recusa">
                                           <i class="bi bi-x" style="font-size: 0.75rem;"></i>
                                         </button>
@@ -975,36 +1262,50 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
                       </td>
 
                       <!-- Ações -->
-                      <td class="text-end pe-4">
-                        <div class="d-inline-flex gap-1">
-                          <?php
-                            $totalMateriaisCulto = $recursosContagemPorCulto[$c->data_culto][$c->id_culto_padrao] ?? 0;
-                            $btnClassMat = $totalMateriaisCulto > 0 ? 'btn-info text-white' : 'btn-outline-info';
-                          ?>
-                          <button type="button" id="btn_mat_culto_<?= $c->data_culto ?>_<?= $c->id_culto_padrao ?>" class="btn <?= $btnClassMat ?> btn-action position-relative" title="Biblioteca de Materiais (<?= $totalMateriaisCulto ?> anexado(s))" onclick="abrirModalMateriaisCulto('<?= $c->data_culto ?>', <?= $c->id_culto_padrao ?>, '<?= esc($c->titulo_culto) ?> - <?= $dia['data_formatada'] ?>')">
-                            <i class="bi bi-collection-play-fill"></i>
-                            <span id="badge_mat_culto_<?= $c->data_culto ?>_<?= $c->id_culto_padrao ?>" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light <?= $totalMateriaisCulto > 0 ? '' : 'd-none' ?>" style="font-size: 0.60rem; padding: 0.25em 0.45em;" title="<?= $totalMateriaisCulto ?> material(is) anexado(s)">
-                              <?= $totalMateriaisCulto ?>
-                            </span>
-                          </button>
-                          <?php if (!empty($sys_action->create)) { ?>
-                            <button type="button" class="btn btn-outline-primary btn-action" title="Escalar Voluntário no Culto" onclick="abrirModalEscalar('<?= $c->data_culto ?>', <?= $c->id_culto_padrao ?>, '<?= esc($c->titulo_culto) ?> - <?= $dia['data_formatada'] ?>')">
-                              <i class="bi bi-person-plus-fill"></i>
-                            </button>
-                          <?php } ?>
-                        </div>
-                      </td>
-
+                      <?php if ($isDiaPassado && !$podeEditarPassado) { ?>
+                        <td class="text-center">
+                          <span class="badge badge-past-locked rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center justify-content-center gap-1" title="Data encerrada (somente leitura)">
+                            <i class="bi bi-lock-fill"></i> Encerrado
+                          </span>
+                        </td>
+                      <?php } else { ?>
+                        <td class="text-end pe-4">
+                          <div class="d-inline-flex gap-1 align-items-center">
+                            <?php if (!empty($sys_action->create)) { ?>
+                              <?php
+                              $totalMateriaisCulto = $recursosContagemPorCulto[$c->data_culto][$c->id_culto_padrao] ?? 0;
+                              $btnClassMat = $totalMateriaisCulto > 0 ? 'btn-info text-white' : 'btn-outline-info';
+                              ?>
+                              <button type="button" id="btn_mat_culto_<?= $c->data_culto ?>_<?= $c->id_culto_padrao ?>" class="btn <?= $btnClassMat ?> btn-action position-relative" title="Biblioteca de Materiais (<?= $totalMateriaisCulto ?> anexado(s))" onclick="abrirModalMateriaisCulto('<?= $c->data_culto ?>', <?= $c->id_culto_padrao ?>, '<?= esc($c->titulo_culto) ?> - <?= $dia['data_formatada'] ?>')">
+                                <i class="bi bi-collection-play-fill"></i>
+                                <span id="badge_mat_culto_<?= $c->data_culto ?>_<?= $c->id_culto_padrao ?>" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light <?= $totalMateriaisCulto > 0 ? '' : 'd-none' ?>" style="font-size: 0.60rem; padding: 0.25em 0.45em;" title="<?= $totalMateriaisCulto ?> material(is) anexado(s)">
+                                  <?= $totalMateriaisCulto ?>
+                                </span>
+                              </button>
+                              <button type="button" class="btn btn-outline-primary btn-action" title="Escalar Voluntário no Culto" onclick="abrirModalEscalar('<?= $c->data_culto ?>', <?= $c->id_culto_padrao ?>, '<?= esc($c->titulo_culto) ?> - <?= $dia['data_formatada'] ?>')">
+                                <i class="bi bi-person-plus-fill"></i>
+                              </button>
+                            <?php } ?>
+                          </div>
+                        </td>
+                      <?php } ?>
                     </tr>
                   <?php
                   } // Fim foreach cultos
                 } else { // Sem culto no dia
                   ?>
-                  <tr class="grade-row <?= $bgClass ?>" data-status-escala="sem_culto" data-is-weekend="<?= $isFimSemana ? '1' : '0' ?>" data-cultos="">
+                  <tr class="grade-row <?= $bgClass ?> <?= $rowPastClass ?>" data-status-escala="sem_culto" data-is-weekend="<?= $isFimSemana ? '1' : '0' ?>" data-cultos="" data-is-past="<?= $isDiaPassado ? '1' : '0' ?>" style="<?= $styleOculto ?>">
 
                     <!-- Dia -->
                     <td class="text-center fw-bold font-monospace fs-6">
                       <?= $dia['data_formatada'] ?>
+                      <?php if ($isDiaPassado) { ?>
+                        <div class="mt-1">
+                          <span class="badge bg-body-secondary text-muted rounded-pill px-2 py-0.5" style="font-size: 0.65rem;">
+                            Encerrado
+                          </span>
+                        </div>
+                      <?php } ?>
                     </td>
 
                     <!-- Dia Semana -->
@@ -1029,9 +1330,17 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
                     </td>
 
                     <!-- Ações -->
-                    <td class="text-end pe-4">
-                      <span class="text-muted small">-</span>
-                    </td>
+                    <?php if ($isDiaPassado && !$podeEditarPassado) { ?>
+                      <td class="text-center">
+                        <span class="badge badge-past-locked rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center justify-content-center gap-1" title="Data encerrada (somente leitura)">
+                          <i class="bi bi-lock-fill"></i> Encerrado
+                        </span>
+                      </td>
+                    <?php } else { ?>
+                      <td class="text-center">
+                        <span class="text-muted small">-</span>
+                      </td>
+                    <?php } ?>
 
                   </tr>
                 <?php } ?>
@@ -1756,16 +2065,25 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
       });
   }
 
-  // Função unificada de filtros da Grade (Status + Tipo de Culto)
+  // Função unificada de filtros da Grade (Status + Tipo de Culto + Dias Anteriores)
   function aplicarFiltrosGrade() {
     const activeBtn = document.querySelector('.btnFilterRow.active');
     const filter = activeBtn ? activeBtn.getAttribute('data-filter') : 'all';
     const cultoSelecionado = (document.getElementById('selectFiltroCulto')?.value || '').toLowerCase().trim();
+    const toggleDiasAnteriores = document.getElementById('toggleDiasAnteriores');
+    const exibirDiasAnteriores = toggleDiasAnteriores ? toggleDiasAnteriores.checked : true;
 
     document.querySelectorAll('#tblGradeEscala tbody tr.grade-row').forEach(row => {
       const status = row.getAttribute('data-status-escala');
       const isWeekend = row.getAttribute('data-is-weekend') === '1';
       const cultosNaLinha = (row.getAttribute('data-cultos') || '').toLowerCase();
+      const isPast = row.getAttribute('data-is-past') === '1';
+
+      // Se for linha de dia passado no mês corrente e o toggle estiver desligado, oculta
+      if (isPast && !exibirDiasAnteriores) {
+        row.style.display = 'none';
+        return;
+      }
 
       let atendeStatus = true;
       if (filter === 'all') {
@@ -1808,6 +2126,11 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     aplicarFiltrosGrade();
   });
 
+  // Event listener do Toggle de Dias Anteriores
+  document.getElementById('toggleDiasAnteriores')?.addEventListener('change', function() {
+    aplicarFiltrosGrade();
+  });
+
   function safeDecode(text) {
     if (!text) return '';
     const doc = new DOMParser().parseFromString(String(text), 'text/html');
@@ -1845,11 +2168,22 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     const code = (r.type_code || '').toLowerCase();
     const provider = (r.provider || '').toLowerCase();
 
-    if (provider === 'youtube' || code === 'video') { gradClass = 'cover-gradient-video'; iconClass = 'bi bi-play-circle-fill'; }
-    else if (provider === 'spotify') { gradClass = 'cover-gradient-spotify'; iconClass = 'bi bi-spotify'; }
-    else if (code === 'pdf') { gradClass = 'cover-gradient-pdf'; iconClass = 'bi bi-file-earmark-pdf-fill'; }
-    else if (code === 'link') { gradClass = 'cover-gradient-link'; iconClass = 'bi bi-link-45deg'; }
-    else if (code === 'text') { gradClass = 'cover-gradient-text'; iconClass = 'bi bi-file-text-fill'; }
+    if (provider === 'youtube' || code === 'video') {
+      gradClass = 'cover-gradient-video';
+      iconClass = 'bi bi-play-circle-fill';
+    } else if (provider === 'spotify') {
+      gradClass = 'cover-gradient-spotify';
+      iconClass = 'bi bi-spotify';
+    } else if (code === 'pdf') {
+      gradClass = 'cover-gradient-pdf';
+      iconClass = 'bi bi-file-earmark-pdf-fill';
+    } else if (code === 'link') {
+      gradClass = 'cover-gradient-link';
+      iconClass = 'bi bi-link-45deg';
+    } else if (code === 'text') {
+      gradClass = 'cover-gradient-text';
+      iconClass = 'bi bi-file-text-fill';
+    }
 
     return `
       <div class="music-cover-art ${gradClass} flex-shrink-0">
@@ -1881,7 +2215,7 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     contextoMateriaisAtual.id_area = parseInt(id_area_pre_select) || 0;
 
     document.getElementById('modal_mat_culto_titulo').textContent = `Biblioteca • ${cultoDisplay}`;
-    
+
     const selectArea = document.getElementById('modal_mat_id_area');
     if (selectArea) {
       selectArea.value = contextoMateriaisAtual.id_area;
@@ -1971,9 +2305,9 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     let html = '';
     exibiveis.forEach(r => {
       const isGeral = (parseInt(r.id_area) === 0);
-      const tagDestino = isGeral 
-        ? `<span class="badge badge-global-origin rounded-pill small"><i class="bi bi-globe2 me-1"></i>Geral (Todas)</span>`
-        : `<span class="badge badge-dep-origin rounded-pill small"><i class="bi bi-pin-map-fill me-1"></i>${escapeHtml(r.nome_area || 'Sub-área')}</span>`;
+      const tagDestino = isGeral ?
+        `<span class="badge badge-global-origin rounded-pill small"><i class="bi bi-globe2 me-1"></i>Geral (Todas)</span>` :
+        `<span class="badge badge-dep-origin rounded-pill small"><i class="bi bi-pin-map-fill me-1"></i>${escapeHtml(r.nome_area || 'Sub-área')}</span>`;
 
       const coverHtml = getMediaCoverHtml(r);
 
@@ -2098,10 +2432,10 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
 
   function filtrarPickerEscala() {
     const termo = (document.getElementById('filtro_picker_escala_busca').value || '').trim().toLowerCase();
-    
+
     let filtrados = cacheItensPickerDisponiveis.filter(item => {
-      const matchBusca = (item.title || '').toLowerCase().includes(termo) || 
-                          (item.description || '').toLowerCase().includes(termo);
+      const matchBusca = (item.title || '').toLowerCase().includes(termo) ||
+        (item.description || '').toLowerCase().includes(termo);
 
       if (!matchBusca) return false;
 
@@ -2131,9 +2465,9 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     if (modoPickerAtual === 'recursos') {
       itens.forEach(r => {
         const isGlobal = (r.department_id === null || parseInt(r.department_id) === 0);
-        const originBadge = isGlobal
-          ? `<span class="badge badge-global-origin rounded-pill small"><i class="bi bi-globe2 me-1"></i>Global</span>`
-          : `<span class="badge badge-dep-origin rounded-pill small"><i class="bi bi-building me-1"></i>${escapeHtml(r.department_name || 'Departamento')}</span>`;
+        const originBadge = isGlobal ?
+          `<span class="badge badge-global-origin rounded-pill small"><i class="bi bi-globe2 me-1"></i>Global</span>` :
+          `<span class="badge badge-dep-origin rounded-pill small"><i class="bi bi-building me-1"></i>${escapeHtml(r.department_name || 'Departamento')}</span>`;
 
         const coverHtml = getMediaCoverHtml(r);
 
@@ -2163,9 +2497,9 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     } else {
       itens.forEach(c => {
         const isGlobal = (c.department_id === null || parseInt(c.department_id) === 0);
-        const originBadge = isGlobal
-          ? `<span class="badge badge-global-origin rounded-pill small"><i class="bi bi-globe2 me-1"></i>Global</span>`
-          : `<span class="badge badge-dep-origin rounded-pill small"><i class="bi bi-building me-1"></i>${escapeHtml(c.department_name || 'Departamento')}</span>`;
+        const originBadge = isGlobal ?
+          `<span class="badge badge-global-origin rounded-pill small"><i class="bi bi-globe2 me-1"></i>Global</span>` :
+          `<span class="badge badge-dep-origin rounded-pill small"><i class="bi bi-building me-1"></i>${escapeHtml(c.department_name || 'Departamento')}</span>`;
 
         const coverHtml = getMediaCoverHtml(c, true);
 
@@ -2236,7 +2570,10 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     formData.append('id_area', id_area);
     formData.append('resource_ids', resource_id);
 
-    fetch('<?= base_url('resource/anexarNaEscala') ?>', { method: 'POST', body: formData })
+    fetch('<?= base_url('resource/anexarNaEscala') ?>', {
+        method: 'POST',
+        body: formData
+      })
       .then(r => r.json())
       .then(res => {
         if (res.status === 'success') {
@@ -2287,7 +2624,10 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     formData.append('id_area', id_area);
     formData.append('collection_id', collection_id);
 
-    fetch('<?= base_url('resource/anexarNaEscala') ?>', { method: 'POST', body: formData })
+    fetch('<?= base_url('resource/anexarNaEscala') ?>', {
+        method: 'POST',
+        body: formData
+      })
       .then(r => r.json())
       .then(res => {
         if (res.status === 'success') {
@@ -2333,7 +2673,10 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
       formData.append('id_area', id_area);
     }
 
-    fetch('<?= base_url('resource/removerDaEscala') ?>', { method: 'POST', body: formData })
+    fetch('<?= base_url('resource/removerDaEscala') ?>', {
+        method: 'POST',
+        body: formData
+      })
       .then(r => r.json())
       .then(res => {
         if (res.status === 'success') {

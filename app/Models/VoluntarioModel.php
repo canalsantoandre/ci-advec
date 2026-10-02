@@ -236,6 +236,7 @@ class VoluntarioModel extends Model
         $totalAusencias     = 0;
         $totalConfirmados   = 0;
         $totalCancelamentos = 0;
+        $totalOmissoes      = 0;
         $totalPendentes     = 0;
         $listaCancelamentos = [];
         $distribuicaoAreas  = [];
@@ -247,11 +248,15 @@ class VoluntarioModel extends Model
                 $totalAusencias++;
             }
 
-            if ($item->status_confirmacao === 'CONFIRMADO') {
+            $conf = strtoupper((string)($item->status_confirmacao ?: 'PENDENTE'));
+
+            if ($conf === 'CONFIRMADO') {
                 $totalConfirmados++;
-            } elseif ($item->status_confirmacao === 'RECUSADO') {
+            } elseif ($conf === 'RECUSADO') {
                 $totalCancelamentos++;
                 $listaCancelamentos[] = $item;
+            } elseif ($conf === 'NAO_CONFIRMADO') {
+                $totalOmissoes++;
             } else {
                 $totalPendentes++;
             }
@@ -271,7 +276,7 @@ class VoluntarioModel extends Model
             if ($item->status_presenca == 1) {
                 $distribuicaoAreas[$areaKey]['presencas']++;
             }
-            if ($item->status_confirmacao === 'RECUSADO') {
+            if ($conf === 'RECUSADO') {
                 $distribuicaoAreas[$areaKey]['cancelamentos']++;
             }
         }
@@ -852,17 +857,21 @@ class VoluntarioModel extends Model
             $idV = (int)$e->id_voluntario;
             if (!isset($escalasPorVoluntario[$idV])) {
                 $escalasPorVoluntario[$idV] = [
-                    'total'        => 0,
-                    'confirmados'  => 0,
-                    'cancelados'   => 0,
-                    'presencas'    => 0
+                    'total'           => 0,
+                    'confirmados'     => 0,
+                    'cancelados'      => 0,
+                    'nao_confirmados' => 0,
+                    'presencas'       => 0
                 ];
             }
             $escalasPorVoluntario[$idV]['total']++;
-            if ($e->status_confirmacao === 'CONFIRMADO') {
+            $statusConf = strtoupper((string)($e->status_confirmacao ?: 'PENDENTE'));
+            if ($statusConf === 'CONFIRMADO') {
                 $escalasPorVoluntario[$idV]['confirmados']++;
-            } elseif ($e->status_confirmacao === 'RECUSADO') {
+            } elseif ($statusConf === 'RECUSADO') {
                 $escalasPorVoluntario[$idV]['cancelados']++;
+            } elseif ($statusConf === 'NAO_CONFIRMADO') {
+                $escalasPorVoluntario[$idV]['nao_confirmados']++;
             }
             if ($e->status_presenca == 1) {
                 $escalasPorVoluntario[$idV]['presencas']++;
@@ -893,6 +902,7 @@ class VoluntarioModel extends Model
                         'total_escalas'      => 0,
                         'cultos_aceitos'     => 0,
                         'cultos_cancelados'  => 0,
+                        'nao_confirmados'    => 0,
                         'presencas'          => 0,
                         'taxa_assiduidade'   => 0,
                         'pontos'             => 0,
@@ -904,9 +914,10 @@ class VoluntarioModel extends Model
                 continue;
             }
 
-            $totEsc = $vStats['total'];
+            $totEsc  = $vStats['total'];
             $totConf = $vStats['confirmados'];
             $totCanc = $vStats['cancelados'];
+            $totOmi  = $vStats['nao_confirmados'] ?? 0;
             $totPres = $vStats['presencas'];
 
             $taxaAssiduidade = $totEsc > 0 ? round(($totPres / $totEsc) * 100, 1) : 0;
@@ -915,7 +926,8 @@ class VoluntarioModel extends Model
             // +15 pts por presença cumprida
             // +10 pts por confirmação
             // -10 pts por cancelamento/recusa
-            $pontos = ($totPres * 15) + ($totConf * 10) - ($totCanc * 10);
+            // -25 pts por omissão/falta não confirmada
+            $pontos = ($totPres * 15) + ($totConf * 10) - ($totCanc * 10) - ($totOmi * 25);
             if ($pontos < 0) $pontos = 0;
 
             $leaderboard[] = (object)[
@@ -928,6 +940,7 @@ class VoluntarioModel extends Model
                 'total_escalas'      => $totEsc,
                 'cultos_aceitos'     => $totConf,
                 'cultos_cancelados'  => $totCanc,
+                'nao_confirmados'    => $totOmi,
                 'presencas'          => $totPres,
                 'taxa_assiduidade'   => $taxaAssiduidade,
                 'pontos'             => $pontos,

@@ -473,6 +473,256 @@ if (!function_exists('getContrasteTexto')) {
         opacity: 1;
       }
     }
+
+    /* ========================================================
+       AVATAR STACK (FACEPILE) & BOTTOM SHEET PARTICIPANTES
+       ======================================================== */
+    .facepile-stack-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      padding: 2px 7px 2px 3px;
+      border-radius: 9999px;
+      background: rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    .facepile-stack-wrapper:hover {
+      background: rgba(37, 99, 235, 0.08);
+      border-color: rgba(37, 99, 235, 0.3);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+    }
+
+    .facepile-stack-wrapper:active {
+      transform: scale(0.97);
+    }
+
+    [data-bs-theme="dark"] .facepile-stack-wrapper {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    [data-bs-theme="dark"] .facepile-stack-wrapper:hover {
+      background: rgba(59, 130, 246, 0.18);
+      border-color: rgba(59, 130, 246, 0.4);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .facepile-avatars {
+      display: inline-flex;
+      align-items: center;
+      flex-direction: row;
+    }
+
+    .facepile-avatar-item {
+      position: relative;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+      object-fit: cover;
+      margin-left: -8px;
+      transition: transform 0.2s ease, z-index 0.2s ease, box-shadow 0.2s ease;
+      background-color: #e2e8f0;
+      cursor: pointer;
+    }
+
+    .facepile-avatar-item:first-child {
+      margin-left: 0;
+    }
+
+    .facepile-avatar-item:hover {
+      transform: scale(1.18);
+      z-index: 15 !important;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    [data-bs-theme="dark"] .facepile-avatar-item {
+      border-color: #1e293b;
+      background-color: #334155;
+    }
+
+    .facepile-counter-bubble {
+      position: relative;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      margin-left: -8px;
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      color: #1e40af;
+      font-size: 0.65rem;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease;
+    }
+
+    [data-bs-theme="dark"] .facepile-counter-bubble {
+      border-color: #1e293b;
+      background: linear-gradient(135deg, #1e293b 0%, #172554 100%);
+      color: #93c5fd;
+    }
+
+    .facepile-label-hint {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding-right: 2px;
+      margin-left: 2px;
+    }
+
+    [data-bs-theme="dark"] .facepile-label-hint {
+      color: #94a3b8;
+    }
+
+    /* Modal / Bottom Sheet Mobile-First */
+    @media (max-width: 767.98px) {
+      .modal-bottom-sheet-mobile {
+        padding-right: 0 !important;
+        padding-left: 0 !important;
+      }
+
+      .modal-bottom-sheet-mobile .modal-dialog {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: 0;
+        max-width: 100%;
+        transform: translateY(100%);
+        transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .modal-bottom-sheet-mobile.show .modal-dialog {
+        transform: translateY(0);
+      }
+
+      .modal-bottom-sheet-mobile .modal-content {
+        border-radius: 1.5rem 1.5rem 0 0 !important;
+        border-bottom: 0;
+        max-height: 85vh;
+        box-shadow: 0 -10px 35px rgba(0, 0, 0, 0.4);
+      }
+    }
+
+    .bottom-sheet-drag-handle {
+      width: 42px;
+      height: 5px;
+      border-radius: 999px;
+      background-color: rgba(0, 0, 0, 0.18);
+      margin: 8px auto 2px auto;
+    }
+
+    [data-bs-theme="dark"] .bottom-sheet-drag-handle {
+      background-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .participante-card-item {
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.07);
+      border-radius: 1rem;
+      padding: 0.75rem 0.85rem;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .participante-card-item:hover {
+      border-color: rgba(37, 99, 235, 0.35);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+      background-color: #f8fafc;
+    }
+
+    [data-bs-theme="dark"] .participante-card-item {
+      background: #1e293b;
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    [data-bs-theme="dark"] .participante-card-item:hover {
+      background-color: #24344d;
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+
+    .participante-nome-expand {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-height 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+    }
+
+    .participante-card-item.expanded .participante-nome-expand {
+      max-height: 180px;
+      opacity: 1;
+    }
+
+    .participante-detalhes-clean {
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
+      padding-top: 0.45rem;
+      margin-top: 0.5rem;
+    }
+
+    [data-bs-theme="dark"] .participante-detalhes-clean {
+      border-top-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .social-icon-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.76rem;
+      text-decoration: none;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      opacity: 0.9;
+    }
+
+    .social-icon-btn:hover {
+      transform: translateY(-2px) scale(1.1);
+      opacity: 1;
+    }
+
+    .btn-whatsapp-action {
+      background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+      color: #ffffff !important;
+      border: none;
+      font-weight: 700;
+      border-radius: 9999px;
+      padding: 0.38rem 0.72rem;
+      font-size: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 2px 6px rgba(37, 211, 102, 0.3);
+      transition: all 0.2s ease;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-whatsapp-action:hover {
+      background: linear-gradient(135deg, #20ba5a 0%, #0e7266 100%);
+      box-shadow: 0 4px 12px rgba(37, 211, 102, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .btn-whatsapp-action:active {
+      transform: scale(0.96);
+    }
   </style>
 </head>
 
@@ -731,15 +981,67 @@ if (!function_exists('getContrasteTexto')) {
                     <?php } ?>
                   </div>
 
-                  <!-- Linha 3: Departamento e Sub-área Lado a Lado -->
-                  <div class="d-flex align-items-center gap-1.5 flex-wrap">
-                    <span class="badge rounded-pill px-2.5 py-1 small fw-bold shadow-xs text-nowrap"
-                      style="background-color: <?= esc($corDep) ?> !important; color: <?= esc($txtDep) ?> !important; font-size: 0.72rem; border: 1px solid rgba(0,0,0,0.1);">
-                      <?= esc($esc->nome_departamento) ?>
-                    </span>
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 small fw-bold text-nowrap" style="font-size: 0.72rem;">
-                      <?= esc($esc->nome_area) ?>
-                    </span>
+                  <!-- Linha 3: Departamento, Sub-área e Avatar Stack (Facepile) -->
+                  <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mt-0.5">
+                    <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                      <span class="badge rounded-pill px-2.5 py-1 small fw-bold shadow-xs text-nowrap"
+                        style="background-color: <?= esc($corDep) ?> !important; color: <?= esc($txtDep) ?> !important; font-size: 0.72rem; border: 1px solid rgba(0,0,0,0.1);">
+                        <?= esc($esc->nome_departamento) ?>
+                      </span>
+                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 small fw-bold text-nowrap" style="font-size: 0.72rem;">
+                        <?= esc($esc->nome_area) ?>
+                      </span>
+                    </div>
+
+                    <?php
+                    $meuIdVol = (int)($voluntario->id_voluntario ?? 0);
+                    $participantes = array_values(array_filter($esc->participantes ?? [], function ($p) use ($meuIdVol) {
+                      return (int)$p->id_voluntario !== $meuIdVol;
+                    }));
+                    $totalPart = count($participantes);
+                    if ($totalPart > 0) {
+                      $participantesJson = htmlspecialchars(json_encode($participantes), ENT_QUOTES, 'UTF-8');
+                      $maxAvatares = 3;
+                      $exibirAvatares = array_slice($participantes, 0, $maxAvatares);
+                      $restantes = $totalPart - $maxAvatares;
+                      $tituloCultoEsc = esc(addslashes($esc->titulo_culto));
+                      $nomeDepEsc = esc(addslashes($esc->nome_departamento));
+                    ?>
+                      <!-- Avatar Stack (Facepile) -->
+                      <div class="facepile-stack-wrapper shadow-xs"
+                        onclick="event.stopPropagation(); abrirModalParticipantes(<?= $participantesJson ?>, '<?= $tituloCultoEsc ?>', '<?= date('d/m/Y', $tsData) ?>', '<?= $nomeDepEsc ?>', '<?= esc($corDep) ?>', '<?= esc($txtDep) ?>')"
+                        data-bs-toggle="tooltip" data-bs-placement="top" title="Ver <?= $totalPart ?> <?= $totalPart === 1 ? 'outro voluntário escalado' : 'outros voluntários escalados' ?>">
+                        <div class="facepile-avatars">
+                          <?php
+                          $zIndex = 5;
+                          foreach ($exibirAvatares as $p) {
+                            $fotoPart = !empty($p->foto_url) ? $p->foto_url : ('https://ui-avatars.com/api/?name=' . urlencode($p->nome_completo) . '&background=2563eb&color=fff&size=64&bold=true');
+                            $nomeTooltip = esc($p->nome_completo) . ' (' . esc($p->sub_area) . ')';
+                          ?>
+                            <img src="<?= esc($fotoPart) ?>"
+                              alt="<?= esc($p->primeiro_nome) ?>"
+                              class="facepile-avatar-item"
+                              style="z-index: <?= $zIndex ?>;"
+                              data-bs-toggle="tooltip"
+                              data-bs-placement="top"
+                              title="<?= $nomeTooltip ?>"
+                              onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=<?= urlencode($p->nome_completo) ?>&background=2563eb&color=fff&size=64&bold=true';">
+                          <?php
+                            $zIndex--;
+                          }
+                          ?>
+                          <?php if ($restantes > 0) { ?>
+                            <span class="facepile-counter-bubble" style="z-index: <?= $zIndex ?>;" data-bs-toggle="tooltip" data-bs-placement="top" title="Mais <?= $restantes ?> <?= $restantes === 1 ? 'voluntário' : 'voluntários' ?>">
+                              +<?= $restantes ?>
+                            </span>
+                          <?php } ?>
+                        </div>
+                        <span class="facepile-label-hint">
+                          <i class="bi bi-people-fill text-primary" style="font-size: 0.72rem;"></i>
+                          <span><?= $totalPart ?></span>
+                        </span>
+                      </div>
+                    <?php } ?>
                   </div>
                 </div>
 
@@ -859,6 +1161,50 @@ if (!function_exists('getContrasteTexto')) {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal / Bottom Sheet de Participantes da Escala (Facepile Modal) -->
+  <div class="modal fade modal-bottom-sheet-mobile" id="modalParticipantesEscala" tabindex="-1" aria-labelledby="modalPartTituloCulto" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 500px;">
+      <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+        <!-- Barra visual de arrasto no Mobile (Bottom Sheet Handle) -->
+        <div class="d-block d-md-none pt-1">
+          <div class="bottom-sheet-drag-handle"></div>
+        </div>
+
+        <div class="modal-header border-0 pb-1 pt-3 px-3.5">
+          <div class="w-100">
+            <div class="d-flex align-items-center justify-content-between mb-1">
+              <span class="badge rounded-pill px-2.5 py-1 small fw-bold" id="modalPartDepBadge" style="font-size: 0.72rem;">Departamento</span>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <h5 class="modal-title fw-bold text-body fs-5 mb-0" id="modalPartTituloCulto">Equipe Escalada</h5>
+            <div class="text-secondary small mt-1 d-flex align-items-center gap-1.5 flex-wrap" style="font-size: 0.78rem;">
+              <span class="d-flex align-items-center gap-1">
+                <i class="bi bi-calendar-check text-primary"></i>
+                <span id="modalPartDataCulto">Data</span>
+              </span>
+              <span class="text-muted">•</span>
+              <span id="modalPartTotalCount" class="fw-bold text-primary">0 voluntários</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-body py-2.5 px-3.5" style="max-height: 60vh; overflow-y: auto;">
+
+
+          <div id="modalParticipantesLista" class="d-flex flex-column gap-2">
+            <!-- Participantes renderizados dinamicamente via JS -->
+          </div>
+        </div>
+
+        <div class="modal-footer border-0 pt-2 pb-3 px-3.5 bg-body-tertiary">
+          <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-4 w-100 fw-semibold" data-bs-dismiss="modal">
+            <i class="bi bi-x-lg me-1"></i> Fechar
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -1378,6 +1724,432 @@ if (!function_exists('getContrasteTexto')) {
           '"': '&quot;',
           "'": '&#039;'
         } [m];
+      });
+    }
+
+    // ========================================================
+    // MODAL / BOTTOM SHEET DE PARTICIPANTES DA ESCALA (FACEPILE)
+    // ========================================================
+    const CURRENT_VOLUNTARIO_ID = <?= (int)($voluntario->id_voluntario ?? 0) ?>;
+    let modalParticipantesInstance = null;
+
+    // Inicializa todos os tooltips da página
+    function inicializarTooltipsBootstrap() {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+      tooltipTriggerList.forEach(el => {
+        if (!bootstrap.Tooltip.getInstance(el)) {
+          new bootstrap.Tooltip(el);
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      inicializarTooltipsBootstrap();
+      inicializarGestosBottomSheetParticipantes();
+    });
+
+    // Helpers para Redes Sociais, Senioridade e Formatação de Telefone
+    function getSocialLinkInfo(plataforma, valor) {
+      const p = (plataforma || '').toLowerCase().trim();
+      const v = (valor || '').trim();
+      const cleanNick = v.replace(/^@/, '');
+
+      const config = {
+        'instagram': {
+          icon: 'bi-instagram',
+          color: '#E1306C',
+          bg: 'rgba(225,48,108,0.12)',
+          border: 'rgba(225,48,108,0.3)',
+          base: 'https://instagram.com/'
+        },
+        'facebook': {
+          icon: 'bi-facebook',
+          color: '#1877F2',
+          bg: 'rgba(24,119,242,0.12)',
+          border: 'rgba(24,119,242,0.3)',
+          base: 'https://facebook.com/'
+        },
+        'youtube': {
+          icon: 'bi-youtube',
+          color: '#FF0000',
+          bg: 'rgba(255,0,0,0.12)',
+          border: 'rgba(255,0,0,0.3)',
+          base: 'https://youtube.com/@'
+        },
+        'tiktok': {
+          icon: 'bi-tiktok',
+          color: '#000000',
+          bg: 'rgba(0,0,0,0.12)',
+          border: 'rgba(0,0,0,0.3)',
+          base: 'https://tiktok.com/@'
+        },
+        'linkedin': {
+          icon: 'bi-linkedin',
+          color: '#0A66C2',
+          bg: 'rgba(10,102,194,0.12)',
+          border: 'rgba(10,102,194,0.3)',
+          base: 'https://linkedin.com/in/'
+        },
+        'twitter': {
+          icon: 'bi-twitter-x',
+          color: '#000000',
+          bg: 'rgba(0,0,0,0.12)',
+          border: 'rgba(0,0,0,0.3)',
+          base: 'https://x.com/'
+        },
+        'x': {
+          icon: 'bi-twitter-x',
+          color: '#000000',
+          bg: 'rgba(0,0,0,0.12)',
+          border: 'rgba(0,0,0,0.3)',
+          base: 'https://x.com/'
+        },
+        'threads': {
+          icon: 'bi-threads',
+          color: '#000000',
+          bg: 'rgba(0,0,0,0.12)',
+          border: 'rgba(0,0,0,0.3)',
+          base: 'https://threads.net/@'
+        },
+        'github': {
+          icon: 'bi-github',
+          color: '#24292e',
+          bg: 'rgba(36,41,46,0.12)',
+          border: 'rgba(36,41,46,0.3)',
+          base: 'https://github.com/'
+        },
+        'spotify': {
+          icon: 'bi-spotify',
+          color: '#1DB954',
+          bg: 'rgba(29,185,84,0.12)',
+          border: 'rgba(29,185,84,0.3)',
+          base: 'https://open.spotify.com/'
+        },
+        'pinterest': {
+          icon: 'bi-pinterest',
+          color: '#BD081C',
+          bg: 'rgba(189,8,28,0.12)',
+          border: 'rgba(189,8,28,0.3)',
+          base: 'https://pinterest.com/'
+        }
+      };
+
+      const info = config[p] || {
+        icon: 'bi-globe',
+        color: '#64748b',
+        bg: 'rgba(100,116,139,0.12)',
+        border: 'rgba(100,116,139,0.3)',
+        base: 'https://'
+      };
+      let finalUrl = '#';
+      if (!v) {
+        finalUrl = '#';
+      } else if (/^https?:\/\//i.test(v)) {
+        finalUrl = v;
+      } else {
+        finalUrl = info.base + cleanNick;
+      }
+
+      return {
+        icon: info.icon,
+        color: info.color,
+        bg: info.bg,
+        border: info.border,
+        url: finalUrl,
+        name: p.charAt(0).toUpperCase() + p.slice(1)
+      };
+    }
+
+    function formatarTelefoneBR(tel) {
+      if (!tel) return '';
+      const r = tel.replace(/\D/g, '');
+      if (r.length === 11) {
+        return `(${r.substring(0, 2)}) ${r.substring(2, 7)}-${r.substring(7)}`;
+      } else if (r.length === 10) {
+        return `(${r.substring(0, 2)}) ${r.substring(2, 6)}-${r.substring(6)}`;
+      } else if (r.length === 13 && r.startsWith('55')) {
+        return `(${r.substring(2, 4)}) ${r.substring(4, 9)}-${r.substring(9)}`;
+      } else if (r.length === 12 && r.startsWith('55')) {
+        return `(${r.substring(2, 4)}) ${r.substring(4, 8)}-${r.substring(8)}`;
+      }
+      return tel;
+    }
+
+    function getSenioridadeBadge(nivel) {
+      const n = (nivel || '').toUpperCase().trim();
+      if (n === 'SENIOR' || n === 'SÊNIOR') {
+        return `<span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.64rem; letter-spacing: 0.2px;"><i class="bi bi-star-fill text-warning me-1"></i>Sênior</span>`;
+      } else if (n === 'PLENO') {
+        return `<span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.64rem; letter-spacing: 0.2px;"><i class="bi bi-award-fill me-1"></i>Pleno</span>`;
+      } else if (n === 'JUNIOR' || n === 'JÚNIOR') {
+        return `<span class="badge bg-info-subtle text-info-emphasis rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.64rem; letter-spacing: 0.2px;"><i class="bi bi-patch-check-fill me-1"></i>Júnior</span>`;
+      } else if (n === 'APRENDIZ') {
+        return `<span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.64rem; letter-spacing: 0.2px;"><i class="bi bi-mortarboard-fill me-1"></i>Aprendiz</span>`;
+      }
+      return '';
+    }
+
+    function abrirModalParticipantes(participantesRaw, nomeCulto, dataCulto, nomeDepartamento, corDep, txtDep) {
+      const modalEl = document.getElementById('modalParticipantesEscala');
+      if (!modalEl) return;
+
+      if (!modalParticipantesInstance) {
+        modalParticipantesInstance = new bootstrap.Modal(modalEl);
+      }
+
+      // Filtra para garantir que apenas outros participantes sejam exibidos
+      const participantes = (participantesRaw || []).filter(p => parseInt(p.id_voluntario, 10) !== CURRENT_VOLUNTARIO_ID);
+
+      // Configura Header
+      document.getElementById('modalPartTituloCulto').textContent = nomeCulto || 'Equipe Escalada';
+      document.getElementById('modalPartDataCulto').textContent = dataCulto || '';
+
+      const badgeDep = document.getElementById('modalPartDepBadge');
+      if (badgeDep) {
+        badgeDep.textContent = nomeDepartamento || 'Departamento';
+        badgeDep.style.backgroundColor = corDep || '#2563eb';
+        badgeDep.style.color = txtDep || '#ffffff';
+      }
+
+      const totalCount = participantes.length;
+      document.getElementById('modalPartTotalCount').textContent = totalCount === 1 ? '1 voluntário com você' : `${totalCount} voluntários com você`;
+
+      // Monta Lista de Participantes
+      const listaContainer = document.getElementById('modalParticipantesLista');
+      listaContainer.innerHTML = '';
+
+      if (!totalCount) {
+        listaContainer.innerHTML = `
+          <div class="text-center py-4 text-muted">
+            <i class="bi bi-people fs-2 mb-1 d-block opacity-50"></i>
+            <p class="small mb-0">Você é o único voluntário escalado até o momento nesta área/culto.</p>
+          </div>
+        `;
+      } else {
+        participantes.forEach((p) => {
+          const nomeExibicao = p.primeiro_nome || p.apelido || (p.nome_completo ? p.nome_completo.split(' ')[0] : 'Voluntário');
+          const nomeCompleto = p.nome_completo || nomeExibicao;
+          const subArea = p.sub_area || 'Geral';
+          const fotoUrl = p.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(nomeCompleto)}&background=2563eb&color=fff&size=80&bold=true`;
+
+          const isConfirmado = (String(p.status_confirmacao).toUpperCase() === 'CONFIRMADO');
+
+          // Tratamento Telefone WhatsApp
+          let rawPhone = (p.telefone_whatsapp || '').replace(/\D/g, '');
+          let temWhats = false;
+          let linkWhats = '#';
+          let telefoneFormatado = formatarTelefoneBR(p.telefone_whatsapp || '');
+          if (rawPhone.length >= 8) {
+            let phoneComDDI = rawPhone;
+            if (rawPhone.length <= 11) {
+              phoneComDDI = '55' + rawPhone;
+            }
+            const msgWhats = `Oi ${nomeExibicao} tudo bem? Vi que vamos servir juntos no mesmo dia no culto ${nomeCulto} dia ${dataCulto} na área ${nomeDepartamento}. Podemos combinar como podemos nos ajudar nessa escala?`;
+            linkWhats = `https://wa.me/${phoneComDDI}?text=${encodeURIComponent(msgWhats)}`;
+            temWhats = true;
+          }
+
+          // Tratamento de Redes Sociais
+          let redesList = [];
+          if (p.redes_sociais) {
+            try {
+              const parsed = typeof p.redes_sociais === 'string' ? JSON.parse(p.redes_sociais) : p.redes_sociais;
+              if (Array.isArray(parsed)) {
+                redesList = parsed;
+              }
+            } catch (err) {
+              redesList = [];
+            }
+          }
+
+          let redesHtml = '';
+          if (redesList.length > 0) {
+            redesList.forEach(r => {
+              const platName = r.plataforma || r.rede || 'Outro';
+              const rUrl = r.url || r.link || '';
+              if (!rUrl) return;
+              const sInfo = getSocialLinkInfo(platName, rUrl);
+              redesHtml += `
+                <a href="${escapeHtmlAgenda(sInfo.url)}" target="_blank" rel="noopener noreferrer" 
+                  class="social-icon-btn" 
+                  style="background-color: ${sInfo.bg}; color: ${sInfo.color};"
+                  onclick="event.stopPropagation();" 
+                  data-bs-toggle="tooltip" 
+                  data-bs-placement="top" 
+                  title="${escapeHtmlAgenda(sInfo.name)}: ${escapeHtmlAgenda(rUrl)}">
+                  <i class="bi ${sInfo.icon}"></i>
+                </a>
+              `;
+            });
+          }
+
+          const card = document.createElement('div');
+          card.className = 'participante-card-item shadow-xs';
+          card.setAttribute('data-id-vol', p.id_voluntario);
+          card.setAttribute('data-bs-toggle', 'tooltip');
+          card.setAttribute('data-bs-placement', 'top');
+          card.setAttribute('title', `${nomeCompleto}`);
+
+          // Interação Mobile: Toque / Clique expande os dados do voluntário
+          card.onclick = function(e) {
+            if (e.target.closest('.btn-whatsapp-action') || e.target.closest('.social-icon-btn') || e.target.closest('a')) return;
+            this.classList.toggle('expanded');
+          };
+
+          card.innerHTML = `
+            <div class="d-flex align-items-center justify-content-between gap-2.5">
+              <!-- Avatar e Informações Básicas -->
+              <div class="d-flex align-items-center gap-2.5 overflow-hidden flex-grow-1">
+                <div class="position-relative flex-shrink-0">
+                  <img src="${escapeHtmlAgenda(fotoUrl)}" 
+                    alt="${escapeHtmlAgenda(nomeExibicao)}" 
+                    class="rounded-circle border" 
+                    style="width: 42px; height: 42px; object-fit: cover;"
+                    onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(nomeCompleto)}&background=2563eb&color=fff&size=80&bold=true';">
+                  <span class="position-absolute bottom-0 end-0 p-1 rounded-circle border border-2 ${isConfirmado ? 'bg-success' : 'bg-warning'}" 
+                    style="transform: translate(15%, 15%); width: 11px; height: 11px;" 
+                    title="${isConfirmado ? 'Confirmado' : 'Pendente'}">
+                  </span>
+                </div>
+                
+                <div class="overflow-hidden flex-grow-1">
+                  <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                    <span class="fw-bold text-body" style="font-size: 0.92rem;">
+                      ${escapeHtmlAgenda(nomeExibicao)}
+                    </span>
+                  </div>
+                  
+                  <div class="d-flex align-items-center gap-1.5 mt-0.5 flex-wrap">
+                    <span class="badge bg-body-secondary text-secondary rounded-pill px-2 py-0.5 fw-semibold" style="font-size: 0.70rem;">
+                      <i class="bi bi-tag-fill me-0.5 opacity-75"></i>${escapeHtmlAgenda(subArea)}
+                    </span>
+                    <span class="badge ${isConfirmado ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning-emphasis'} rounded-pill px-2 py-0.5 fw-bold" style="font-size: 0.66rem;">
+                      ${isConfirmado ? '<i class="bi bi-check-circle-fill me-0.5"></i>Confirmado' : '<i class="bi bi-clock-fill me-0.5"></i>Pendente'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Ação do WhatsApp Direto -->
+              <div class="flex-shrink-0">
+                ${temWhats ? `
+                  <a href="${linkWhats}" target="_blank" rel="noopener noreferrer" class="btn-whatsapp-action" onclick="event.stopPropagation();" data-bs-toggle="tooltip" data-bs-placement="left" title="Mandar mensagem no WhatsApp">
+                    <i class="bi bi-whatsapp"></i>
+                    <span>Conversar</span>
+                  </a>
+                ` : `
+                  <span class="badge bg-body-tertiary text-secondary border rounded-pill px-2 py-1" style="font-size: 0.70rem;" title="Telefone não informado">
+                    <i class="bi bi-telephone-x me-1"></i>Sem Whats
+                  </span>
+                `}
+              </div>
+            </div>
+
+            <!-- Expansão Detalhada Minimalista (Sem bordas de tabela, tipografia suave & clean) -->
+            <div class="participante-nome-expand">
+              <div class="participante-detalhes-clean text-start">
+                <!-- Linha 1: Nome Completo + Senioridade -->
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                  <span class="text-body fw-medium text-truncate" style="font-size: 0.81rem; letter-spacing: -0.01em;">
+                    ${escapeHtmlAgenda(nomeCompleto)}
+                  </span>
+                  ${getSenioridadeBadge(p.nivel_conhecimento)}
+                </div>
+
+                <!-- Linha 2: Telefone/WhatsApp + Redes Sociais -->
+                <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                  <!-- Número do WhatsApp -->
+                  <div class="d-flex align-items-center">
+                    ${temWhats ? `
+                      <a href="${linkWhats}" target="_blank" rel="noopener noreferrer" 
+                        class="d-inline-flex align-items-center gap-1 text-decoration-none text-success" 
+                        style="font-size: 0.74rem; font-weight: 500;"
+                        onclick="event.stopPropagation();" 
+                        title="Conversar no WhatsApp">
+                        <i class="bi bi-whatsapp" style="font-size: 0.75rem;"></i>
+                        <span>${escapeHtmlAgenda(telefoneFormatado)}</span>
+                      </a>
+                    ` : `
+                      <span class="text-muted d-inline-flex align-items-center gap-1" style="font-size: 0.73rem;">
+                        <i class="bi bi-telephone text-secondary" style="font-size: 0.72rem;"></i>
+                        <span>${telefoneFormatado || 'Sem telefone'}</span>
+                      </span>
+                    `}
+                  </div>
+
+                  <!-- Ícones de Redes Sociais -->
+                  ${redesHtml ? `
+                    <div class="d-flex align-items-center gap-1 ms-auto">
+                      ${redesHtml}
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+          `;
+
+          listaContainer.appendChild(card);
+        });
+      }
+
+      // Reinicializa Tooltips no conteúdo recém-criado
+      const modalTooltips = modalEl.querySelectorAll('[data-bs-toggle="tooltip"]');
+      modalTooltips.forEach(el => new bootstrap.Tooltip(el));
+
+      modalParticipantesInstance.show();
+    }
+
+    // Suporte a swipe down no Bottom Sheet no Mobile para fechar
+    function inicializarGestosBottomSheetParticipantes() {
+      const modalEl = document.getElementById('modalParticipantesEscala');
+      if (!modalEl) return;
+
+      let startY = 0;
+      let currentY = 0;
+      let isDragging = false;
+
+      const content = modalEl.querySelector('.modal-content');
+      if (!content) return;
+
+      content.addEventListener('touchstart', function(e) {
+        if (window.innerWidth >= 768) return;
+        const modalBody = modalEl.querySelector('.modal-body');
+        if (modalBody && modalBody.scrollTop > 0) return;
+
+        startY = e.touches[0].clientY;
+        currentY = startY;
+        isDragging = true;
+      }, {
+        passive: true
+      });
+
+      content.addEventListener('touchmove', function(e) {
+        if (!isDragging || window.innerWidth >= 768) return;
+        currentY = e.touches[0].clientY;
+        const diff = currentY - startY;
+        if (diff > 0) {
+          content.style.transform = `translateY(${diff}px)`;
+          content.style.transition = 'none';
+        }
+      }, {
+        passive: true
+      });
+
+      content.addEventListener('touchend', function() {
+        if (!isDragging || window.innerWidth >= 768) return;
+        isDragging = false;
+        const diff = currentY - startY;
+        content.style.transition = 'transform 0.25s ease';
+        if (diff > 75) {
+          if (modalParticipantesInstance) {
+            modalParticipantesInstance.hide();
+          }
+          setTimeout(() => {
+            content.style.transform = '';
+          }, 300);
+        } else {
+          content.style.transform = '';
+        }
       });
     }
   </script>
