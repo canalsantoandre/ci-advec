@@ -197,8 +197,10 @@ class Voluntario extends BaseController
                 $redeNome = trim($redeNome);
                 if (!empty($redeNome) && !empty($redeLink)) {
                     $redesArray[] = [
-                        'rede' => $redeNome,
-                        'link' => $redeLink
+                        'rede'       => $redeNome,
+                        'link'       => $redeLink,
+                        'plataforma' => $redeNome,
+                        'url'        => $redeLink
                     ];
                 }
             }

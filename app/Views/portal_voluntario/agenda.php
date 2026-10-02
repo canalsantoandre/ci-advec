@@ -39,6 +39,18 @@ if (!function_exists('getContrasteTexto')) {
   <link rel="manifest" href="<?= base_url('manifest.json') ?>">
   <link rel="apple-touch-icon" href="<?= base_url('logo-advec.png') ?>">
 
+  <!-- Anti-flicker Theme Init -->
+  <script>
+    (function() {
+      const t = localStorage.getItem('portal_theme') || localStorage.getItem('theme');
+      let resolved = t;
+      if (!t || t === 'auto') {
+        resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-bs-theme', resolved);
+    })();
+  </script>
+
   <title><?= esc($title ?? 'Minhas Escalas - ADVEC') ?></title>
 
   <!-- Google Font: Plus Jakarta Sans -->
@@ -410,21 +422,56 @@ if (!function_exists('getContrasteTexto')) {
     }
 
     @keyframes swipeDemoLoop {
-      0%, 100% { transform: translateX(0); }
-      22% { transform: translateX(65px); }
-      44% { transform: translateX(0); }
-      66% { transform: translateX(-65px); }
-      88% { transform: translateX(0); }
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      22% {
+        transform: translateX(65px);
+      }
+
+      44% {
+        transform: translateX(0);
+      }
+
+      66% {
+        transform: translateX(-65px);
+      }
+
+      88% {
+        transform: translateX(0);
+      }
     }
 
     @keyframes indicatorRightLoop {
-      0%, 42%, 100% { opacity: 0; }
-      18%, 30% { opacity: 1; }
+
+      0%,
+      42%,
+      100% {
+        opacity: 0;
+      }
+
+      18%,
+      30% {
+        opacity: 1;
+      }
     }
 
     @keyframes indicatorLeftLoop {
-      0%, 45%, 86%, 100% { opacity: 0; }
-      60%, 74% { opacity: 1; }
+
+      0%,
+      45%,
+      86%,
+      100% {
+        opacity: 0;
+      }
+
+      60%,
+      74% {
+        opacity: 1;
+      }
     }
   </style>
 </head>
@@ -708,6 +755,28 @@ if (!function_exists('getContrasteTexto')) {
               <?php if ($conf === 'RECUSADO' && !empty($esc->justificativa_recusa)) { ?>
                 <div class="mt-2 pt-2 border-top small text-danger d-flex align-items-center gap-1" style="font-size: 0.75rem;">
                   <i class="bi bi-chat-quote-fill"></i> <strong>Motivo da recusa:</strong> "<?= esc($esc->justificativa_recusa) ?>"
+                </div>
+              <?php } ?>
+
+              <!-- Materiais de Apoio / Músicas da Escala (Consumo do Voluntário) -->
+              <?php if (!empty($esc->recursos)) { ?>
+                <div class="mt-3 pt-2.5 border-top">
+                  <div class="d-flex align-items-center justify-content-between mb-1.5">
+                    <span class="fw-bold text-primary small d-flex align-items-center gap-1" style="font-size: 0.76rem;">
+                      <i class="bi bi-collection-play-fill text-primary"></i> Materiais de Apoio (<?= count($esc->recursos) ?>)
+                    </span>
+                  </div>
+                  <div class="d-flex flex-wrap gap-1.5">
+                    <?php foreach ($esc->recursos as $resItem) {
+                      $resJson = htmlspecialchars(json_encode($resItem), ENT_QUOTES, 'UTF-8');
+                    ?>
+                      <button type="button" class="btn btn-sm btn-light border rounded-pill px-2.5 py-1 text-start d-inline-flex align-items-center gap-1.5 shadow-xs" onclick="abrirPlayerVoluntario(<?= $resJson ?>)" style="font-size: 0.72rem;">
+                        <i class="<?= esc($resItem->type_icon) ?> text-<?= esc($resItem->type_color) ?>"></i>
+                        <span class="text-truncate fw-semibold" style="max-width: 140px;">&nbsp;<?= esc($resItem->title) ?></span>
+                        &nbsp;<i class="bi bi-play-circle text-primary ms-0.5"></i>
+                      </button>
+                    <?php } ?>
+                  </div>
                 </div>
               <?php } ?>
 
@@ -1236,7 +1305,106 @@ if (!function_exists('getContrasteTexto')) {
         modal.classList.add('active');
       }
     }
+
+    // Modal de Visualização de Materiais de Apoio / Player Embed
+    let modalPlayerVoluntarioInstance = null;
+
+    function abrirPlayerVoluntario(resource) {
+      if (!modalPlayerVoluntarioInstance) {
+        modalPlayerVoluntarioInstance = new bootstrap.Modal(document.getElementById('modalPlayerVoluntario'));
+      }
+
+      document.getElementById('vol_player_badge_type').textContent = resource.type_name || 'Material';
+      document.getElementById('vol_player_title').textContent = resource.title || '';
+      document.getElementById('vol_player_desc').textContent = resource.description || '';
+
+      const linkBtn = document.getElementById('vol_player_external_link');
+      if (resource.url) {
+        linkBtn.href = resource.url;
+        linkBtn.classList.remove('d-none');
+      } else {
+        linkBtn.classList.add('d-none');
+      }
+
+      const container = document.getElementById('vol_player_body_container');
+      container.innerHTML = '';
+
+      if (resource.provider === 'youtube' && resource.embed_url) {
+        container.innerHTML = `
+          <div class="ratio ratio-16x9 rounded-3 overflow-hidden shadow">
+            <iframe src="${resource.embed_url}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+        `;
+      } else if (resource.provider === 'spotify' && resource.embed_url) {
+        container.innerHTML = `
+          <iframe src="${resource.embed_url}" class="w-100" style="height: 352px; border: 0; border-radius: 12px;" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        `;
+      } else if (resource.provider === 'drive' && resource.embed_url) {
+        container.innerHTML = `
+          <iframe src="${resource.embed_url}" class="w-100" style="height: 420px; border: 0;" allow="autoplay"></iframe>
+        `;
+      } else if (resource.type_code === 'text' || resource.content_text) {
+        container.innerHTML = `
+          <div class="p-3 bg-body text-body rounded-3 border overflow-auto font-monospace text-start" style="max-height: 400px; white-space: pre-wrap; font-size: 0.88rem;">
+            ${escapeHtmlAgenda(resource.content_text || resource.description || '')}
+          </div>
+        `;
+      } else if (resource.type_code === 'pdf' && resource.url) {
+        container.innerHTML = `
+          <iframe src="${resource.url}" class="w-100" style="height: 420px; border: 0;"></iframe>
+        `;
+      } else {
+        container.innerHTML = `
+          <div class="text-center p-4">
+            <i class="bi bi-box-arrow-up-right display-4 text-primary mb-2"></i>
+            <p class="small text-secondary mb-3">Material disponível através de link externo.</p>
+            <a href="${resource.url}" target="_blank" rel="noopener noreferrer" class="btn btn-primary rounded-pill px-4">
+              <i class="bi bi-box-arrow-up-right me-1"></i> Abrir Página
+            </a>
+          </div>
+        `;
+      }
+
+      modalPlayerVoluntarioInstance.show();
+    }
+
+    function escapeHtmlAgenda(text) {
+      if (!text) return '';
+      return String(text).replace(/[&<>"']/g, function(m) {
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#039;'
+        } [m];
+      });
+    }
   </script>
+
+  <!-- Modal / Bottom Sheet de Visualização de Materiais do Voluntário -->
+  <div class="modal fade" id="modalPlayerVoluntario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content rounded-4 shadow border-0 overflow-hidden">
+        <div class="modal-header border-0 pb-0">
+          <div>
+            <span class="badge bg-primary-subtle text-primary rounded-pill mb-1" id="vol_player_badge_type">Tipo</span>
+            <h5 class="modal-title fw-bold text-dark-emphasis mb-0" id="vol_player_title">Título</h5>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body py-3">
+          <div id="vol_player_body_container" class="mb-2"></div>
+          <p class="text-secondary small mb-2" id="vol_player_desc"></p>
+          <div class="pt-2 border-top d-flex justify-content-end">
+            <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary rounded-pill px-3" id="vol_player_external_link">
+              <i class="bi bi-box-arrow-up-right me-1"></i> Abrir Link Completo
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 
 </html>

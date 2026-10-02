@@ -99,6 +99,31 @@ $routes->group('portal', ['filter' => 'auth_voluntario'], static function ($rout
     $routes->post('alterarSenha', 'PortalVoluntario::alterarSenha');
 });
 
+/* RESOURCE LIBRARY (MATERIAIS DE APOIO E COLEÇÕES) */
+$routes->get('resource', 'Resource::index', ['filter' => 'auth']);
+$routes->group('resource', ['filter' => 'auth'], static function ($routes) {
+    $routes->match(['GET', 'POST'], 'index', 'Resource::index');
+    $routes->get('novo', 'Resource::novo');
+    $routes->match(['GET', 'POST'], 'editar/(:num)', 'Resource::editar/$1');
+    $routes->post('salvar', 'Resource::salvar');
+    $routes->post('excluir/(:num)', 'Resource::excluir/$1');
+    
+    // Coleções
+    $routes->get('novaColecao', 'Resource::novaColecao');
+    $routes->match(['GET', 'POST'], 'editarColecao/(:num)', 'Resource::editarColecao/$1');
+    $routes->post('salvarColecao', 'Resource::salvarColecao');
+    $routes->post('excluirColecao/(:num)', 'Resource::excluirColecao/$1');
+    
+    // AJAX APIs & Auto-Parser
+    $routes->get('autoParseUrl', 'Resource::autoParseUrl');
+    $routes->get('apiList', 'Resource::apiList');
+    $routes->get('apiCollections', 'Resource::apiCollections');
+    $routes->get('getRecursosEscala', 'Resource::getRecursosEscala');
+    $routes->post('anexarNaEscala', 'Resource::anexarNaEscala');
+    $routes->post('removerDaEscala', 'Resource::removerDaEscala');
+    $routes->post('reordenarEscala', 'Resource::reordenarEscala');
+});
+
 /* WEBHOOKS */
 $routes->get('webhook', 'Webhook::index', ['filter' => 'auth']);
 $routes->group('webhook', static function ($routes) {

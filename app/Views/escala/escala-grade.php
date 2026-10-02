@@ -385,18 +385,139 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     color: #64748b !important;
   }
 
-  [data-bs-theme="dark"] .bg-purple-subtle {
-    background-color: rgba(168, 85, 247, 0.2) !important;
-    color: #c084fc !important;
-    border-color: rgba(168, 85, 247, 0.3) !important;
+  /* ============================================================
+     ESTILOS PREMIUM - BIBLIOTECA & PLAYERS (SPOTIFY / APPLE MUSIC)
+     ============================================================ */
+  .music-modal-content {
+    border-radius: 20px !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(16px);
   }
 
-  [data-bs-theme="dark"] .text-purple {
-    color: #c084fc !important;
+  .music-track-card {
+    border-radius: 14px;
+    padding: 10px 14px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    background: var(--bs-body-bg);
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
   }
 
-  [data-bs-theme="dark"] .vol-text-muted {
-    color: #94a3b8 !important;
+  .music-track-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(var(--bs-primary-rgb), 0.35);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+    background: rgba(var(--bs-primary-rgb), 0.025);
+  }
+
+  [data-bs-theme="dark"] .music-track-card {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: #181b20;
+  }
+
+  [data-bs-theme="dark"] .music-track-card:hover {
+    border-color: rgba(99, 102, 241, 0.5);
+    background: #1f232b;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+  }
+
+  .music-cover-art {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+
+  .cover-gradient-video {
+    background: linear-gradient(135deg, #ff0033 0%, #b3001e 100%);
+    color: #fff;
+  }
+  .cover-gradient-audio {
+    background: linear-gradient(135deg, #1db954 0%, #107c34 100%);
+    color: #fff;
+  }
+  .cover-gradient-spotify {
+    background: linear-gradient(135deg, #1db954 0%, #191414 100%);
+    color: #fff;
+  }
+  .cover-gradient-pdf {
+    background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+    color: #fff;
+  }
+  .cover-gradient-link {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+    color: #fff;
+  }
+  .cover-gradient-text {
+    background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+    color: #fff;
+  }
+  .cover-gradient-collection {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: #fff;
+  }
+
+  .badge-global-origin {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    font-weight: 600;
+  }
+  [data-bs-theme="dark"] .badge-global-origin {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border-color: rgba(16, 185, 129, 0.35);
+  }
+
+  .badge-dep-origin {
+    background: rgba(99, 102, 241, 0.1);
+    color: #4f46e5;
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    font-weight: 600;
+  }
+  [data-bs-theme="dark"] .badge-dep-origin {
+    background: rgba(99, 102, 241, 0.2);
+    color: #a5b4fc;
+    border-color: rgba(99, 102, 241, 0.35);
+  }
+
+  .pill-filter-btn {
+    border-radius: 50rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 5px 14px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    transition: all 0.2s ease;
+  }
+  .pill-filter-btn:hover, .pill-filter-btn.active {
+    background: var(--bs-primary);
+    color: #fff;
+    border-color: var(--bs-primary);
+    box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.3);
+  }
+  [data-bs-theme="dark"] .pill-filter-btn {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: #181b20;
+  }
+
+  .btn-attach-music {
+    border-radius: 50rem;
+    padding: 5px 14px;
+    font-size: 0.80rem;
+    font-weight: 600;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-attach-music:hover {
+    transform: scale(1.05);
   }
 </style>
 
@@ -855,11 +976,23 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
 
                       <!-- Ações -->
                       <td class="text-end pe-4">
-                        <?php if (!empty($sys_action->create)) { ?>
-                          <button type="button" class="btn btn-outline-primary btn-action" title="Escalar Voluntário no Culto" onclick="abrirModalEscalar('<?= $c->data_culto ?>', <?= $c->id_culto_padrao ?>, '<?= esc($c->titulo_culto) ?> - <?= $dia['data_formatada'] ?>')">
-                            <i class="bi bi-person-plus-fill"></i>
+                        <div class="d-inline-flex gap-1">
+                          <?php
+                            $totalMateriaisCulto = $recursosContagemPorCulto[$c->data_culto][$c->id_culto_padrao] ?? 0;
+                            $btnClassMat = $totalMateriaisCulto > 0 ? 'btn-info text-white' : 'btn-outline-info';
+                          ?>
+                          <button type="button" id="btn_mat_culto_<?= $c->data_culto ?>_<?= $c->id_culto_padrao ?>" class="btn <?= $btnClassMat ?> btn-action position-relative" title="Biblioteca de Materiais (<?= $totalMateriaisCulto ?> anexado(s))" onclick="abrirModalMateriaisCulto('<?= $c->data_culto ?>', <?= $c->id_culto_padrao ?>, '<?= esc($c->titulo_culto) ?> - <?= $dia['data_formatada'] ?>')">
+                            <i class="bi bi-collection-play-fill"></i>
+                            <span id="badge_mat_culto_<?= $c->data_culto ?>_<?= $c->id_culto_padrao ?>" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light <?= $totalMateriaisCulto > 0 ? '' : 'd-none' ?>" style="font-size: 0.60rem; padding: 0.25em 0.45em;" title="<?= $totalMateriaisCulto ?> material(is) anexado(s)">
+                              <?= $totalMateriaisCulto ?>
+                            </span>
                           </button>
-                        <?php } ?>
+                          <?php if (!empty($sys_action->create)) { ?>
+                            <button type="button" class="btn btn-outline-primary btn-action" title="Escalar Voluntário no Culto" onclick="abrirModalEscalar('<?= $c->data_culto ?>', <?= $c->id_culto_padrao ?>, '<?= esc($c->titulo_culto) ?> - <?= $dia['data_formatada'] ?>')">
+                              <i class="bi bi-person-plus-fill"></i>
+                            </button>
+                          <?php } ?>
+                        </div>
                       </td>
 
                     </tr>
@@ -1023,8 +1156,161 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
       </div>
       <div class="modal-footer border-0 pt-0">
         <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" id="btnConfirmarRemoverEscalaSubmit" class="btn btn-danger rounded-pill px-4 fw-bold">
-          <i class="bi bi-trash3-fill me-1"></i> Confirmar Remoção
+        <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold" id="btnConfirmarRemoverEscalaSubmit">
+          <i class="bi bi-trash-fill me-1"></i> Confirmar Remoção
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Materiais de Apoio / Biblioteca do Culto -->
+<div class="modal fade" id="modalMateriaisCulto" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content music-modal-content shadow-lg border-0">
+      <div class="modal-header border-0 pb-1 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+          <div class="rounded-3 p-2 d-flex align-items-center justify-content-center bg-primary text-white shadow-sm" style="width: 38px; height: 38px;">
+            <i class="bi bi-disc-fill fs-5"></i>
+          </div>
+          <div>
+            <div class="d-flex align-items-center gap-1.5 mb-0">
+              <span class="badge bg-primary-subtle text-primary rounded-pill px-2" style="font-size: 0.70rem; font-weight: 700; letter-spacing: 0.5px;">BIBLIOTECA</span>
+            </div>
+            <h5 class="modal-title fw-bold text-dark-emphasis mb-0" id="modal_mat_culto_titulo" style="font-size: 1.15rem;">Materiais do Culto</h5>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body py-3">
+        <!-- Sub-área de Destino & Ações Rápidas -->
+        <div class="p-3 rounded-4 bg-body-tertiary border mb-3 shadow-xs">
+          <div class="row g-3 align-items-center justify-content-between">
+            <div class="col-md-5">
+              <label for="modal_mat_id_area" class="form-label small fw-bold text-secondary mb-1">
+                <i class="bi bi-pin-map-fill me-1 text-primary"></i> Destino / Sub-área:
+              </label>
+              <select id="modal_mat_id_area" class="form-select form-select-sm fw-semibold rounded-pill px-3" onchange="aoMudarSubareaModalMateriais()">
+                <option value="0">🌐 Geral (Todas as Sub-áreas)</option>
+                <?php foreach ($areasDepartamento as $area) { ?>
+                  <option value="<?= $area->id_area ?>">📍 <?= esc($area->nome_area) ?></option>
+                <?php } ?>
+              </select>
+            </div>
+
+            <div class="col-md-7 d-flex justify-content-md-end gap-2 align-self-end">
+              <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-xs fw-semibold" onclick="abrirPickerColecoesEscala()">
+                <i class="bi bi-folder2-open me-1"></i> + Repertório Completo
+              </button>
+              <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 shadow-xs fw-semibold" onclick="abrirPickerMateriaisEscala()">
+                <i class="bi bi-plus-circle-fill me-1"></i> + Material Avulso
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filtro Rápido / Visualização da Lista -->
+        <div class="d-flex align-items-center justify-content-between mb-2.5 px-1">
+          <div class="d-flex align-items-center gap-1.5">
+            <i class="bi bi-music-note-list text-primary"></i>
+            <span class="small fw-bold text-dark-emphasis" id="modal_mat_lista_info">
+              Faixas & Materiais Escalados
+            </span>
+          </div>
+          <div class="btn-group btn-group-sm" role="group">
+            <button type="button" class="btn btn-sm btn-outline-secondary active pill-filter-btn" id="btn_mat_view_all" onclick="filtrarVisualizacaoMateriais('all')">Todos</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary pill-filter-btn" id="btn_mat_view_selected" onclick="filtrarVisualizacaoMateriais('current')">Apenas Destino Selecionado</button>
+          </div>
+        </div>
+
+        <!-- Lista de Materiais Anexados -->
+        <div id="container_materiais_escala_lista" class="d-flex flex-column gap-2 overflow-auto p-1" style="max-height: 380px;">
+          <div class="text-center text-muted py-4 small">
+            <div class="spinner-border spinner-border-sm text-primary me-2"></div> Carregando materiais...
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-secondary rounded-pill px-4 fw-semibold" data-bs-dismiss="modal">Concluir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Picker de Materiais e Coleções para Anexar na Escala (Estilo Spotify) -->
+<div class="modal fade" id="modalPickerMateriaisEscala" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content music-modal-content shadow-lg border-0">
+      <div class="modal-header border-0 pb-1 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" class="btn btn-light btn-sm rounded-circle p-1.5 d-flex align-items-center justify-content-center shadow-xs" onclick="voltarParaModalMateriais()" title="Voltar aos materiais do culto" style="width: 32px; height: 32px;">
+            <i class="bi bi-arrow-left fs-6"></i>
+          </button>
+          <div>
+            <div class="d-flex align-items-center gap-1.5 mb-0">
+              <span class="badge bg-success-subtle text-success rounded-pill px-2" style="font-size: 0.70rem; font-weight: 700; letter-spacing: 0.5px;">BIBLIOTECA DE MÍDIA</span>
+            </div>
+            <h5 class="modal-title fw-bold text-dark-emphasis mb-0" id="picker_modal_title" style="font-size: 1.15rem;">
+              Selecionar Materiais
+            </h5>
+          </div>
+        </div>
+        <button type="button" class="btn-close" onclick="fecharTodosModaisMateriais()" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body py-3">
+        <!-- Destino Banner -->
+        <div class="p-2.5 rounded-3 bg-body-tertiary border text-secondary small mb-3 d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-geo-alt-fill text-primary"></i>
+            <span>Destino na Escala: <strong id="picker_destino_label" class="text-primary-emphasis">Geral (Todas as Sub-áreas)</strong></span>
+          </div>
+          <span class="badge bg-secondary-subtle text-secondary rounded-pill">Ao clicar em Anexar, o item entra na escala</span>
+        </div>
+
+        <!-- Barra de Busca Spotify Style -->
+        <div class="position-relative mb-3">
+          <div class="input-group">
+            <span class="input-group-text bg-body-tertiary border-end-0 rounded-start-pill ps-3 text-muted">
+              <i class="bi bi-search"></i>
+            </span>
+            <input type="text" id="filtro_picker_escala_busca" class="form-control bg-body-tertiary border-start-0 rounded-end-pill pe-3" placeholder="Buscar por título, autor, cifra ou link..." oninput="filtrarPickerEscala()">
+          </div>
+        </div>
+
+        <!-- Filtros Rápidos por Tipo de Mídia -->
+        <div class="d-flex align-items-center gap-1.5 overflow-x-auto pb-2 mb-2" id="picker_quick_filter_pills">
+          <button type="button" class="btn pill-filter-btn active" data-type="" onclick="aplicarFiltroTipoPicker('')">
+            <i class="bi bi-grid-fill me-1"></i> Todos
+          </button>
+          <button type="button" class="btn pill-filter-btn" data-type="audio" onclick="aplicarFiltroTipoPicker('audio')">
+            <i class="bi bi-music-note-beamed text-success me-1"></i> Músicas & Áudios
+          </button>
+          <button type="button" class="btn pill-filter-btn" data-type="video" onclick="aplicarFiltroTipoPicker('video')">
+            <i class="bi bi-play-circle-fill text-danger me-1"></i> Vídeos
+          </button>
+          <button type="button" class="btn pill-filter-btn" data-type="pdf" onclick="aplicarFiltroTipoPicker('pdf')">
+            <i class="bi bi-file-earmark-pdf-fill text-warning me-1"></i> Cifras / PDFs
+          </button>
+          <button type="button" class="btn pill-filter-btn" data-type="text" onclick="aplicarFiltroTipoPicker('text')">
+            <i class="bi bi-file-text-fill text-secondary me-1"></i> Letras / Textos
+          </button>
+        </div>
+
+        <!-- Container de Itens Carregados -->
+        <div id="picker_escala_itens_container" class="d-flex flex-column gap-2 overflow-auto p-1" style="max-height: 360px;">
+          <!-- Carregado via AJAX -->
+        </div>
+      </div>
+
+      <div class="modal-footer border-0 pt-0 d-flex justify-content-between">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold" onclick="voltarParaModalMateriais()">
+          <i class="bi bi-arrow-left me-1"></i> Voltar à Escala
+        </button>
+        <button type="button" class="btn btn-primary rounded-pill px-4 fw-semibold" onclick="voltarParaModalMateriais()">
+          Pronto / Ver Escala
         </button>
       </div>
     </div>
@@ -1522,14 +1808,547 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     aplicarFiltrosGrade();
   });
 
+  function safeDecode(text) {
+    if (!text) return '';
+    const doc = new DOMParser().parseFromString(String(text), 'text/html');
+    return doc.body.textContent || '';
+  }
+
   function escapeHtml(text) {
     if (!text) return '';
-    return String(text)
+    const clean = safeDecode(text);
+    return clean
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
+  }
+
+  function getMediaCoverHtml(r, isCollection = false) {
+    if (isCollection) {
+      return `
+        <div class="music-cover-art cover-gradient-collection flex-shrink-0">
+          <i class="bi bi-folder2-open fs-5"></i>
+        </div>
+      `;
+    }
+    if (r.thumbnail_url && (r.provider === 'youtube' || r.provider === 'spotify')) {
+      return `
+        <div class="music-cover-art flex-shrink-0 position-relative">
+          <img src="${escapeHtml(r.thumbnail_url)}" alt="Capa" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+      `;
+    }
+    let gradClass = 'cover-gradient-audio';
+    let iconClass = r.type_icon || 'bi bi-music-note-beamed';
+    const code = (r.type_code || '').toLowerCase();
+    const provider = (r.provider || '').toLowerCase();
+
+    if (provider === 'youtube' || code === 'video') { gradClass = 'cover-gradient-video'; iconClass = 'bi bi-play-circle-fill'; }
+    else if (provider === 'spotify') { gradClass = 'cover-gradient-spotify'; iconClass = 'bi bi-spotify'; }
+    else if (code === 'pdf') { gradClass = 'cover-gradient-pdf'; iconClass = 'bi bi-file-earmark-pdf-fill'; }
+    else if (code === 'link') { gradClass = 'cover-gradient-link'; iconClass = 'bi bi-link-45deg'; }
+    else if (code === 'text') { gradClass = 'cover-gradient-text'; iconClass = 'bi bi-file-text-fill'; }
+
+    return `
+      <div class="music-cover-art ${gradClass} flex-shrink-0">
+        <i class="${iconClass} fs-5"></i>
+      </div>
+    `;
+  }
+
+  // ============================================================
+  // BIBLIOTECA / MATERIAIS DE APOIO NA ESCALA DO CULTO COM SUB-ÁREAS
+  // ============================================================
+  let modalMateriaisCultoInstance = null;
+  let modalPickerMateriaisEscalaInstance = null;
+  let contextoMateriaisAtual = {
+    data_culto: '',
+    id_culto_padrao: 0,
+    id_departamento: <?= (int)$id_departamento ?>,
+    id_area: 0
+  };
+  let cacheMateriaisEscalaCulto = [];
+  let cacheItensPickerDisponiveis = [];
+  let modoPickerAtual = 'recursos'; // 'recursos' ou 'colecoes'
+  let filtroVisualizacaoMateriais = 'all';
+  let filtroTipoPickerAtual = '';
+
+  function abrirModalMateriaisCulto(data_culto, id_culto_padrao, cultoDisplay, id_area_pre_select = 0) {
+    contextoMateriaisAtual.data_culto = data_culto;
+    contextoMateriaisAtual.id_culto_padrao = id_culto_padrao;
+    contextoMateriaisAtual.id_area = parseInt(id_area_pre_select) || 0;
+
+    document.getElementById('modal_mat_culto_titulo').textContent = `Biblioteca • ${cultoDisplay}`;
+    
+    const selectArea = document.getElementById('modal_mat_id_area');
+    if (selectArea) {
+      selectArea.value = contextoMateriaisAtual.id_area;
+    }
+
+    if (!modalMateriaisCultoInstance) {
+      modalMateriaisCultoInstance = new bootstrap.Modal(document.getElementById('modalMateriaisCulto'));
+    }
+
+    carregarMateriaisEscala(data_culto, id_culto_padrao);
+    modalMateriaisCultoInstance.show();
+  }
+
+  function voltarParaModalMateriais() {
+    if (modalPickerMateriaisEscalaInstance) {
+      modalPickerMateriaisEscalaInstance.hide();
+    }
+    if (modalMateriaisCultoInstance) {
+      modalMateriaisCultoInstance.show();
+    }
+  }
+
+  function fecharTodosModaisMateriais() {
+    if (modalPickerMateriaisEscalaInstance) modalPickerMateriaisEscalaInstance.hide();
+    if (modalMateriaisCultoInstance) modalMateriaisCultoInstance.hide();
+  }
+
+  function aoMudarSubareaModalMateriais() {
+    const selectArea = document.getElementById('modal_mat_id_area');
+    contextoMateriaisAtual.id_area = parseInt(selectArea.value) || 0;
+    if (filtroVisualizacaoMateriais === 'current') {
+      renderizarListaMateriaisEscala(cacheMateriaisEscalaCulto);
+    }
+  }
+
+  function filtrarVisualizacaoMateriais(modo) {
+    filtroVisualizacaoMateriais = modo;
+    document.getElementById('btn_mat_view_all')?.classList.toggle('active', modo === 'all');
+    document.getElementById('btn_mat_view_selected')?.classList.toggle('active', modo === 'current');
+    renderizarListaMateriaisEscala(cacheMateriaisEscalaCulto);
+  }
+
+  function carregarMateriaisEscala(data_culto, id_culto_padrao) {
+    const container = document.getElementById('container_materiais_escala_lista');
+    container.innerHTML = '<div class="text-center text-muted py-4 small"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Carregando materiais...</div>';
+
+    fetch(`<?= base_url('resource/getRecursosEscala') ?>?data_culto=${data_culto}&id_culto_padrao=${id_culto_padrao}&id_departamento=${contextoMateriaisAtual.id_departamento}`)
+      .then(r => r.json())
+      .then(res => {
+        if (res.status === 'success' && res.data) {
+          cacheMateriaisEscalaCulto = res.data;
+          renderizarListaMateriaisEscala(res.data);
+        } else {
+          cacheMateriaisEscalaCulto = [];
+          container.innerHTML = `
+            <div class="text-center py-4 text-secondary small bg-body rounded-4 border p-4">
+              <i class="bi bi-music-note-beamed display-6 text-muted d-block mb-2"></i>
+              Nenhum material anexado a este culto. Clique nos botões acima para adicionar materiais avulsos ou uma coleção completa.
+            </div>
+          `;
+        }
+      })
+      .catch(() => {
+        container.innerHTML = '<div class="text-center text-danger py-3 small">Erro ao carregar materiais da escala.</div>';
+      });
+  }
+
+  function renderizarListaMateriaisEscala(lista) {
+    const container = document.getElementById('container_materiais_escala_lista');
+    const idAreaFiltro = contextoMateriaisAtual.id_area;
+
+    let exibiveis = lista || [];
+    if (filtroVisualizacaoMateriais === 'current') {
+      exibiveis = exibiveis.filter(r => (parseInt(r.id_area) === idAreaFiltro || parseInt(r.id_area) === 0));
+    }
+
+    if (exibiveis.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-4 text-secondary small bg-body rounded-4 border p-4">
+          <i class="bi bi-disc display-6 text-muted d-block mb-2 opacity-50"></i>
+          Nenhum material anexado ${filtroVisualizacaoMateriais === 'current' ? 'para o destino selecionado' : 'a este culto'}.
+        </div>
+      `;
+      return;
+    }
+
+    let html = '';
+    exibiveis.forEach(r => {
+      const isGeral = (parseInt(r.id_area) === 0);
+      const tagDestino = isGeral 
+        ? `<span class="badge badge-global-origin rounded-pill small"><i class="bi bi-globe2 me-1"></i>Geral (Todas)</span>`
+        : `<span class="badge badge-dep-origin rounded-pill small"><i class="bi bi-pin-map-fill me-1"></i>${escapeHtml(r.nome_area || 'Sub-área')}</span>`;
+
+      const coverHtml = getMediaCoverHtml(r);
+
+      html += `
+        <div class="music-track-card d-flex align-items-center justify-content-between scale-mat-item" data-id="${r.id}">
+          <div class="d-flex align-items-center gap-3 min-w-0">
+            ${coverHtml}
+            <div class="min-w-0">
+              <div class="d-flex align-items-center gap-1.5 flex-wrap mb-1">
+                <h6 class="fw-bold mb-0 text-dark-emphasis text-truncate" style="font-size: 0.90rem;">${escapeHtml(r.title)}</h6>
+                ${tagDestino}
+                ${r.provider === 'youtube' ? '<span class="badge bg-danger text-white rounded-pill" style="font-size: 0.65rem;">YouTube</span>' : ''}
+                ${r.provider === 'spotify' ? '<span class="badge bg-success text-white rounded-pill" style="font-size: 0.65rem;">Spotify</span>' : ''}
+                ${r.type_name ? `<span class="badge bg-body-secondary text-secondary rounded-pill" style="font-size: 0.65rem;">${escapeHtml(r.type_name)}</span>` : ''}
+              </div>
+              <div class="text-secondary small text-truncate" style="font-size: 0.78rem;">
+                ${escapeHtml(r.description || r.url || 'Material de apoio para a equipe')}
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-1.5 flex-shrink-0 ms-2">
+            ${r.url ? `
+              <a href="${r.url}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-light border-0 rounded-circle p-2 d-flex align-items-center justify-content-center shadow-xs text-primary" title="Abrir Link Externo" style="width: 34px; height: 34px;">
+                <i class="bi bi-box-arrow-up-right"></i>
+              </a>
+            ` : ''}
+            <button type="button" class="btn btn-sm btn-outline-danger border-0 rounded-circle p-2 d-flex align-items-center justify-content-center shadow-xs" onclick="removerRecursoEscalaAjax(${r.id}, ${r.id_area})" title="Desanexar deste culto" style="width: 34px; height: 34px;">
+              <i class="bi bi-trash3-fill"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  }
+
+  function abrirPickerMateriaisEscala() {
+    modoPickerAtual = 'recursos';
+    const selectArea = document.getElementById('modal_mat_id_area');
+    const selectedText = selectArea ? selectArea.options[selectArea.selectedIndex]?.text : 'Geral';
+    const labelDestino = document.getElementById('picker_destino_label');
+    if (labelDestino) labelDestino.textContent = selectedText;
+
+    if (modalMateriaisCultoInstance) {
+      modalMateriaisCultoInstance.hide();
+    }
+
+    if (!modalPickerMateriaisEscalaInstance) {
+      modalPickerMateriaisEscalaInstance = new bootstrap.Modal(document.getElementById('modalPickerMateriaisEscala'));
+    }
+
+    document.getElementById('picker_modal_title').innerHTML = 'Selecionar Materiais Avulsos';
+    document.getElementById('picker_quick_filter_pills').style.display = 'flex';
+    document.getElementById('filtro_picker_escala_busca').value = '';
+    filtroTipoPickerAtual = '';
+    aplicarFiltroTipoPicker('');
+
+    const container = document.getElementById('picker_escala_itens_container');
+    container.innerHTML = '<div class="text-center py-4 small text-muted"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Carregando materiais da biblioteca (Departamento + Globais)...</div>';
+
+    modalPickerMateriaisEscalaInstance.show();
+
+    fetch(`<?= base_url('resource/apiList') ?>?department_id=${contextoMateriaisAtual.id_departamento}`)
+      .then(r => r.json())
+      .then(res => {
+        if (res.status === 'success' && res.data) {
+          cacheItensPickerDisponiveis = res.data;
+          renderizarItensPicker(res.data);
+        } else {
+          cacheItensPickerDisponiveis = [];
+          container.innerHTML = '<div class="text-center text-muted py-4 small">Nenhum material encontrado na biblioteca.</div>';
+        }
+      });
+  }
+
+  function abrirPickerColecoesEscala() {
+    modoPickerAtual = 'colecoes';
+    const selectArea = document.getElementById('modal_mat_id_area');
+    const selectedText = selectArea ? selectArea.options[selectArea.selectedIndex]?.text : 'Geral';
+    const labelDestino = document.getElementById('picker_destino_label');
+    if (labelDestino) labelDestino.textContent = selectedText;
+
+    if (modalMateriaisCultoInstance) {
+      modalMateriaisCultoInstance.hide();
+    }
+
+    if (!modalPickerMateriaisEscalaInstance) {
+      modalPickerMateriaisEscalaInstance = new bootstrap.Modal(document.getElementById('modalPickerMateriaisEscala'));
+    }
+
+    document.getElementById('picker_modal_title').innerHTML = 'Selecionar Coleção / Repertório';
+    document.getElementById('picker_quick_filter_pills').style.display = 'none';
+    document.getElementById('filtro_picker_escala_busca').value = '';
+
+    const container = document.getElementById('picker_escala_itens_container');
+    container.innerHTML = '<div class="text-center py-4 small text-muted"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Carregando coleções e repertórios...</div>';
+
+    modalPickerMateriaisEscalaInstance.show();
+
+    fetch(`<?= base_url('resource/apiCollections') ?>?department_id=${contextoMateriaisAtual.id_departamento}`)
+      .then(r => r.json())
+      .then(res => {
+        if (res.status === 'success' && res.data) {
+          cacheItensPickerDisponiveis = res.data;
+          renderizarItensPicker(res.data);
+        } else {
+          cacheItensPickerDisponiveis = [];
+          container.innerHTML = '<div class="text-center text-muted py-4 small">Nenhuma coleção cadastrada.</div>';
+        }
+      });
+  }
+
+  function aplicarFiltroTipoPicker(typeCode) {
+    filtroTipoPickerAtual = typeCode;
+    document.querySelectorAll('#picker_quick_filter_pills .pill-filter-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-type') === typeCode);
+    });
+    filtrarPickerEscala();
+  }
+
+  function filtrarPickerEscala() {
+    const termo = (document.getElementById('filtro_picker_escala_busca').value || '').trim().toLowerCase();
+    
+    let filtrados = cacheItensPickerDisponiveis.filter(item => {
+      const matchBusca = (item.title || '').toLowerCase().includes(termo) || 
+                          (item.description || '').toLowerCase().includes(termo);
+
+      if (!matchBusca) return false;
+
+      if (modoPickerAtual === 'recursos' && filtroTipoPickerAtual !== '') {
+        const itemCode = (item.type_code || '').toLowerCase();
+        const itemProv = (item.provider || '').toLowerCase();
+        if (filtroTipoPickerAtual === 'audio' && itemCode !== 'audio' && itemProv !== 'spotify') return false;
+        if (filtroTipoPickerAtual === 'video' && itemCode !== 'video' && itemProv !== 'youtube') return false;
+        if (filtroTipoPickerAtual === 'pdf' && itemCode !== 'pdf') return false;
+        if (filtroTipoPickerAtual === 'text' && itemCode !== 'text') return false;
+      }
+
+      return true;
+    });
+
+    renderizarItensPicker(filtrados);
+  }
+
+  function renderizarItensPicker(itens) {
+    const container = document.getElementById('picker_escala_itens_container');
+    if (!itens || itens.length === 0) {
+      container.innerHTML = '<div class="text-center text-muted py-4 small">Nenhum item encontrado com os filtros selecionados.</div>';
+      return;
+    }
+
+    let html = '';
+    if (modoPickerAtual === 'recursos') {
+      itens.forEach(r => {
+        const isGlobal = (r.department_id === null || parseInt(r.department_id) === 0);
+        const originBadge = isGlobal
+          ? `<span class="badge badge-global-origin rounded-pill small"><i class="bi bi-globe2 me-1"></i>Global</span>`
+          : `<span class="badge badge-dep-origin rounded-pill small"><i class="bi bi-building me-1"></i>${escapeHtml(r.department_name || 'Departamento')}</span>`;
+
+        const coverHtml = getMediaCoverHtml(r);
+
+        html += `
+          <div class="music-track-card d-flex align-items-center justify-content-between picker-item-row" data-id="${r.id}">
+            <div class="d-flex align-items-center gap-3 min-w-0">
+              ${coverHtml}
+              <div class="min-w-0">
+                <div class="d-flex align-items-center gap-1.5 flex-wrap mb-1">
+                  <h6 class="fw-bold mb-0 text-dark-emphasis text-truncate" style="font-size: 0.90rem;">${escapeHtml(r.title)}</h6>
+                  ${originBadge}
+                  ${r.provider === 'youtube' ? '<span class="badge bg-danger text-white rounded-pill" style="font-size: 0.65rem;">YouTube</span>' : ''}
+                  ${r.provider === 'spotify' ? '<span class="badge bg-success text-white rounded-pill" style="font-size: 0.65rem;">Spotify</span>' : ''}
+                  ${r.type_name ? `<span class="badge bg-body-secondary text-secondary rounded-pill" style="font-size: 0.65rem;">${escapeHtml(r.type_name)}</span>` : ''}
+                </div>
+                <div class="text-secondary small text-truncate" style="font-size: 0.78rem;">
+                  ${escapeHtml(r.description || r.url || 'Disponível na Biblioteca')}
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-primary btn-attach-music flex-shrink-0 ms-2" id="btn_anexar_rec_${r.id}" onclick="anexarRecursoNaEscalaAjax(${r.id})">
+              <i class="bi bi-plus-lg me-1"></i> Anexar
+            </button>
+          </div>
+        `;
+      });
+    } else {
+      itens.forEach(c => {
+        const isGlobal = (c.department_id === null || parseInt(c.department_id) === 0);
+        const originBadge = isGlobal
+          ? `<span class="badge badge-global-origin rounded-pill small"><i class="bi bi-globe2 me-1"></i>Global</span>`
+          : `<span class="badge badge-dep-origin rounded-pill small"><i class="bi bi-building me-1"></i>${escapeHtml(c.department_name || 'Departamento')}</span>`;
+
+        const coverHtml = getMediaCoverHtml(c, true);
+
+        html += `
+          <div class="music-track-card d-flex align-items-center justify-content-between picker-item-row" data-id="${c.id}">
+            <div class="d-flex align-items-center gap-3 min-w-0">
+              ${coverHtml}
+              <div class="min-w-0">
+                <div class="d-flex align-items-center gap-1.5 flex-wrap mb-1">
+                  <h6 class="fw-bold mb-0 text-dark-emphasis text-truncate" style="font-size: 0.92rem;">${escapeHtml(c.title)}</h6>
+                  ${originBadge}
+                  <span class="badge bg-primary text-white rounded-pill" style="font-size: 0.65rem;">${c.total_resources || 0} materiais inclusos</span>
+                </div>
+                <div class="text-secondary small text-truncate" style="font-size: 0.78rem;">
+                  ${escapeHtml(c.description || 'Repertório completo pronto para ser escalado')}
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-primary btn-attach-music flex-shrink-0 ms-2" id="btn_anexar_col_${c.id}" onclick="anexarColecaoNaEscalaAjax(${c.id})">
+              <i class="bi bi-box-arrow-in-down me-1"></i> Inserir Repertório
+            </button>
+          </div>
+        `;
+      });
+    }
+
+    container.innerHTML = html;
+  }
+
+  function atualizarBulletMateriaisGrade(data_culto, id_culto_padrao, total) {
+    const btn = document.getElementById(`btn_mat_culto_${data_culto}_${id_culto_padrao}`);
+    const badge = document.getElementById(`badge_mat_culto_${data_culto}_${id_culto_padrao}`);
+    const count = parseInt(total) || 0;
+
+    if (btn) {
+      if (count > 0) {
+        btn.className = 'btn btn-info text-white btn-action position-relative';
+        btn.setAttribute('title', `Biblioteca de Materiais (${count} anexado(s))`);
+      } else {
+        btn.className = 'btn btn-outline-info btn-action position-relative';
+        btn.setAttribute('title', 'Biblioteca de Materiais (0 anexado(s))');
+      }
+    }
+
+    if (badge) {
+      badge.textContent = count;
+      badge.setAttribute('title', `${count} material(is) anexado(s)`);
+      if (count > 0) {
+        badge.classList.remove('d-none');
+      } else {
+        badge.classList.add('d-none');
+      }
+    }
+  }
+
+  function anexarRecursoNaEscalaAjax(resource_id) {
+    const id_area = parseInt(document.getElementById('modal_mat_id_area')?.value) || 0;
+    const btn = document.getElementById(`btn_anexar_rec_${resource_id}`);
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>';
+    }
+
+    const formData = new FormData();
+    formData.append('data_culto', contextoMateriaisAtual.data_culto);
+    formData.append('id_culto_padrao', contextoMateriaisAtual.id_culto_padrao);
+    formData.append('id_departamento', contextoMateriaisAtual.id_departamento);
+    formData.append('id_area', id_area);
+    formData.append('resource_ids', resource_id);
+
+    fetch('<?= base_url('resource/anexarNaEscala') ?>', { method: 'POST', body: formData })
+      .then(r => r.json())
+      .then(res => {
+        if (res.status === 'success') {
+          if (btn) {
+            btn.className = 'btn btn-sm btn-success btn-attach-music flex-shrink-0 ms-2';
+            btn.innerHTML = '<i class="bi bi-check2 me-1"></i> Anexado';
+          }
+          if (typeof USToast !== 'undefined' && USToast.show) {
+            USToast.show('success', 'Material Anexado', res.message);
+          } else if (typeof usShowToast === 'function') {
+            usShowToast('success', 'Material Anexado', res.message);
+          }
+          if (res.data) {
+            cacheMateriaisEscalaCulto = res.data;
+            renderizarListaMateriaisEscala(res.data);
+            atualizarBulletMateriaisGrade(contextoMateriaisAtual.data_culto, contextoMateriaisAtual.id_culto_padrao, res.data.length);
+          }
+        } else {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-plus-lg me-1"></i> Anexar';
+          }
+          if (typeof USToast !== 'undefined' && USToast.show) {
+            USToast.show('error', 'Erro', res.message || 'Erro ao anexar.');
+          }
+        }
+      })
+      .catch(() => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="bi bi-plus-lg me-1"></i> Anexar';
+        }
+      });
+  }
+
+  function anexarColecaoNaEscalaAjax(collection_id) {
+    const id_area = parseInt(document.getElementById('modal_mat_id_area')?.value) || 0;
+    const btn = document.getElementById(`btn_anexar_col_${collection_id}`);
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>';
+    }
+
+    const formData = new FormData();
+    formData.append('data_culto', contextoMateriaisAtual.data_culto);
+    formData.append('id_culto_padrao', contextoMateriaisAtual.id_culto_padrao);
+    formData.append('id_departamento', contextoMateriaisAtual.id_departamento);
+    formData.append('id_area', id_area);
+    formData.append('collection_id', collection_id);
+
+    fetch('<?= base_url('resource/anexarNaEscala') ?>', { method: 'POST', body: formData })
+      .then(r => r.json())
+      .then(res => {
+        if (res.status === 'success') {
+          if (btn) {
+            btn.className = 'btn btn-sm btn-success btn-attach-music flex-shrink-0 ms-2';
+            btn.innerHTML = '<i class="bi bi-check2 me-1"></i> Inserido';
+          }
+          if (typeof USToast !== 'undefined' && USToast.show) {
+            USToast.show('success', 'Coleção Inserida', res.message);
+          } else if (typeof usShowToast === 'function') {
+            usShowToast('success', 'Coleção Inserida', res.message);
+          }
+          if (res.data) {
+            cacheMateriaisEscalaCulto = res.data;
+            renderizarListaMateriaisEscala(res.data);
+            atualizarBulletMateriaisGrade(contextoMateriaisAtual.data_culto, contextoMateriaisAtual.id_culto_padrao, res.data.length);
+          }
+        } else {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-box-arrow-in-down me-1"></i> Inserir Repertório';
+          }
+          if (typeof USToast !== 'undefined' && USToast.show) {
+            USToast.show('error', 'Erro', res.message || 'Erro ao anexar coleção.');
+          }
+        }
+      })
+      .catch(() => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="bi bi-box-arrow-in-down me-1"></i> Inserir Repertório';
+        }
+      });
+  }
+
+  function removerRecursoEscalaAjax(resource_id, id_area = null) {
+    const formData = new FormData();
+    formData.append('data_culto', contextoMateriaisAtual.data_culto);
+    formData.append('id_culto_padrao', contextoMateriaisAtual.id_culto_padrao);
+    formData.append('id_departamento', contextoMateriaisAtual.id_departamento);
+    formData.append('resource_id', resource_id);
+    if (id_area !== null) {
+      formData.append('id_area', id_area);
+    }
+
+    fetch('<?= base_url('resource/removerDaEscala') ?>', { method: 'POST', body: formData })
+      .then(r => r.json())
+      .then(res => {
+        if (res.status === 'success') {
+          if (typeof USToast !== 'undefined' && USToast.show) {
+            USToast.show('success', 'Material Removido', res.message);
+          } else if (typeof usShowToast === 'function') {
+            usShowToast('success', 'Material Removido', res.message);
+          }
+          if (res.data) {
+            cacheMateriaisEscalaCulto = res.data;
+            renderizarListaMateriaisEscala(res.data);
+            atualizarBulletMateriaisGrade(contextoMateriaisAtual.data_culto, contextoMateriaisAtual.id_culto_padrao, res.data.length);
+          }
+        }
+      });
   }
 
   // Inicializa tooltips do Bootstrap

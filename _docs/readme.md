@@ -198,6 +198,13 @@ flowchart TD
 | `POST` | `/voluntario/vincularRapido` | Vincula voluntário existente à sub-área do departamento | `auth` (Líder/Admin) |
 | `GET` | `/voluntario/getSubareasPorDepartamento/(:num)` | Retorna sub-áreas ativas do departamento | `auth` (Líder/Admin) |
 | `GET` | `/dashboard` | Painel inicial com suporte à view padrão de boas-vindas | `auth` |
+| `GET` | `/resource` | Listagem e gestão da Resource Library (Materiais e Coleções) | `auth_sysadm` (SysAdm) |
+| `GET/POST` | `/resource/novo` / `editar/(:num)` | Cadastro e edição de material avulso com auto-parsing | `auth_sysadm` (SysAdm) |
+| `GET/POST` | `/resource/novaColecao` / `editarColecao/(:num)` | Gestão de coleções e playlists com drag-and-drop | `auth_sysadm` (SysAdm) |
+| `GET` | `/resource/autoParseUrl` | Auto-Parser de links do YouTube, Spotify, Drive e PDFs | `auth_sysadm` (SysAdm) |
+| `GET` | `/resource/getRecursosEscala` | Retorna materiais anexados a um culto e departamento | `auth_sysadm` / `auth` |
+| `POST` | `/resource/anexarNaEscala` | Anexa materiais avulsos ou coleção desmembrada na escala | `auth_sysadm` / `auth` |
+| `POST` | `/resource/removerDaEscala` | Desanexa material de um culto específico | `auth_sysadm` / `auth` |
 
 ---
 
@@ -215,6 +222,42 @@ flowchart TD
 - Tela inicial moderna e clean para recepção de todos os perfis de usuários.
 - Saudação dinâmica (*Bom dia / Boa tarde / Boa noite*), cards de atalhos rápidos com base nas permissões do perfil, orientações gerais e suporte ao tema Dark/Light.
 
+### 7. Biblioteca (Materiais de Apoio & Repertórios/Coleções)
+- **Controle de Acesso RBAC & Departamental**:
+  - Acesso ao módulo governado por permissões de perfil (`SessionModel` -> `$data['sys_action']->read/create/update/delete`).
+  - No filtro e nas listagens de materiais e coleções, a opção **🌐 Global (Todos)** está sempre disponível para consulta e associação geral.
+  - Os demais departamentos listados no combo e acessíveis para cadastro/gestão restringem-se estritamente aos departamentos autorizados ao usuário logado via `tb_departamento_gestor` (seguindo o mesmo conceito do módulo de voluntários).
+- **Auto-Parsing Inteligente**:
+  - YouTube: Extração de ID, geração de thumbnail (`hqdefault.jpg`) e URL segura de embed.
+  - Spotify: Detecção de faixas/álbuns/playlists e geração de player nativo do Spotify.
+  - Google Drive e PDFs: Modo de pré-visualização inline e visualizadores integrados.
+- **Coleções (Playlists) & Desmembramento em Escalas por Sub-área**:
+  - Permite criar coleções e ordenar os materiais via Drag-and-Drop.
+  - Ao anexar materiais ou coleções a um culto, o líder pode definir o destino: **🌐 Geral (Todas as Sub-áreas)** ou uma **Sub-área específica** (ex: Louvor - Backing Vocal).
+  - Na grade mensal de escalas (`/escala/grade`), os cultos com materiais exibem um indicador/badge com a contagem exata de materiais anexados.
+- **Visão do Voluntário (Mobile-First)**:
+  - Na tela de Agenda (`/portal/agenda`), o voluntário visualiza exclusivamente os materiais gerais do departamento somados aos materiais direcionados à sua sub-área de atuação escalada, com reprodutor nativo em modal interativo.
+
+### 8. Experiência Visual do Portal, Tema & Redes Sociais
+- **Seletor de Tema (Dark / Light / Automático)**:
+  - Toggle de tema no menu superior ([`_nav.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/portal_voluntario/_nav.php)) ao lado do avatar do usuário.
+  - Script anti-flicker no `<head>` de todas as páginas do portal para renderização imediata da preferência salva em `localStorage` ou detecção nativa do sistema operacional (`prefers-color-scheme`).
+  - Paleta equilibrada com alto contraste para evitar sobreposição de elementos escuros.
+- **Redes Sociais & UX Mac Dock ([`perfil.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/portal_voluntario/perfil.php))**:
+  - Micro-compositor expansível `+` para cadastro instantâneo de redes sociais apenas digitando o *handle/nickname* ou URL completa (com resolução automática de URLs raiz para Instagram, LinkedIn, TikTok, YouTube, Facebook, X/Twitter, Threads, GitHub, etc.).
+  - Lista visual inspirada na Dock do macOS com efeito suave de levitação (`hover lift`) e links externos com segurança `rel="noopener noreferrer"`.
+  - Agrupamento das sub-áreas de atuação por departamento com espaçamento simétrico (`py-3`) e cores institucionais.
+- **Métricas, Assiduidade & Comparativo com Mês Anterior ([`metricas.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/portal_voluntario/metricas.php))**:
+  - Comparativo dinâmico de escalas servidas em relação ao mês anterior.
+  - Ajuste estético dos cards de KPI (remoção de círculos pesados ao redor dos ícones e adoção do ícone de joinha para baixo `bi-hand-thumbs-down-fill` para recusas/ausências).
+  - Dimensionamento responsivo de badges e tags de status.
+- **Centralização e Refinamento da Tela de Login ([`login.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/portal_voluntario/login.php))**:
+  - Alinhamento vertical e horizontal perfeito em 100% da altura do viewport (`min-height: 100dvh`).
+  - Fundo com gradiente radial fixo e contínuo, eliminando faixas ou cortes no rodapé.
+  - Atualização dos metadados PWA ([`manifest.json`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/public/manifest.json)).
+- **Interoperabilidade e Normalização de Dados de Redes Sociais**:
+  - Compatibilização bidirecional entre o painel administrativo ([`voluntario-form.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/voluntario/voluntario-form.php) / [`Voluntario.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Controllers/Voluntario.php)) e o portal do voluntário ([`PortalVoluntario.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Controllers/PortalVoluntario.php)), gravando e lendo chaves `rede`/`link` e `plataforma`/`url` com *null coalescing* seguro.
+
 ---
 
 ## 🗄️ 5. Scripts de Banco de Dados (`scripts_deploys/`)
@@ -226,4 +269,6 @@ flowchart TD
 | [`30092026_disponibilidade_voluntarios_cultos.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/30092026_disponibilidade_voluntarios_cultos.sql) | `30092026_disponibilidade_voluntarios_cultos_rollback.sql` | Tabela relacional `tb_voluntario_culto` (N:N) |
 | [`30092026_modulo_webhooks_e_otp.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/30092026_modulo_webhooks_e_otp.sql) | `30092026_modulo_webhooks_e_otp_rollback.sql` | Tabela `tb_webhook`, colunas de OTP e ativação de troca |
 | [`01102026_controle_acesso_departamento_gestor.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/01102026_controle_acesso_departamento_gestor.sql) | `01102026_controle_acesso_departamento_gestor_rollback.sql` | Tabela `tb_departamento_gestor` para controle de acesso departamental |
+| [`01102026_resource_library_tables.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/01102026_resource_library_tables.sql) | `01102026_resource_library_tables_rollback.sql` | Tabelas `resource_types`, `resources`, `collections`, `collection_resources`, `schedule_resources` |
+
 

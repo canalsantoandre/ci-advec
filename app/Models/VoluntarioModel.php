@@ -162,6 +162,11 @@ class VoluntarioModel extends Model
                 $dataFim    = date('Y-m-t');
                 $labelPeriodo = 'Mês Atual (' . date('m/Y') . ')';
                 break;
+            case 'mes_anterior':
+                $dataInicio = date('Y-m-01', strtotime('first day of last month'));
+                $dataFim    = date('Y-m-t', strtotime('last day of last month'));
+                $labelPeriodo = 'Mês Anterior (' . date('m/Y', strtotime('first day of last month')) . ')';
+                break;
             case 'ultimos_3_meses':
                 $dataInicio = date('Y-m-01', strtotime('-2 months'));
                 $dataFim    = date('Y-m-t');
@@ -779,6 +784,11 @@ class VoluntarioModel extends Model
                 $dataFim    = date('Y-m-t');
                 $labelPeriodo = 'Mês Atual (' . date('m/Y') . ')';
                 break;
+            case 'mes_anterior':
+                $dataInicio = date('Y-m-01', strtotime('first day of last month'));
+                $dataFim    = date('Y-m-t', strtotime('last day of last month'));
+                $labelPeriodo = 'Mês Anterior (' . date('m/Y', strtotime('first day of last month')) . ')';
+                break;
             case 'ano_atual':
                 $dataInicio = date('Y-01-01');
                 $dataFim    = date('Y-12-31');
@@ -966,7 +976,7 @@ class VoluntarioModel extends Model
     }
 
     /**
-     * Retorna lista de voluntários disponíveis para um determinado culto aplicando a Regra do Coringa
+     * Retorna lista de voluntários disponíveis para um determinado culto aplicando a Regra de Disponibilidade Total
      * (Voluntários que marcaram o culto OU que não possuem nenhuma restrição cadastrada)
      */
     public function getVoluntariosDisponiveisPorCulto($id_culto_padrao, $id_departamento = null, $id_area = null, $onlyActive = true)

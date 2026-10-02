@@ -1,35 +1,38 @@
 <?php
-  /**
-   * Helper: Retorna a cor de texto ideal (#ffffff ou #0f172a) com base na luminância da cor de fundo (WCAG YIQ)
-   */
-  if (!function_exists('getContrasteTexto')) {
-      function getContrasteTexto($hexColor) {
-          if (empty($hexColor)) return '#ffffff';
-          $hex = ltrim((string)$hexColor, '#');
-          if (strlen($hex) === 3) {
-              $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
-          }
-          if (strlen($hex) !== 6) {
-              return '#ffffff';
-          }
-          $r = hexdec(substr($hex, 0, 2));
-          $g = hexdec(substr($hex, 2, 2));
-          $b = hexdec(substr($hex, 4, 2));
-          $yiq = (($r * 299) + ($g * 587) + ($b * 114)) / 1000;
-          return ($yiq >= 150) ? '#0f172a' : '#ffffff';
-      }
-  }
 
-  $nomeDepAtual = $departamentoAtual ? ($departamentoAtual->nome ?? $departamentoAtual->nome_departamento ?? 'Departamento') : 'Consolidado (Todos)';
-  $corDepAtual  = !empty($departamentoAtual->cor_identificacao) ? $departamentoAtual->cor_identificacao : '#2563eb';
-  $txtDepAtual  = getContrasteTexto($corDepAtual);
+/**
+ * Helper: Retorna a cor de texto ideal (#ffffff ou #0f172a) com base na luminância da cor de fundo (WCAG YIQ)
+ */
+if (!function_exists('getContrasteTexto')) {
+  function getContrasteTexto($hexColor)
+  {
+    if (empty($hexColor)) return '#ffffff';
+    $hex = ltrim((string)$hexColor, '#');
+    if (strlen($hex) === 3) {
+      $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+    }
+    if (strlen($hex) !== 6) {
+      return '#ffffff';
+    }
+    $r = hexdec(substr($hex, 0, 2));
+    $g = hexdec(substr($hex, 2, 2));
+    $b = hexdec(substr($hex, 4, 2));
+    $yiq = (($r * 299) + ($g * 587) + ($b * 114)) / 1000;
+    return ($yiq >= 150) ? '#0f172a' : '#ffffff';
+  }
+}
+
+$nomeDepAtual = $departamentoAtual ? ($departamentoAtual->nome ?? $departamentoAtual->nome_departamento ?? 'Departamento') : 'Todos';
+$corDepAtual  = !empty($departamentoAtual->cor_identificacao) ? $departamentoAtual->cor_identificacao : '#2563eb';
+$txtDepAtual  = getContrasteTexto($corDepAtual);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br" data-bs-theme="light">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  
+
   <!-- PWA & Mobile Fullscreen Settings -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -39,6 +42,18 @@
   <meta name="msapplication-navbutton-color" content="#0f172a">
   <link rel="manifest" href="<?= base_url('manifest.json') ?>">
   <link rel="apple-touch-icon" href="<?= base_url('logo-advec.png') ?>">
+
+  <!-- Anti-flicker Theme Init -->
+  <script>
+    (function() {
+      const t = localStorage.getItem('portal_theme') || localStorage.getItem('theme');
+      let resolved = t;
+      if (!t || t === 'auto') {
+        resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-bs-theme', resolved);
+    })();
+  </script>
 
   <title><?= esc($title ?? 'Métricas & Ranking - Portal do Voluntário') ?></title>
 
@@ -60,16 +75,19 @@
       --bronze-gradient: linear-gradient(135deg, #d97706 0%, #92400e 100%);
       --dark-card: #0f172a;
     }
+
     body {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
       background-color: #f1f5f9;
       color: #1e293b;
       min-height: 100dvh;
     }
+
     [data-bs-theme="dark"] body {
       background-color: #0b1329;
       color: #e2e8f0;
     }
+
     .hero-ranking-card {
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #1e3a8a 100%);
       color: #ffffff;
@@ -77,6 +95,7 @@
       position: relative;
       overflow: hidden;
     }
+
     .hero-ranking-card::before {
       content: '';
       position: absolute;
@@ -88,21 +107,25 @@
       border-radius: 50%;
       pointer-events: none;
     }
+
     .kpi-card {
       border-radius: 1.25rem;
       border: 1px solid rgba(226, 232, 240, 0.8);
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       background: #ffffff;
     }
+
     [data-bs-theme="dark"] .kpi-card {
       background-color: #1e293b;
       border-color: #334155;
       color: #f1f5f9;
     }
+
     .kpi-card:hover {
       transform: translateY(-3px);
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
     }
+
     .podium-badge {
       width: 32px;
       height: 32px;
@@ -113,51 +136,92 @@
       font-weight: 800;
       font-size: 0.9rem;
     }
-    .podium-1 { background: var(--gold-gradient); color: #fff; box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); }
-    .podium-2 { background: var(--silver-gradient); color: #fff; }
-    .podium-3 { background: var(--bronze-gradient); color: #fff; }
+
+    .podium-1 {
+      background: var(--gold-gradient);
+      color: #fff;
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+    }
+
+    .podium-2 {
+      background: var(--silver-gradient);
+      color: #fff;
+    }
+
+    .podium-3 {
+      background: var(--bronze-gradient);
+      color: #fff;
+    }
+
     .leaderboard-row-me {
       background: rgba(37, 99, 235, 0.08) !important;
       border-left: 4px solid #2563eb !important;
     }
+
     [data-bs-theme="dark"] .leaderboard-row-me {
       background: rgba(59, 130, 246, 0.18) !important;
       border-left: 4px solid #60a5fa !important;
     }
-    .badge-level-aprendiz { background-color: #64748b !important; color: #ffffff !important; font-weight: 700; }
-    .badge-level-junior   { background-color: #0284c7 !important; color: #ffffff !important; font-weight: 700; }
-    .badge-level-pleno    { background-color: #7c3aed !important; color: #ffffff !important; font-weight: 700; }
-    .badge-level-senior   { background-color: #d97706 !important; color: #ffffff !important; font-weight: 700; }
+
+    .badge-level-aprendiz {
+      background-color: #64748b !important;
+      color: #ffffff !important;
+      font-weight: 700;
+    }
+
+    .badge-level-junior {
+      background-color: #0284c7 !important;
+      color: #ffffff !important;
+      font-weight: 700;
+    }
+
+    .badge-level-pleno {
+      background-color: #7c3aed !important;
+      color: #ffffff !important;
+      font-weight: 700;
+    }
+
+    .badge-level-senior {
+      background-color: #d97706 !important;
+      color: #ffffff !important;
+      font-weight: 700;
+    }
 
     [data-bs-theme="dark"] .card {
       background-color: #1e293b;
       border-color: #334155;
       color: #f1f5f9;
     }
+
     [data-bs-theme="dark"] .card-header {
       background-color: #0f172a !important;
       border-color: #334155 !important;
     }
+
     [data-bs-theme="dark"] .table {
       --bs-table-bg: transparent;
       --bs-table-color: #e2e8f0;
       --bs-table-hover-bg: rgba(255, 255, 255, 0.05);
     }
+
     [data-bs-theme="dark"] .table-light {
       --bs-table-bg: #0f172a;
       --bs-table-color: #94a3b8;
     }
+
     [data-bs-theme="dark"] .btn-light {
       background-color: #1e293b;
       border-color: #334155;
       color: #e2e8f0;
     }
+
     [data-bs-theme="dark"] .btn-light:hover {
       background-color: #334155;
       color: #fff;
     }
   </style>
 </head>
+
 <body>
 
   <!-- Navegação do Portal -->
@@ -166,21 +230,21 @@
   <main class="container max-w-portal py-3 py-md-4">
 
     <!-- Seletor de Período -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div class="d-flex flex-wrap justify-content-center justify-content-md-between align-items-center mb-3 gap-2">
       <div>
-        <h4 class="fw-black mb-0 text-body d-flex align-items-center gap-2">
-          <i class="bi bi-trophy-fill text-warning"></i> Métricas & Competição de Fidelidade
+        <h4 class="fw-black mb-0 text-body d-flex align-items-center justify-content-center justify-content-md-start gap-2">
+          <i class="bi bi-trophy-fill text-warning"></i> Métricas de Fidelidade
         </h4>
-        <small class="text-muted">Acompanhe seu desempenho e sua posição no ranking por departamento</small>
       </div>
 
       <?php
-        $depParamUrl = ($id_departamento_selecionado !== null) ? '&id_departamento=' . $id_departamento_selecionado : '&id_departamento=todos';
+      $depParamUrl = ($id_departamento_selecionado !== null) ? '&id_departamento=' . $id_departamento_selecionado : '&id_departamento=todos';
       ?>
-      <div class="btn-group shadow-xs rounded-pill overflow-hidden bg-white p-1 border" role="group">
-        <a href="<?= base_url('portal/metricas?periodo=mes_atual' . $depParamUrl) ?>" class="btn btn-sm <?= ($periodo === 'mes_atual') ? 'btn-primary text-white fw-bold' : 'btn-light text-muted' ?> rounded-pill px-3">Mês Atual</a>
-        <a href="<?= base_url('portal/metricas?periodo=ano_atual' . $depParamUrl) ?>" class="btn btn-sm <?= ($periodo === 'ano_atual') ? 'btn-primary text-white fw-bold' : 'btn-light text-muted' ?> rounded-pill px-3">Ano Atual</a>
-        <a href="<?= base_url('portal/metricas?periodo=tudo' . $depParamUrl) ?>" class="btn btn-sm <?= ($periodo === 'tudo') ? 'btn-primary text-white fw-bold' : 'btn-light text-muted' ?> rounded-pill px-3">Geral</a>
+      <div class="btn-group shadow-xs rounded-pill overflow-hidden bg-body p-1 border mx-auto mx-md-0" role="group">
+        <a href="<?= base_url('portal/metricas?periodo=mes_atual' . $depParamUrl) ?>" class="btn btn-sm <?= ($periodo === 'mes_atual') ? 'btn-primary text-white fw-bold shadow-xs' : 'btn-light text-muted' ?> rounded-pill px-2.5 px-md-3">Mês Atual</a>
+        <a href="<?= base_url('portal/metricas?periodo=mes_anterior' . $depParamUrl) ?>" class="btn btn-sm <?= ($periodo === 'mes_anterior') ? 'btn-primary text-white fw-bold shadow-xs' : 'btn-light text-muted' ?> rounded-pill px-2.5 px-md-3">Mês Anterior</a>
+        <a href="<?= base_url('portal/metricas?periodo=ano_atual' . $depParamUrl) ?>" class="btn btn-sm <?= ($periodo === 'ano_atual') ? 'btn-primary text-white fw-bold shadow-xs' : 'btn-light text-muted' ?> rounded-pill px-2.5 px-md-3">Ano Atual</a>
+        <a href="<?= base_url('portal/metricas?periodo=tudo' . $depParamUrl) ?>" class="btn btn-sm <?= ($periodo === 'tudo') ? 'btn-primary text-white fw-bold shadow-xs' : 'btn-light text-muted' ?> rounded-pill px-2.5 px-md-3">Geral</a>
       </div>
     </div>
 
@@ -195,20 +259,17 @@
               <i class="bi bi-diagram-3-fill text-primary"></i>
               <span class="fw-bold text-body small">Selecione o Departamento para ver o Ranking:</span>
             </div>
-            <small class="text-muted" style="font-size: 0.75rem;">
-              <i class="bi bi-shield-check text-success me-1"></i> Ranqueamento segregado por departamento para pontuação justa
-            </small>
           </div>
-          <div class="d-flex flex-wrap gap-2">
-            <?php foreach ($meusDepartamentos as $dep) { 
+          <div class="d-flex flex-wrap gap-2 justify-content-center">
+            <?php foreach ($meusDepartamentos as $dep) {
               $isDepActive = ($id_departamento_selecionado !== null && (int)$id_departamento_selecionado === (int)$dep->id_departamento);
               $depCor = !empty($dep->cor_identificacao) ? $dep->cor_identificacao : '#2563eb';
               $depTxt = getContrasteTexto($depCor);
               $depNome = $dep->nome ?? $dep->nome_departamento ?? 'Departamento';
             ?>
-              <a href="<?= base_url('portal/metricas?id_departamento=' . $dep->id_departamento . '&periodo=' . $periodo) ?>" 
-                 class="btn btn-sm rounded-pill px-3 py-2 d-flex align-items-center gap-2 fw-semibold shadow-xs <?= $isDepActive ? 'border' : 'btn-light border text-body' ?>"
-                 style="<?= $isDepActive ? 'background-color: ' . esc($depCor) . ' !important; color: ' . esc($depTxt) . ' !important; border-color: ' . esc($depCor) . ' !important;' : '' ?>">
+              <a href="<?= base_url('portal/metricas?id_departamento=' . $dep->id_departamento . '&periodo=' . $periodo) ?>"
+                class="btn btn-sm rounded-pill px-3 py-2 d-flex align-items-center gap-2 fw-semibold shadow-xs <?= $isDepActive ? 'border' : 'btn-light border text-body' ?>"
+                style="<?= $isDepActive ? 'background-color: ' . esc($depCor) . ' !important; color: ' . esc($depTxt) . ' !important; border-color: ' . esc($depCor) . ' !important;' : '' ?>">
                 <span class="rounded-circle shadow-xs" style="width: 10px; height: 10px; background-color: <?= esc($depCor) ?>; display: inline-block; border: 1px solid <?= $isDepActive ? esc($depTxt) : 'rgba(0,0,0,0.15)' ?>;"></span>
                 <span><?= esc($depNome) ?></span>
                 <?php if ($isDepActive) { ?>
@@ -218,10 +279,10 @@
             <?php } ?>
 
             <!-- Visão Consolidada Geral (Opcional) -->
-            <a href="<?= base_url('portal/metricas?id_departamento=todos&periodo=' . $periodo) ?>" 
-               class="btn btn-sm rounded-pill px-3 py-2 d-flex align-items-center gap-2 fw-semibold shadow-xs <?= ($id_departamento_selecionado === null) ? 'btn-primary text-white fw-bold' : 'btn-light border text-body' ?>">
+            <a href="<?= base_url('portal/metricas?id_departamento=todos&periodo=' . $periodo) ?>"
+              class="btn btn-sm rounded-pill px-3 py-2 d-flex align-items-center gap-2 fw-semibold shadow-xs <?= ($id_departamento_selecionado === null) ? 'btn-primary text-white fw-bold' : 'btn-light border text-body' ?>">
               <i class="bi bi-grid-fill"></i>
-              <span>Consolidado (Todos)</span>
+              <span>Todos</span>
             </a>
           </div>
         </div>
@@ -229,8 +290,8 @@
     <?php } elseif (!empty($departamentoAtual)) { ?>
       <!-- Voluntário em 1 único departamento -->
       <div class="d-flex align-items-center gap-2 mb-3">
-        <span class="badge rounded-pill px-3 py-2 shadow-xs d-inline-flex align-items-center gap-2 fw-bold" 
-              style="background-color: <?= esc($corDepAtual) ?> !important; color: <?= esc($txtDepAtual) ?> !important; font-size: 0.82rem; border: 1px solid rgba(0,0,0,0.15);">
+        <span class="badge rounded-pill px-3 py-2 shadow-xs d-inline-flex align-items-center gap-2 fw-bold"
+          style="background-color: <?= esc($corDepAtual) ?> !important; color: <?= esc($txtDepAtual) ?> !important; font-size: 0.82rem; border: 1px solid rgba(0,0,0,0.15);">
           <i class="bi bi-bookmark-check-fill"></i> Departamento: <?= esc($nomeDepAtual) ?>
         </span>
         <span class="text-muted small d-none d-sm-inline">&bull; Métricas e ranking exclusivos deste departamento</span>
@@ -241,17 +302,17 @@
     <!-- HERO CARD PREMIUM: MEU SCORE & POSIÇÃO     -->
     <!-- ========================================== -->
     <?php
-      $meu = $rankingData->meuRank;
-      $isClassificado = !empty($meu) && !empty($meu->classificado) && !empty($meu->posicao);
-      $posicaoMeu = $isClassificado ? '#' . $meu->posicao : 'S/C';
-      $pontosMeu  = $meu ? $meu->pontos : 0;
-      $totalClassificados = $rankingData->totalClassificados ?? count($rankingData->leaderboard);
-      $defaultAvatar = 'https://ui-avatars.com/api/?name=' . urlencode($voluntario->nome) . '&background=2563eb&color=fff&size=120&bold=true';
-      $fotoSrc = !empty($voluntario->foto_url) ? $voluntario->foto_url : $defaultAvatar;
+    $meu = $rankingData->meuRank;
+    $isClassificado = !empty($meu) && !empty($meu->classificado) && !empty($meu->posicao);
+    $posicaoMeu = $isClassificado ? '#' . $meu->posicao : 'S/C';
+    $pontosMeu  = $meu ? $meu->pontos : 0;
+    $totalClassificados = $rankingData->totalClassificados ?? count($rankingData->leaderboard);
+    $defaultAvatar = 'https://ui-avatars.com/api/?name=' . urlencode($voluntario->nome) . '&background=2563eb&color=fff&size=120&bold=true';
+    $fotoSrc = !empty($voluntario->foto_url) ? $voluntario->foto_url : $defaultAvatar;
     ?>
     <div class="hero-ranking-card shadow-lg p-4 mb-4">
       <div class="row align-items-center g-4">
-        
+
         <!-- Identificação e Foto -->
         <div class="col-md-7 d-flex align-items-center gap-3 gap-md-4">
           <div class="position-relative">
@@ -274,20 +335,20 @@
                 <span class="badge bg-white bg-opacity-25 text-white rounded-pill px-2 py-0">"<?= esc($voluntario->nickname) ?>"</span>
               <?php } ?>
             </div>
-            
+
             <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
               <span class="badge badge-level-<?= strtolower($voluntario->nivel_conhecimento ?? 'junior') ?> rounded-pill px-2 py-1 small">
                 <i class="bi bi-mortarboard-fill me-1"></i><?= esc($voluntario->nivel_conhecimento ?? 'JUNIOR') ?>
               </span>
 
               <?php if ($departamentoAtual) { ?>
-                <span class="badge rounded-pill px-2.5 py-1 small fw-bold shadow-xs d-inline-flex align-items-center gap-1" 
-                      style="background-color: <?= esc($corDepAtual) ?> !important; color: <?= esc($txtDepAtual) ?> !important; border: 1px solid rgba(255,255,255,0.25);">
+                <span class="badge rounded-pill px-2.5 py-1 small fw-bold shadow-xs d-inline-flex align-items-center gap-1"
+                  style="background-color: <?= esc($corDepAtual) ?> !important; color: <?= esc($txtDepAtual) ?> !important; border: 1px solid rgba(255,255,255,0.25);">
                   <i class="bi bi-diagram-3-fill"></i> <?= esc($nomeDepAtual) ?>
                 </span>
               <?php } else { ?>
                 <span class="badge bg-secondary text-white rounded-pill px-2.5 py-1 small fw-bold shadow-xs d-inline-flex align-items-center gap-1">
-                  <i class="bi bi-grid-fill"></i> Consolidado Geral
+                  <i class="bi bi-grid-fill"></i> Geral
                 </span>
               <?php } ?>
 
@@ -300,7 +361,7 @@
             </div>
 
             <div class="text-white-50 small">
-              <i class="bi bi-star-fill text-warning me-1"></i> <?= $pontosMeu ?> Pontos de Fidelidade <?= $isClassificado ? 'acumulados' : 'no período' ?>
+              <i class="bi bi-star-fill text-warning me-1"></i> <?= $pontosMeu ?> Pontos <?= $isClassificado ? 'acumulados' : 'no período' ?>
             </div>
           </div>
         </div>
@@ -333,15 +394,13 @@
     <!-- CARDS DE METRICAS COMPARATIVAS (4 CARDS)   -->
     <!-- ========================================== -->
     <div class="row g-3 mb-4">
-      
+
       <!-- 1. Cultos Aceitos / Confirmados -->
       <div class="col-6 col-lg-3">
         <div class="kpi-card p-3 p-md-4 h-100 shadow-xs">
           <div class="d-flex justify-content-between align-items-start mb-2">
             <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.72rem;">Cultos Aceitos</span>
-            <span class="badge bg-success-subtle text-success-emphasis rounded-circle p-2">
-              <i class="bi bi-check-lg fs-6"></i>
-            </span>
+            <i class="bi bi-check-circle-fill text-success fs-5"></i>
           </div>
           <h3 class="fw-black text-success mb-1"><?= $metricas->totalConfirmados ?></h3>
           <small class="text-muted" style="font-size: 0.75rem;">
@@ -355,9 +414,7 @@
         <div class="kpi-card p-3 p-md-4 h-100 shadow-xs border-danger-subtle <?= ($metricas->totalCancelamentos > 0) ? 'bg-danger-subtle bg-opacity-25' : '' ?>">
           <div class="d-flex justify-content-between align-items-start mb-2">
             <span class="text-danger small fw-bold text-uppercase" style="font-size: 0.72rem;">Cancelamentos</span>
-            <span class="badge bg-danger-subtle text-danger-emphasis rounded-circle p-2">
-              <i class="bi bi-x-lg fs-6"></i>
-            </span>
+            <i class="bi bi-hand-thumbs-down-fill text-danger fs-5"></i>
           </div>
           <h3 class="fw-black text-danger mb-1"><?= $metricas->totalCancelamentos ?></h3>
           <small class="text-danger" style="font-size: 0.75rem;">
@@ -371,9 +428,7 @@
         <div class="kpi-card p-3 p-md-4 h-100 shadow-xs">
           <div class="d-flex justify-content-between align-items-start mb-2">
             <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.72rem;">Assiduidade</span>
-            <span class="badge bg-info-subtle text-info-emphasis rounded-circle p-2">
-              <i class="bi bi-pie-chart-fill fs-6"></i>
-            </span>
+            <i class="bi bi-pie-chart-fill text-info fs-5"></i>
           </div>
           <h3 class="fw-black text-body mb-1"><?= $metricas->taxaAssiduidade ?>%</h3>
           <div class="progress mt-1" style="height: 5px;">
@@ -387,9 +442,7 @@
         <div class="kpi-card p-3 p-md-4 h-100 shadow-xs">
           <div class="d-flex justify-content-between align-items-start mb-2">
             <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.72rem;">Total Atribuído</span>
-            <span class="badge bg-primary-subtle text-primary-emphasis rounded-circle p-2">
-              <i class="bi bi-calendar-check fs-6"></i>
-            </span>
+            <i class="bi bi-calendar-check text-primary fs-5"></i>
           </div>
           <h3 class="fw-black text-primary mb-1"><?= $metricas->totalEscalas ?></h3>
           <small class="text-muted" style="font-size: 0.75rem;">
@@ -426,13 +479,13 @@
       <div class="card card-outline card-danger shadow-sm border-0 rounded-4 mb-4">
         <div class="card-header bg-danger-subtle py-3 d-flex justify-content-between align-items-center">
           <h6 class="card-title fw-bold mb-0 text-danger-emphasis d-flex align-items-center gap-2">
-            <i class="bi bi-x-circle-fill"></i> Seus Cancelamentos <?= $departamentoAtual ? 'em ' . esc($nomeDepAtual) : '' ?> no Período (<?= count($metricas->listaCancelamentos) ?>)
+            <i class="bi bi-hand-thumbs-down-fill"></i> Seus Cancelamentos <?= $departamentoAtual ? 'em ' . esc($nomeDepAtual) : '' ?> no Período (<?= count($metricas->listaCancelamentos) ?>)
           </h6>
           <span class="badge bg-danger rounded-pill px-3">Registrado no Histórico</span>
         </div>
         <div class="card-body p-3 p-md-4">
           <div class="row g-3">
-            <?php foreach ($metricas->listaCancelamentos as $c) { 
+            <?php foreach ($metricas->listaCancelamentos as $c) {
               $corDepCanc = !empty($c->cor_departamento) ? $c->cor_departamento : '#2563eb';
               $txtDepCanc = getContrasteTexto($corDepCanc);
             ?>
@@ -454,7 +507,7 @@
                     <span>&bull;</span>
                     <span><?= esc($c->nome_area) ?></span>
                   </div>
-                  
+
                   <div class="p-2 bg-danger-subtle rounded-3 text-danger-emphasis small fst-italic">
                     <i class="bi bi-chat-quote-fill me-1"></i> "<?= nl2br(esc($c->justificativa_recusa ?: 'Sem justificativa preenchida.')) ?>"
                   </div>
@@ -472,15 +525,15 @@
     <div class="card card-outline card-primary shadow-sm border-0 rounded-4 overflow-hidden mb-4">
       <div class="card-header bg-body py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h5 class="card-title fw-bold mb-0 text-body d-flex align-items-center gap-2">
-          <i class="bi bi-award-fill text-warning"></i> Ranking de Fidelidade:
+          <i class="bi bi-award-fill text-warning"></i> Ranking
           <?php if ($departamentoAtual) { ?>
-            <span class="badge rounded-pill px-3 py-1 shadow-xs fw-bold" 
-                  style="background-color: <?= esc($corDepAtual) ?> !important; color: <?= esc($txtDepAtual) ?> !important;">
+            <span class="badge rounded-pill px-3 py-1 shadow-xs fw-bold"
+              style="background-color: <?= esc($corDepAtual) ?> !important; color: <?= esc($txtDepAtual) ?> !important;">
               <?= esc($nomeDepAtual) ?>
             </span>
           <?php } else { ?>
             <span class="badge bg-secondary text-white rounded-pill px-3 py-1 shadow-xs fw-bold">
-              Consolidado Geral
+              Geral
             </span>
           <?php } ?>
         </h5>
@@ -505,11 +558,11 @@
                 </tr>
               </thead>
               <tbody>
-                <?php foreach ($rankingData->leaderboard as $item) { 
+                <?php foreach ($rankingData->leaderboard as $item) {
                   $isMe = $item->is_current_user;
                 ?>
                   <tr class="<?= $isMe ? 'leaderboard-row-me' : '' ?>">
-                    
+
                     <!-- Posição / Troféus Top 3 -->
                     <td class="ps-3 ps-md-4 text-center">
                       <?php if ($item->posicao === 1) { ?>
@@ -597,4 +650,5 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
+
 </html>

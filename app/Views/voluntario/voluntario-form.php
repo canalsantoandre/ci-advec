@@ -254,26 +254,29 @@ $idade = $isEdit && !empty($voluntario->data_nascimento) ? date_diff(date_create
                         <small class="text-muted">Adicione links de redes sociais do voluntário (Instagram, LinkedIn, YouTube, TikTok, etc.)</small>
                       </div>
                       <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="adicionarRedeSocial()">
-                        <i class="bi bi-plus-lg me-1"></i> Adicionar Rede
+                        <i class="bi bi-plus-lg me-1"></i>
                       </button>
                     </div>
 
                     <div id="containerRedesSociais" class="d-flex flex-column gap-2">
                       <?php if (!empty($redesSociais)) { ?>
-                        <?php foreach ($redesSociais as $index => $r) { ?>
+                        <?php foreach ($redesSociais as $index => $r) {
+                          $nomeRede = $r['rede'] ?? ($r['plataforma'] ?? 'Instagram');
+                          $linkRede = $r['link'] ?? ($r['url'] ?? '');
+                        ?>
                           <div class="row g-2 align-items-center rede-social-item">
                             <div class="col-md-4">
                               <select name="rede_nome[]" class="form-select form-select-sm">
-                                <option value="Instagram" <?= ($r['rede'] === 'Instagram') ? 'selected' : '' ?>>Instagram</option>
-                                <option value="LinkedIn" <?= ($r['rede'] === 'LinkedIn') ? 'selected' : '' ?>>LinkedIn</option>
-                                <option value="TikTok" <?= ($r['rede'] === 'TikTok') ? 'selected' : '' ?>>TikTok</option>
-                                <option value="YouTube" <?= ($r['rede'] === 'YouTube') ? 'selected' : '' ?>>YouTube</option>
-                                <option value="Facebook" <?= ($r['rede'] === 'Facebook') ? 'selected' : '' ?>>Facebook</option>
-                                <option value="Outro" <?= ($r['rede'] === 'Outro') ? 'selected' : '' ?>>Outro</option>
+                                <option value="Instagram" <?= ($nomeRede === 'Instagram') ? 'selected' : '' ?>>Instagram</option>
+                                <option value="LinkedIn" <?= ($nomeRede === 'LinkedIn') ? 'selected' : '' ?>>LinkedIn</option>
+                                <option value="TikTok" <?= ($nomeRede === 'TikTok') ? 'selected' : '' ?>>TikTok</option>
+                                <option value="YouTube" <?= ($nomeRede === 'YouTube') ? 'selected' : '' ?>>YouTube</option>
+                                <option value="Facebook" <?= ($nomeRede === 'Facebook') ? 'selected' : '' ?>>Facebook</option>
+                                <option value="Outro" <?= ($nomeRede === 'Outro') ? 'selected' : '' ?>>Outro</option>
                               </select>
                             </div>
                             <div class="col-md-7">
-                              <input type="text" name="rede_link[]" class="form-control form-control-sm" placeholder="Ex: @usuario ou https://..." value="<?= esc($r['link']) ?>">
+                              <input type="text" name="rede_link[]" class="form-control form-control-sm" placeholder="Ex: @usuario ou https://..." value="<?= esc($linkRede) ?>">
                             </div>
                             <div class="col-md-1 text-center">
                               <button type="button" class="btn btn-outline-danger btn-sm border-0" onclick="removerRedeSocial(this)" title="Remover">
@@ -408,11 +411,11 @@ $idade = $isEdit && !empty($voluntario->data_nascimento) ? date_diff(date_create
                     </div>
                   </div>
 
-                  <!-- Banner Informativo da Regra do Coringa -->
+                  <!-- Banner Informativo da Regra de Disponibilidade Total -->
                   <div class="alert alert-primary-subtle border border-primary-subtle rounded-4 p-3 mb-4 d-flex align-items-start gap-3">
                     <i class="bi bi-info-circle-fill text-primary fs-4 flex-shrink-0 mt-1"></i>
                     <div>
-                      <strong class="d-block text-body mb-1">Regra da Disponibilidade Total (Coringa):</strong>
+                      <strong class="d-block text-body mb-1">Regra da Disponibilidade Total:</strong>
                       <div class="small text-secondary">
                         <p class="mb-1">&bull; Se <strong>nenhum culto</strong> for marcado, o voluntário será considerado apto para servir em <strong>TODOS os cultos</strong> (disponibilidade total / sem restrições).</p>
                         <p class="mb-0">&bull; Se <strong>um ou mais cultos</strong> forem marcados, o voluntário ficará restrito exclusivamente aos cultos especificamente selecionados.</p>
@@ -746,7 +749,7 @@ $idade = $isEdit && !empty($voluntario->data_nascimento) ? date_diff(date_create
     atualizarContadorCultos();
 
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
+    tooltipTriggerList.map(function(tooltipTriggerEl) {
       return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
@@ -768,24 +771,24 @@ $idade = $isEdit && !empty($voluntario->data_nascimento) ? date_diff(date_create
         ultimoTelefoneVerificado = digitos;
 
         fetch('<?= base_url('voluntario/verificarTelefone') ?>?numero=' + encodeURIComponent(val), {
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-          }
-        })
-        .then(response => {
-          if (response.ok) {
-            return response.json();
-          }
-          return null;
-        })
-        .then(data => {
-          if (data && data.encontrado && data.voluntario) {
-            abrirModalVoluntarioExistente(data.voluntario);
-          }
-        })
-        .catch(err => {
-          console.error('Erro ao verificar telefone:', err);
-        });
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          })
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            }
+            return null;
+          })
+          .then(data => {
+            if (data && data.encontrado && data.voluntario) {
+              abrirModalVoluntarioExistente(data.voluntario);
+            }
+          })
+          .catch(err => {
+            console.error('Erro ao verificar telefone:', err);
+          });
       }
 
       if (telInput) {
@@ -815,7 +818,7 @@ $idade = $isEdit && !empty($voluntario->data_nascimento) ? date_diff(date_create
     const containerAreas = document.getElementById('existente_areas_list');
     if (containerAreas) {
       if (vol.areas && vol.areas.length > 0) {
-        containerAreas.innerHTML = vol.areas.map(a => 
+        containerAreas.innerHTML = vol.areas.map(a =>
           `<span class="badge rounded-pill text-white px-2 py-1" style="background-color: ${a.cor_identificacao || '#2563eb'}; font-size: 0.75rem;">
             ${a.nome_departamento}: ${a.nome_area}
           </span>`
@@ -848,29 +851,31 @@ $idade = $isEdit && !empty($voluntario->data_nascimento) ? date_diff(date_create
     subareaSelect.disabled = true;
 
     fetch('<?= base_url('voluntario/getSubareasPorDepartamento') ?>?id_departamento=' + idDep, {
-      headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(r => r.json())
-    .then(data => {
-      subareaSelect.disabled = false;
-      if (data && data.subareas && data.subareas.length > 0) {
-        subareaSelect.innerHTML = '<option value="">Selecione uma Sub-área *</option>' + 
-          data.subareas.map(s => `<option value="${s.id_area}">${s.nome_area}</option>`).join('');
-      } else {
-        subareaSelect.innerHTML = '<option value="">Nenhuma sub-área cadastrada</option>';
-      }
-    })
-    .catch(err => {
-      subareaSelect.disabled = false;
-      subareaSelect.innerHTML = '<option value="">Erro ao carregar sub-áreas</option>';
-    });
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(r => r.json())
+      .then(data => {
+        subareaSelect.disabled = false;
+        if (data && data.subareas && data.subareas.length > 0) {
+          subareaSelect.innerHTML = '<option value="">Selecione uma Sub-área *</option>' +
+            data.subareas.map(s => `<option value="${s.id_area}">${s.nome_area}</option>`).join('');
+        } else {
+          subareaSelect.innerHTML = '<option value="">Nenhuma sub-área cadastrada</option>';
+        }
+      })
+      .catch(err => {
+        subareaSelect.disabled = false;
+        subareaSelect.innerHTML = '<option value="">Erro ao carregar sub-áreas</option>';
+      });
   }
 
   function submeterVinculacaoRapida() {
-    const idVoluntario   = document.getElementById('existente_id_voluntario').value;
+    const idVoluntario = document.getElementById('existente_id_voluntario').value;
     const idDepartamento = document.getElementById('existente_id_departamento').value;
-    const idSubarea      = document.getElementById('existente_id_subarea').value;
-    const btn            = document.getElementById('btnConfirmarVinculacao');
+    const idSubarea = document.getElementById('existente_id_subarea').value;
+    const btn = document.getElementById('btnConfirmarVinculacao');
 
     if (!idDepartamento || !idSubarea) {
       if (typeof USToast !== 'undefined' && USToast.show) {
@@ -891,47 +896,47 @@ $idade = $isEdit && !empty($voluntario->data_nascimento) ? date_diff(date_create
     formData.append('id_subarea', idSubarea);
 
     fetch('<?= base_url('voluntario/vincularRapido') ?>', {
-      method: 'POST',
-      body: formData,
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    })
-    .then(r => r.json())
-    .then(data => {
-      btn.disabled = false;
-      btn.innerHTML = originalText;
-
-      const modalEl = document.getElementById('modalVoluntarioExistente');
-      const modal = bootstrap.Modal.getInstance(modalEl);
-      if (modal) modal.hide();
-
-      if (data.status === 'success') {
-        if (typeof USToast !== 'undefined' && USToast.show) {
-          USToast.show('success', 'Vinculado com Sucesso', data.message || 'Voluntário vinculado com sucesso ao seu departamento.');
-        } else if (typeof usShowToast === 'function') {
-          usShowToast('success', 'Vinculado com Sucesso', data.message || 'Voluntário vinculado com sucesso ao seu departamento.');
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
         }
-        setTimeout(() => {
-          window.location.href = data.redirect || '<?= base_url('voluntario') ?>';
-        }, 1200);
-      } else {
-        if (typeof USToast !== 'undefined' && USToast.show) {
-          USToast.show('error', 'Não foi possível vincular', data.message || 'Erro ao realizar vinculação.');
-        } else if (typeof usShowToast === 'function') {
-          usShowToast('error', 'Não foi possível vincular', data.message || 'Erro ao realizar vinculação.');
+      })
+      .then(r => r.json())
+      .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+
+        const modalEl = document.getElementById('modalVoluntarioExistente');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        if (data.status === 'success') {
+          if (typeof USToast !== 'undefined' && USToast.show) {
+            USToast.show('success', 'Vinculado com Sucesso', data.message || 'Voluntário vinculado com sucesso ao seu departamento.');
+          } else if (typeof usShowToast === 'function') {
+            usShowToast('success', 'Vinculado com Sucesso', data.message || 'Voluntário vinculado com sucesso ao seu departamento.');
+          }
+          setTimeout(() => {
+            window.location.href = data.redirect || '<?= base_url('voluntario') ?>';
+          }, 1200);
+        } else {
+          if (typeof USToast !== 'undefined' && USToast.show) {
+            USToast.show('error', 'Não foi possível vincular', data.message || 'Erro ao realizar vinculação.');
+          } else if (typeof usShowToast === 'function') {
+            usShowToast('error', 'Não foi possível vincular', data.message || 'Erro ao realizar vinculação.');
+          }
         }
-      }
-    })
-    .catch(err => {
-      btn.disabled = false;
-      btn.innerHTML = originalText;
-      if (typeof USToast !== 'undefined' && USToast.show) {
-        USToast.show('error', 'Erro de Conexão', 'Falha ao comunicar com o servidor.');
-      } else if (typeof usShowToast === 'function') {
-        usShowToast('error', 'Erro de Conexão', 'Falha ao comunicar com o servidor.');
-      }
-    });
+      })
+      .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        if (typeof USToast !== 'undefined' && USToast.show) {
+          USToast.show('error', 'Erro de Conexão', 'Falha ao comunicar com o servidor.');
+        } else if (typeof usShowToast === 'function') {
+          usShowToast('error', 'Erro de Conexão', 'Falha ao comunicar com o servidor.');
+        }
+      });
   }
 
   // Dynamic Social Media Links

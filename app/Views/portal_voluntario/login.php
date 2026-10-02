@@ -9,8 +9,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="ADVEC Voluntário">
-  <meta name="theme-color" content="#0f172a">
-  <meta name="msapplication-navbutton-color" content="#0f172a">
+  <meta name="theme-color" content="#0b1120">
+  <meta name="msapplication-navbutton-color" content="#0b1120">
   <link rel="manifest" href="<?= base_url('manifest.json') ?>">
   <link rel="apple-touch-icon" href="<?= base_url('logo-advec.png') ?>">
 
@@ -30,16 +30,25 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 
   <style>
+    html {
+      height: 100%;
+      background-color: #0b1120;
+    }
+
     body {
       font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-      background: radial-gradient(circle at 50% 10%, #1e293b 0%, #0f172a 100%);
+      background: radial-gradient(circle at 50% 30%, #1e293b 0%, #0b1120 100%) no-repeat fixed;
+      background-color: #0b1120;
+      min-height: 100%;
+      min-height: 100vh;
       min-height: 100dvh;
-      min-height: -webkit-fill-available;
+      margin: 0;
       color: #f8fafc;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1.25rem;
+      padding: 1.5rem 1rem;
+      box-sizing: border-box;
     }
 
     .login-container {

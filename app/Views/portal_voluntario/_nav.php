@@ -34,12 +34,39 @@
       </a>
     </nav>
 
-    <!-- Right Profile & Logout -->
-    <div class="d-flex align-items-center gap-2">
+    <!-- Right Profile, Theme Switcher & Logout -->
+    <div class="d-flex align-items-center gap-1.5 gap-sm-2">
+
+      <!-- Theme Switcher (Claro / Escuro / Automático) -->
+      <div class="dropdown me-1">
+        <button class="btn btn-sm btn-link text-body p-1.5 d-flex align-items-center justify-content-center rounded-circle border-0 text-decoration-none" id="bd-theme-portal" type="button" aria-expanded="false" data-bs-toggle="dropdown" title="Alternar Tema (Claro / Escuro / Automático)">
+          <i class="bi bi-circle-half fs-5 theme-icon-active" id="theme-icon-portal"></i>
+          <span class="visually-hidden" id="bd-theme-portal-text">Alternar Tema</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow border rounded-4 py-2 mt-2" aria-labelledby="bd-theme-portal-text" style="min-width: 160px;">
+          <li>
+            <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 fw-medium" data-bs-theme-value="light">
+              <i class="bi bi-sun-fill text-warning fs-6"></i> <span>Claro</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 fw-medium" data-bs-theme-value="dark">
+              <i class="bi bi-moon-stars-fill text-info fs-6"></i> <span>Escuro</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="dropdown-item d-flex align-items-center gap-2 py-2 px-3 fw-medium" data-bs-theme-value="auto">
+              <i class="bi bi-circle-half text-secondary fs-6"></i> <span>Automático</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Avatar com link para Perfil -->
       <a href="<?= base_url('portal/perfil') ?>" class="d-flex align-items-center text-decoration-none" title="Editar Meu Perfil">
         <img src="<?= esc($fotoSrc) ?>" class="rounded-circle border shadow-xs avatar-nav-img" style="width: 36px; height: 36px; object-fit: cover;" onerror="this.onerror=null;this.src='<?= $defaultAvatar ?>';">
       </a>
-      <a href="<?= base_url('portal/logout') ?>" class="btn btn-outline-danger btn-sm rounded-pill px-2 py-1" title="Sair do Portal">
+      <a href="<?= base_url('portal/logout') ?>" class="btn btn-outline-danger btn-sm rounded-pill px-2 py-1 ms-1" title="Sair do Portal">
         <i class="bi bi-box-arrow-right"></i> <span class="d-none d-sm-inline ms-1">Sair</span>
       </a>
     </div>
@@ -144,6 +171,80 @@
           console.warn('SW registration failed:', err);
         });
     }
+
+    // 3. Gerenciamento de Tema (Claro / Escuro / Automático)
+    const getStoredTheme = () => localStorage.getItem('portal_theme') || localStorage.getItem('theme');
+    const setStoredTheme = theme => {
+      localStorage.setItem('portal_theme', theme);
+      localStorage.setItem('theme', theme);
+    };
+
+    const getPreferredTheme = () => {
+      const storedTheme = getStoredTheme();
+      if (storedTheme) {
+        return storedTheme;
+      }
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    };
+
+    const setTheme = theme => {
+      let resolvedTheme = theme;
+      if (theme === 'auto') {
+        resolvedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-bs-theme', resolvedTheme);
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', resolvedTheme === 'dark' ? '#0f172a' : '#ffffff');
+      }
+    };
+
+    setTheme(getPreferredTheme());
+
+    const showActiveTheme = (theme) => {
+      const themeIconPortal = document.querySelector('#theme-icon-portal');
+      if (!themeIconPortal) return;
+
+      if (theme === 'dark') {
+        themeIconPortal.className = 'bi bi-moon-stars-fill fs-5 text-info theme-icon-active';
+      } else if (theme === 'light') {
+        themeIconPortal.className = 'bi bi-sun-fill fs-5 text-warning theme-icon-active';
+      } else {
+        themeIconPortal.className = 'bi bi-circle-half fs-5 text-secondary theme-icon-active';
+      }
+
+      document.querySelectorAll('[data-bs-theme-value]').forEach(btn => {
+        const val = btn.getAttribute('data-bs-theme-value');
+        if (val === theme) {
+          btn.classList.add('active', 'fw-bold');
+        } else {
+          btn.classList.remove('active', 'fw-bold');
+        }
+      });
+    };
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      const storedTheme = getStoredTheme();
+      if (storedTheme !== 'light' && storedTheme !== 'dark') {
+        setTheme(getPreferredTheme());
+        showActiveTheme('auto');
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      showActiveTheme(getStoredTheme() || 'auto');
+
+      document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
+        toggle.addEventListener('click', (e) => {
+          e.preventDefault();
+          const theme = toggle.getAttribute('data-bs-theme-value');
+          setStoredTheme(theme);
+          setTheme(theme);
+          showActiveTheme(theme);
+        });
+      });
+    });
   })();
 </script>
 

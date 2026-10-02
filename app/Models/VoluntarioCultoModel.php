@@ -77,7 +77,7 @@ class VoluntarioCultoModel extends Model
         });
 
         if (empty($cultoIds)) {
-            // Nenhuma restrição gravada -> Disponibilidade Total (Coringa)
+            // Nenhuma restrição gravada -> Disponibilidade Total
             return 0;
         }
 
@@ -96,7 +96,7 @@ class VoluntarioCultoModel extends Model
     /**
      * Retorna lista de voluntários aptos e disponíveis para um determinado culto padrão
      * 
-     * Regra da Disponibilidade Total (Coringa):
+     * Regra da Disponibilidade Total:
      * - Voluntários que escolheram especificamente o $id_culto_padrao
      * - OU Voluntários que NÃO possuem nenhum registro na tabela tb_voluntario_culto (disponibilidade irrestrita)
      */
@@ -153,7 +153,7 @@ class VoluntarioCultoModel extends Model
             $builder->where('v.status', 1);
         }
 
-        // Aplicação da REGRA DO CORINGA:
+        // Aplicação da REGRA DE DISPONIBILIDADE TOTAL:
         // Apto se escolheu o culto especificamente (vc_esp IS NOT NULL)
         // OU se não tem nenhuma restrição na tabela (vc_all.id_voluntario IS NULL)
         $builder->groupStart()
@@ -183,11 +183,11 @@ class VoluntarioCultoModel extends Model
             ->countAllResults();
 
         if ($totalCadastrados === 0) {
-            // Regra do Coringa: não cadastrou restrição => disponível para todos
+            // Não cadastrou restrição => disponível para todos
             return [
                 'disponivel' => true,
                 'tipo'       => 'TOTAL',
-                'label'      => 'Disponibilidade Total (Coringa)'
+                'label'      => 'Disponibilidade Total'
             ];
         }
 

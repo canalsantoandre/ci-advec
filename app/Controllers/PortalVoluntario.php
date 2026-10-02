@@ -347,7 +347,8 @@ class PortalVoluntario extends BaseController
         $totalRecusadas   = 0;
         $totalPendentes   = 0;
 
-        foreach ($escalas as $esc) {
+        $scheduleResourceModel = new \App\Models\ScheduleResourceModel();
+        foreach ($escalas as &$esc) {
             $conf = strtoupper((string)$esc->status_confirmacao);
             if ($conf === 'CONFIRMADO') {
                 $totalConfirmadas++;
@@ -356,6 +357,14 @@ class PortalVoluntario extends BaseController
             } else {
                 $totalPendentes++;
             }
+
+            // Carrega lista de materiais anexados para este culto e departamento (Geral + Sub-área em que o voluntário atua)
+            $esc->recursos = $scheduleResourceModel->getRecursosDoCulto(
+                $esc->data_culto,
+                (int)($esc->id_culto_padrao ?? 0),
+                (int)$esc->id_departamento,
+                (int)($esc->id_area ?? 0)
+            );
         }
 
         $mesesNomes = [
@@ -573,7 +582,9 @@ class PortalVoluntario extends BaseController
                     if (!empty($plat) && !empty($u)) {
                         $redesArray[] = [
                             'plataforma' => trim($plat),
-                            'url'        => $u
+                            'url'        => $u,
+                            'rede'       => trim($plat),
+                            'link'       => $u
                         ];
                     }
                 }

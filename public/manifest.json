@@ -5,13 +5,17 @@
   "start_url": "/portal/agenda",
   "scope": "/portal/",
   "display": "standalone",
-  "display_override": ["standalone", "fullscreen", "minimal-ui"],
+  "display_override": [
+    "standalone",
+    "fullscreen",
+    "minimal-ui"
+  ],
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/logo-advec.png",
+      "src": "/advec/logo-advec.png",
       "sizes": "192x192 512x512",
       "type": "image/png",
       "purpose": "any maskable"

@@ -10,6 +10,7 @@ use App\Models\VoluntarioModel;
 use App\Models\VoluntarioAreaModel;
 use App\Models\VoluntarioCultoModel;
 use App\Models\CultoPadraoModel;
+use App\Models\ScheduleResourceModel;
 use App\Models\SessionModel;
 
 class Escala extends BaseController
@@ -195,6 +196,10 @@ class Escala extends BaseController
         // 7. Todos os voluntários ativos vinculados ao departamento selecionado
         $voluntariosDoDepartamento = $voluntarioAreaModel->getVoluntariosPorDepartamentoEArea($id_departamento, null, true);
 
+        // 8. Resumo de Materiais Anexados da Biblioteca no Mês
+        $scheduleResourceModel = new ScheduleResourceModel();
+        $recursosResumo = $scheduleResourceModel->getResumoRecursosMes((int)$id_departamento, $dataInicioMes, $dataFimMes);
+
         $data['departamentos']            = $departamentos;
         $data['id_departamento']          = $id_departamento;
         $data['departamentoSelecionado']  = $departamentoSelecionado;
@@ -210,6 +215,8 @@ class Escala extends BaseController
         $data['totalVoluntariosUnicos']   = count($voluntariosUnicosEscalados);
         $data['percentualPreenchimento']  = min(100, $percentualPreenchimento);
         $data['voluntariosDepartamento']  = $voluntariosDoDepartamento;
+        $data['recursosContagemPorCulto'] = $recursosResumo['por_culto'];
+        $data['recursosContagemPorArea']  = $recursosResumo['por_area'];
 
         $data['content_view'] = view('escala/escala-grade', $data);
         return view('_layout', $data);
@@ -430,7 +437,7 @@ class Escala extends BaseController
                 $v->max_escalas_mes   = $maxMes;
                 $v->atingiu_limite    = ($maxMes > 0 && $totalNoMes >= $maxMes);
 
-                // Disponibilidade de Cultos (Regra do Coringa)
+                // Disponibilidade de Cultos (Regra de Disponibilidade Total)
                 if ($id_culto_padrao > 0) {
                     $statusDisp = $voluntarioCultoModel->getStatusDisponibilidadeVoluntario($v->id_voluntario, $id_culto_padrao);
                     $v->disponivel_culto     = $statusDisp['disponivel'];
