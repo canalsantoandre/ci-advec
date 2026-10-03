@@ -496,43 +496,65 @@ function abrirModalPreview(resource) {
 }
 
 function excluirRecurso(id, title) {
-  if (!confirm(`Tem certeza que deseja remover o material "${title}"?`)) return;
-
-  fetch(`<?= base_url('resource/excluir') ?>/${id}`, { method: 'POST' })
-    .then(r => r.json())
-    .then(data => {
-      if (data.status === 'success') {
-        if (typeof USToast !== 'undefined') {
-          USToast.show('success', 'Removido', data.message);
-        } else if (typeof usShowToast === 'function') {
-          usShowToast('success', 'Removido', data.message);
+  usConfirm({
+    title: 'Remover Material',
+    message: `Tem certeza que deseja remover o material "<strong>${title}</strong>"?`,
+    confirmText: 'Sim, Remover',
+    type: 'danger'
+  }, function() {
+    fetch(`<?= base_url('resource/excluir') ?>/${id}`, { method: 'POST' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') {
+          if (typeof USToast !== 'undefined') {
+            USToast.show('success', 'Removido', data.message);
+          } else if (typeof usShowToast === 'function') {
+            usShowToast('success', 'Removido', data.message);
+          }
+          document.getElementById(`card-resource-${id}`)?.remove();
+        } else {
+          if (typeof USToast !== 'undefined') {
+            USToast.show('error', 'Erro', data.message || 'Erro ao excluir.');
+          }
         }
-        document.getElementById(`card-resource-${id}`)?.remove();
-      } else {
-        alert(data.message || 'Erro ao excluir.');
-      }
-    })
-    .catch(() => alert('Falha na requisição.'));
+      })
+      .catch(() => {
+        if (typeof USToast !== 'undefined') {
+          USToast.show('error', 'Erro de Conexão', 'Falha na requisição.');
+        }
+      });
+  });
 }
 
 function excluirColecao(id, title) {
-  if (!confirm(`Tem certeza que deseja remover a coleção "${title}"?`)) return;
-
-  fetch(`<?= base_url('resource/excluirColecao') ?>/${id}`, { method: 'POST' })
-    .then(r => r.json())
-    .then(data => {
-      if (data.status === 'success') {
-        if (typeof USToast !== 'undefined') {
-          USToast.show('success', 'Removido', data.message);
-        } else if (typeof usShowToast === 'function') {
-          usShowToast('success', 'Removido', data.message);
+  usConfirm({
+    title: 'Remover Coleção',
+    message: `Tem certeza que deseja remover a coleção "<strong>${title}</strong>"?`,
+    confirmText: 'Sim, Remover',
+    type: 'danger'
+  }, function() {
+    fetch(`<?= base_url('resource/excluirColecao') ?>/${id}`, { method: 'POST' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') {
+          if (typeof USToast !== 'undefined') {
+            USToast.show('success', 'Removido', data.message);
+          } else if (typeof usShowToast === 'function') {
+            usShowToast('success', 'Removido', data.message);
+          }
+          document.getElementById(`card-collection-${id}`)?.remove();
+        } else {
+          if (typeof USToast !== 'undefined') {
+            USToast.show('error', 'Erro', data.message || 'Erro ao excluir.');
+          }
         }
-        document.getElementById(`card-collection-${id}`)?.remove();
-      } else {
-        alert(data.message || 'Erro ao excluir.');
-      }
-    })
-    .catch(() => alert('Falha na requisição.'));
+      })
+      .catch(() => {
+        if (typeof USToast !== 'undefined') {
+          USToast.show('error', 'Erro de Conexão', 'Falha na requisição.');
+        }
+      });
+  });
 }
 
 function escapeHtml(text) {

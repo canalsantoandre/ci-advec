@@ -241,10 +241,10 @@ $txtDepAtual  = getContrasteTexto($corDepAtual);
       $depParamUrl = ($id_departamento_selecionado !== null) ? '&id_departamento=' . $id_departamento_selecionado : '&id_departamento=todos';
       ?>
       <div class="btn-group shadow-xs rounded-pill overflow-hidden bg-body p-1 border mx-auto mx-md-0" role="group">
-        <a href="<?= base_url('portal/metricas?periodo=mes_atual' . $depParamUrl) ?>" class="btn btn-sm <?= ($periodo === 'mes_atual') ? 'btn-primary text-white fw-bold shadow-xs' : 'btn-light text-muted' ?> rounded-pill px-2.5 px-md-3">Mês Atual</a>
-        <a href="<?= base_url('portal/metricas?periodo=mes_anterior' . $depParamUrl) ?>" class="btn btn-sm <?= ($periodo === 'mes_anterior') ? 'btn-primary text-white fw-bold shadow-xs' : 'btn-light text-muted' ?> rounded-pill px-2.5 px-md-3">Mês Anterior</a>
-        <a href="<?= base_url('portal/metricas?periodo=ano_atual' . $depParamUrl) ?>" class="btn btn-sm <?= ($periodo === 'ano_atual') ? 'btn-primary text-white fw-bold shadow-xs' : 'btn-light text-muted' ?> rounded-pill px-2.5 px-md-3">Ano Atual</a>
-        <a href="<?= base_url('portal/metricas?periodo=tudo' . $depParamUrl) ?>" class="btn btn-sm <?= ($periodo === 'tudo') ? 'btn-primary text-white fw-bold shadow-xs' : 'btn-light text-muted' ?> rounded-pill px-2.5 px-md-3">Geral</a>
+        <a href="<?= base_url('portal/metricas?periodo=mes_atual' . $depParamUrl) ?>" class="btn btn-sm <?= ($periodo === 'mes_atual') ? 'btn-primary text-white fw-bold shadow-xs' : 'text-body-secondary bg-transparent' ?> rounded-pill px-2.5 px-md-3">Mês Atual</a>
+        <a href="<?= base_url('portal/metricas?periodo=mes_anterior' . $depParamUrl) ?>" class="btn btn-sm <?= ($periodo === 'mes_anterior') ? 'btn-primary text-white fw-bold shadow-xs' : 'text-body-secondary bg-transparent' ?> rounded-pill px-2.5 px-md-3">Mês Anterior</a>
+        <a href="<?= base_url('portal/metricas?periodo=ano_atual' . $depParamUrl) ?>" class="btn btn-sm <?= ($periodo === 'ano_atual') ? 'btn-primary text-white fw-bold shadow-xs' : 'text-body-secondary bg-transparent' ?> rounded-pill px-2.5 px-md-3">Ano Atual</a>
+        <a href="<?= base_url('portal/metricas?periodo=tudo' . $depParamUrl) ?>" class="btn btn-sm <?= ($periodo === 'tudo') ? 'btn-primary text-white fw-bold shadow-xs' : 'text-body-secondary bg-transparent' ?> rounded-pill px-2.5 px-md-3">Geral</a>
       </div>
     </div>
 

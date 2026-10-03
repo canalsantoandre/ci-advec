@@ -11,7 +11,7 @@ class UsuarioModel extends Model
     protected $primaryKey = 'id_usuario';
     protected $returnType     = 'object';
     protected $allowedFields = [
-        'usuario', 'nome', 'senha', 'status_usuario', 'id_perfil', 'alterar_senha', 'force_pwd_change', 'otp_code', 'otp_expires_at', 'senha_usuario', 'data_ultimo_login', 'data_ultima_senha', 'hash_user'
+        'usuario', 'nome', 'foto_url', 'senha', 'status_usuario', 'id_perfil', 'alterar_senha', 'force_pwd_change', 'otp_code', 'otp_expires_at', 'senha_usuario', 'data_ultimo_login', 'data_ultima_senha', 'hash_user'
     ];
 
 

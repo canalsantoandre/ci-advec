@@ -27,6 +27,8 @@ class VoluntarioModel extends Model
         'data_nascimento',
         'foto_url',
         'status',
+        'status_aprovacao',
+        'id_convite_origem',
         'max_escalas_mes',
         'redes_sociais',
         'observacao'
@@ -46,6 +48,9 @@ class VoluntarioModel extends Model
         ');
         $builder->join('tb_escala_voluntario as ev', 'ev.id_voluntario = v.id_voluntario', 'left');
         
+        // Exclui cadastros pendentes de aprovação da lista regular
+        $builder->where("COALESCE(v.status_aprovacao, 'APROVADO') !=", 'PENDENTE');
+
         if (!empty($filtros['id_departamento'])) {
             $builder->join('tb_voluntario_departamento_area as vda', 'vda.id_voluntario = v.id_voluntario', 'inner');
             $builder->where('vda.id_departamento', (int)$filtros['id_departamento']);
@@ -643,6 +648,56 @@ class VoluntarioModel extends Model
     }
 
     /**
+     * Verifica com alta performance se um número de telefone já está cadastrado na base de voluntários
+     * Utiliza índice direto em tb_voluntario(telefone_whatsapp) para tempo de resposta sub-milissegundo
+     *
+     * @param string $telefone
+     * @return bool
+     */
+    public function existeTelefone($telefone)
+    {
+        $digitos = preg_replace('/\D/', '', (string)$telefone);
+        if (empty($digitos) || strlen($digitos) < 8) {
+            return false;
+        }
+
+        $digitosSem55 = (strpos($digitos, '55') === 0 && strlen($digitos) >= 12) ? substr($digitos, 2) : $digitos;
+
+        // Formatações comuns para match indexado direto (O(1))
+        $possibilidades = [
+            trim($telefone),
+            $digitos,
+            $digitosSem55,
+            '55' . $digitosSem55,
+            '+55' . $digitosSem55
+        ];
+
+        if (strlen($digitosSem55) === 11) {
+            $possibilidades[] = sprintf('(%s) %s-%s', substr($digitosSem55, 0, 2), substr($digitosSem55, 2, 5), substr($digitosSem55, 7));
+            $possibilidades[] = sprintf('(%s)%s-%s', substr($digitosSem55, 0, 2), substr($digitosSem55, 2, 5), substr($digitosSem55, 7));
+            $possibilidades[] = sprintf('%s %s-%s', substr($digitosSem55, 0, 2), substr($digitosSem55, 2, 5), substr($digitosSem55, 7));
+        } elseif (strlen($digitosSem55) === 10) {
+            $possibilidades[] = sprintf('(%s) %s-%s', substr($digitosSem55, 0, 2), substr($digitosSem55, 2, 4), substr($digitosSem55, 6));
+            $possibilidades[] = sprintf('(%s)%s-%s', substr($digitosSem55, 0, 2), substr($digitosSem55, 2, 4), substr($digitosSem55, 6));
+        }
+
+        $possibilidades = array_values(array_unique(array_filter($possibilidades)));
+
+        $db = db_connect();
+        $builder = $db->table('tb_voluntario');
+        $builder->select('id_voluntario');
+        $builder->groupStart()
+            ->whereIn('telefone_whatsapp', $possibilidades)
+            ->orWhere("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(telefone_whatsapp, '(', ''), ')', ''), '-', ''), ' ', ''), '+', '') LIKE '%{$digitosSem55}%'")
+        ->groupEnd();
+        $builder->limit(1);
+
+        $row = $builder->get()->getFirstRow();
+
+        return !empty($row);
+    }
+
+    /**
      * Reseta a senha do voluntário para os dígitos limpos do WhatsApp (padrão do sistema)
      * e obriga a troca de senha na próxima autenticação com validação OTP via WhatsApp
      */
@@ -997,5 +1052,151 @@ class VoluntarioModel extends Model
         $voluntarioCultoModel = new VoluntarioCultoModel();
         return $voluntarioCultoModel->getVoluntariosDisponiveisPorCulto($id_culto_padrao, $id_departamento, $id_area, $onlyActive);
     }
+
+    /**
+     * Retorna lista de voluntários pendentes de aprovação (Self-onboarding)
+     */
+    public function listaPendentesAprovacao(array $departamentosPermitidosIds = [], array $filtros = [])
+    {
+        $db = db_connect();
+        $builder = $db->table('tb_voluntario as v');
+        $builder->select('
+            v.*,
+            vda.id_departamento,
+            d.nome as nome_departamento,
+            d.cor_identificacao as cor_departamento,
+            GROUP_CONCAT(DISTINCT a.nome_area ORDER BY a.nome_area SEPARATOR ", ") as nome_area,
+            GROUP_CONCAT(DISTINCT a.id_area ORDER BY a.id_area SEPARATOR ",") as ids_areas,
+            c.token as token_convite,
+            c.tipo as tipo_convite,
+            c.capacidade_maxima,
+            c.usos_realizados
+        ');
+        $builder->join('tb_voluntario_departamento_area as vda', 'vda.id_voluntario = v.id_voluntario', 'left');
+        $builder->join('tb_departamento as d', 'd.id_departamento = vda.id_departamento', 'left');
+        $builder->join('tb_departamento_area as a', 'a.id_area = vda.id_area', 'left');
+        $builder->join('tb_departamento_convite as c', 'c.id_convite = v.id_convite_origem', 'left');
+        $builder->where('v.status_aprovacao', 'PENDENTE');
+
+        if (!empty($filtros['id_departamento'])) {
+            $builder->where('vda.id_departamento', (int)$filtros['id_departamento']);
+        } elseif (!empty($departamentosPermitidosIds)) {
+            $builder->whereIn('vda.id_departamento', (array)$departamentosPermitidosIds);
+        }
+
+        if (!empty($filtros['busca'])) {
+            $busca = trim($filtros['busca']);
+            $builder->groupStart()
+                ->like('v.nome', $busca)
+                ->orLike('v.nickname', $busca)
+                ->orLike('v.email', $busca)
+                ->orLike('v.telefone_whatsapp', $busca)
+                ->groupEnd();
+        }
+
+        $builder->groupBy('v.id_voluntario');
+        $builder->orderBy('v.date_insert', 'DESC');
+        return $builder->get()->getResult('object');
+    }
+
+    /**
+     * Contagem de cadastros pendentes de aprovação (únicos por voluntário)
+     */
+    public function contarPendentes(array $departamentosPermitidosIds = [])
+    {
+        if (empty($departamentosPermitidosIds)) {
+            return 0;
+        }
+
+        $db = db_connect();
+        $builder = $db->table('tb_voluntario as v');
+        $builder->select('COUNT(DISTINCT v.id_voluntario) as total');
+        $builder->join('tb_voluntario_departamento_area as vda', 'vda.id_voluntario = v.id_voluntario', 'left');
+        $builder->where('v.status_aprovacao', 'PENDENTE');
+        $builder->whereIn('vda.id_departamento', (array)$departamentosPermitidosIds);
+
+        $row = $builder->get()->getFirstRow();
+        return $row ? (int)$row->total : 0;
+    }
+
+    /**
+     * Aprova o cadastro do voluntário que realizou self-onboarding e sincroniza suas sub-áreas
+     */
+    public function aprovarVoluntario($idVoluntario, array $dadosAprovacao = [])
+    {
+        $idVoluntario = (int)$idVoluntario;
+        if ($idVoluntario <= 0) {
+            return false;
+        }
+
+        $voluntario = $this->find($idVoluntario);
+        if (!$voluntario) {
+            return false;
+        }
+
+        $digitosTelefone = preg_replace('/\D/', '', (string)$voluntario->telefone_whatsapp);
+        if (empty($digitosTelefone)) {
+            $digitosTelefone = '123456';
+        }
+        $hashSenha = password_hash($digitosTelefone, PASSWORD_BCRYPT);
+
+        $dadosUpdate = [
+            'status'             => 1,
+            'status_aprovacao'   => 'APROVADO',
+            'senha'              => $hashSenha,
+            'primeiro_acesso'    => 1,
+            'force_pwd_change'   => 1,
+            'data_ultima_senha'  => date('Y-m-d H:i:s')
+        ];
+
+        if (isset($dadosAprovacao['nivel_conhecimento'])) {
+            $dadosUpdate['nivel_conhecimento'] = $dadosAprovacao['nivel_conhecimento'];
+        }
+        if (isset($dadosAprovacao['max_escalas_mes'])) {
+            $dadosUpdate['max_escalas_mes'] = max(0, (int)$dadosAprovacao['max_escalas_mes']);
+        }
+        if (isset($dadosAprovacao['observacao'])) {
+            $dadosUpdate['observacao'] = trim((string)$dadosAprovacao['observacao']);
+        }
+
+        $db = db_connect();
+        $db->table('tb_voluntario')->where('id_voluntario', $idVoluntario)->update($dadosUpdate);
+
+        // Atualiza e sincroniza sub-áreas selecionadas na aprovação
+        $idDep = !empty($dadosAprovacao['id_departamento']) ? (int)$dadosAprovacao['id_departamento'] : null;
+        $areasParaSincronizar = [];
+
+        if (!empty($dadosAprovacao['id_areas']) && is_array($dadosAprovacao['id_areas'])) {
+            $areasParaSincronizar = array_values(array_unique(array_filter(array_map('intval', $dadosAprovacao['id_areas']))));
+        } elseif (!empty($dadosAprovacao['id_area'])) {
+            $raw = is_array($dadosAprovacao['id_area']) ? $dadosAprovacao['id_area'] : [$dadosAprovacao['id_area']];
+            $areasParaSincronizar = array_values(array_unique(array_filter(array_map('intval', $raw))));
+        }
+
+        if (!empty($areasParaSincronizar) && $idDep) {
+            $volAreaModel = new VoluntarioAreaModel();
+            $volAreaModel->sincronizarAreas($idVoluntario, $areasParaSincronizar, [$idDep]);
+        }
+
+        return true;
+    }
+
+    /**
+     * Rejeita o cadastro pendente do voluntário
+     */
+    public function rejeitarVoluntario($idVoluntario, $motivo = '')
+    {
+        $voluntario = $this->find((int)$idVoluntario);
+        if (!$voluntario) {
+            return false;
+        }
+
+        return $this->update((int)$idVoluntario, [
+            'status'           => 0,
+            'status_aprovacao' => 'REJEITADO',
+            'observacao'       => trim((string)($voluntario->observacao ? $voluntario->observacao . "\n" : '') . "Rejeitado: " . $motivo)
+        ]);
+    }
 }
+
 

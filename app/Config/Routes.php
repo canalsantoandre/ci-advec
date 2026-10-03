@@ -70,7 +70,21 @@ $routes->group('voluntario', static function ($routes) {
     $routes->get('verificarTelefone', 'Voluntario::verificarTelefone', ['filter' => 'auth']);
     $routes->post('vincularRapido', 'Voluntario::vincularRapido', ['filter' => 'auth']);
     $routes->get('getSubareasPorDepartamento', 'Voluntario::getSubareasPorDepartamento', ['filter' => 'auth']);
+    
+    // Gestão de Convites & Aprovação (Self-Onboarding)
+    $routes->post('gerarConvite', 'Voluntario::gerarConvite', ['filter' => 'auth']);
+    $routes->get('listarConvites', 'Voluntario::listarConvites', ['filter' => 'auth']);
+    $routes->post('encerrarConvite', 'Voluntario::encerrarConvite', ['filter' => 'auth']);
+    $routes->post('aprovarCadastro', 'Voluntario::aprovarCadastro', ['filter' => 'auth']);
+    $routes->post('rejeitarCadastro', 'Voluntario::rejeitarCadastro', ['filter' => 'auth']);
 });
+
+/* SELF-ONBOARDING & CONVITES DE VOLUNTÁRIOS (PÚBLICO) */
+$routes->get('convite/sucesso', 'Convite::sucesso');
+$routes->get('convite/(:any)', 'Convite::index/$1');
+$routes->post('convite/solicitar-otp', 'Convite::solicitarOtp');
+$routes->post('convite/validar-otp', 'Convite::validarOtp');
+$routes->post('convite/concluir-cadastro', 'Convite::concluirCadastro');
 
 /* API VOLUNTÁRIOS */
 $routes->group('api/voluntarios', ['filter' => 'auth'], static function ($routes) {
@@ -194,6 +208,7 @@ $routes->group('usuario', static function ($routes) {
     $routes->match(['GET', 'POST'], 'atualizarSenha', 'Usuario::atualizarSenha', ['filter' => 'auth']);
     $routes->match(['GET', 'POST'], 'resetSenha', 'Usuario::resetSenha', ['filter' => 'auth']);
     $routes->match(['GET', 'POST'], 'getModalResetSenha', 'Usuario::getModalResetSenha', ['filter' => 'auth']);
+    $routes->post('uploadFotoPerfil', 'Usuario::uploadFotoPerfil', ['filter' => 'auth']);
 });
 
 $routes->get('perfil', 'Perfil::index', ['filter' => 'auth']);

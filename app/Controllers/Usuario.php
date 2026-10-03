@@ -309,4 +309,67 @@ class Usuario extends BaseController
 
         return $this->response->setJSON(['erro' => 1, 'mensagem' => 'Usuário não encontrado.']);
     }
+
+    /**
+     * Upload automático de foto de perfil do usuário logado via AJAX
+     * POST /usuario/uploadFotoPerfil
+     */
+    public function uploadFotoPerfil()
+    {
+        $session = session();
+        $userData = $session->get('dsh_usuario');
+        if (empty($userData['obj_user'])) {
+            return $this->response->setStatusCode(401)->setJSON([
+                'status'  => 'error',
+                'message' => 'Sessão expirada. Faça login novamente.'
+            ]);
+        }
+
+        $id_usuario = (int)$userData['obj_user']->id_usuario;
+        $file = $this->request->getFile('foto_file');
+
+        if (!$file || !$file->isValid() || $file->hasMoved()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'status'  => 'error',
+                'message' => 'Nenhum arquivo válido de imagem foi enviado.'
+            ]);
+        }
+
+        // Validação de tipo MIME
+        $mime = $file->getMimeType();
+        if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp', 'image/gif'])) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'status'  => 'error',
+                'message' => 'Formato de imagem inválido. Aceitos: JPG, PNG, WEBP.'
+            ]);
+        }
+
+        // Cria diretório se não existir
+        $uploadDir = FCPATH . 'uploads/usuarios';
+        if (!is_dir($uploadDir)) {
+            @mkdir($uploadDir, 0777, true);
+        }
+
+        $newName = $file->getRandomName();
+        $file->move($uploadDir, $newName);
+
+        $fotoUrl = base_url('uploads/usuarios/' . $newName);
+
+        // Atualiza banco de dados
+        $usuarioModel = new UsuarioModel();
+        $usuarioModel->update($id_usuario, [
+            'foto_url' => $fotoUrl
+        ]);
+
+        // Atualiza sessão ativa
+        $userData['obj_user']->foto_url = $fotoUrl;
+        $userData['obj_user']->foto = $fotoUrl;
+        $session->set('dsh_usuario', $userData);
+
+        return $this->response->setJSON([
+            'status'   => 'success',
+            'foto_url' => $fotoUrl,
+            'message'  => 'Foto de perfil atualizada com sucesso!'
+        ]);
+    }
 }

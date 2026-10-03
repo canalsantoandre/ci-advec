@@ -24,10 +24,14 @@ class PortalVoluntario extends BaseController
 
         $voluntarioModel = new VoluntarioModel();
         $vol = $voluntarioModel->find((int)$sessData['id_voluntario']);
-        if ($vol) {
-            $voluntarioAreaModel = new VoluntarioAreaModel();
-            $vol->areas = $voluntarioAreaModel->getAreasDoVoluntario($vol->id_voluntario);
+        if (!$vol || $vol->status != 1 || (isset($vol->status_aprovacao) && $vol->status_aprovacao === 'PENDENTE')) {
+            $session->remove('dsh_voluntario');
+            $session->remove('otp_auth_challenge');
+            return null;
         }
+
+        $voluntarioAreaModel = new VoluntarioAreaModel();
+        $vol->areas = $voluntarioAreaModel->getAreasDoVoluntario($vol->id_voluntario);
         return $vol;
     }
 
@@ -38,13 +42,23 @@ class PortalVoluntario extends BaseController
     {
         $session = session();
         if ($session->has('dsh_voluntario') && !empty($session->get('dsh_voluntario')['logged_in'])) {
-            return redirect()->to(base_url('portal/agenda'));
+            $idVol = (int)($session->get('dsh_voluntario')['id_voluntario'] ?? 0);
+            $voluntarioModel = new VoluntarioModel();
+            $vol = $idVol > 0 ? $voluntarioModel->find($idVol) : null;
+            if ($vol && $vol->status == 1 && (!isset($vol->status_aprovacao) || $vol->status_aprovacao === 'APROVADO')) {
+                return redirect()->to(base_url('portal/agenda'));
+            } else {
+                $session->remove('dsh_voluntario');
+                $session->remove('otp_auth_challenge');
+            }
         }
+
+        $erroFlash = $session->getFlashdata('erro_login') ?: $session->getFlashdata('erro');
 
         $data = [
             'title'     => 'Acesso do Voluntário - ADVEC',
             'telefone'  => '',
-            'erro'      => ''
+            'erro'      => $erroFlash ?: ''
         ];
 
         if (strtolower($this->request->getMethod()) === 'post') {
@@ -66,30 +80,41 @@ class PortalVoluntario extends BaseController
                 return view('portal_voluntario/login', $data);
             }
 
-            if ($voluntario->status != 1) {
-                $data['erro'] = 'Seu cadastro de voluntário está inativo. Fale com o líder do seu departamento.';
+            if ($voluntario->status != 1 || (isset($voluntario->status_aprovacao) && $voluntario->status_aprovacao === 'PENDENTE')) {
+                if (isset($voluntario->status_aprovacao) && $voluntario->status_aprovacao === 'PENDENTE') {
+                    $data['erro'] = 'Seu pré-cadastro foi recebido e está aguardando aprovação do líder do departamento. Você receberá uma notificação assim que for liberado!';
+                } elseif (isset($voluntario->status_aprovacao) && $voluntario->status_aprovacao === 'REJEITADO') {
+                    $data['erro'] = 'Sua solicitação de cadastro não foi aprovada. Fale com o líder do seu departamento.';
+                } else {
+                    $data['erro'] = 'Seu cadastro de voluntário está inativo. Fale com o líder do seu departamento.';
+                }
                 return view('portal_voluntario/login', $data);
             }
 
-            // Validação de senha:
-            // 1. Se tem hash no banco e o usuário já trocou a senha (force_pwd_change = 0), aceita EXCLUSIVAMENTE o hash via password_verify
-            // 2. Se o usuário ainda precisa trocar a senha (force_pwd_change = 1 ou primeiro_acesso = 1), aceita hash ou senha inicial padrão (telefone)
+            // Validação de senha flexível (aceita hash gravado, formato original, ou dígitos puros)
             $digitosTelefone = preg_replace('/\D/', '', (string)$voluntario->telefone_whatsapp);
             $digitosTelefoneSem55 = (strpos($digitosTelefone, '55') === 0 && strlen($digitosTelefone) >= 12) ? substr($digitosTelefone, 2) : $digitosTelefone;
+            $senhaLimpa = preg_replace('/\D/', '', $senha);
 
             $senhaValida = false;
             $precisaTrocarSenha = (!empty($voluntario->force_pwd_change) || !empty($voluntario->primeiro_acesso));
 
             if (!empty($voluntario->senha)) {
-                if (password_verify($senha, $voluntario->senha)) {
+                if (password_verify($senha, $voluntario->senha) || (!empty($senhaLimpa) && password_verify($senhaLimpa, $voluntario->senha))) {
                     $senhaValida = true;
-                } elseif ($precisaTrocarSenha && ($senha === $digitosTelefone || $senha === $digitosTelefoneSem55)) {
-                    // Senha padrão inicial é aceita APENAS se ainda não tiver concluído a troca obrigatória
+                } elseif ($precisaTrocarSenha && (
+                    $senha === $digitosTelefone || 
+                    $senha === $digitosTelefoneSem55 || 
+                    $senhaLimpa === $digitosTelefone || 
+                    $senhaLimpa === $digitosTelefoneSem55 ||
+                    $senha === (string)$voluntario->telefone_whatsapp
+                )) {
+                    // Senha padrão inicial é aceita se ainda não tiver concluído a troca obrigatória
                     $senhaValida = true;
                 }
             } else {
                 // Sem hash gravado ainda: aceita a senha padrão inicial e força a troca
-                if ($senha === $digitosTelefone || $senha === $digitosTelefoneSem55 || $senha === $voluntario->telefone_whatsapp) {
+                if ($senha === $digitosTelefone || $senha === $digitosTelefoneSem55 || $senhaLimpa === $digitosTelefone || $senhaLimpa === $digitosTelefoneSem55 || $senha === (string)$voluntario->telefone_whatsapp) {
                     $senhaValida = true;
                     $precisaTrocarSenha = true;
                 }

@@ -38,9 +38,10 @@ class PerfilModel extends Model {
     public function perfilModuloAcao($id_modulo, $id_perfil) {
         $db = db_connect();
         $builder = $db->table('tb_sys_modulo_acao as ma');
-        $builder->select('ma.id_modulo, ma.modulo_acao, ifnull(pma.modulo_acao,0) as perfil_acao');
-        $builder->join('tb_sys_perfil_modulo_acao as pma','pma.id_modulo = ma.id_modulo and pma.modulo_acao = ma.modulo_acao and pma.id_perfil = '.$id_perfil,'left');        
-        $builder->where('ma.id_modulo', $id_modulo);
+        $builder->select('ma.id_modulo, ma.modulo_acao, MAX(ifnull(pma.modulo_acao,0)) as perfil_acao');
+        $builder->join('tb_sys_perfil_modulo_acao as pma','pma.id_modulo = ma.id_modulo and pma.modulo_acao = ma.modulo_acao and pma.id_perfil = '.(int)$id_perfil,'left');        
+        $builder->where('ma.id_modulo', (int)$id_modulo);
+        $builder->groupBy('ma.id_modulo, ma.modulo_acao');
         $builder->orderBy('ma.modulo_acao');
         $query = $builder->get();
 

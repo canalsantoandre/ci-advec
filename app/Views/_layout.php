@@ -163,12 +163,180 @@
       transform: scale(1.08);
     }
 
+    /* Premium User Menu Dropdown */
+    .user-menu .dropdown-toggle {
+      border-radius: 9999px;
+      padding: 0.35rem 0.75rem 0.35rem 0.45rem;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid transparent;
+    }
+
+    .user-menu .dropdown-toggle:hover {
+      background: rgba(15, 23, 42, 0.05);
+      border-color: rgba(15, 23, 42, 0.08);
+    }
+
+    [data-bs-theme="dark"] .user-menu .dropdown-toggle:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
     .user-avatar-circle {
       width: 36px;
       height: 36px;
       object-fit: cover;
       border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      flex-shrink: 0;
+    }
+
+    .user-menu-dropdown {
+      width: 290px;
+      border-radius: 1.25rem !important;
+      border: 1px solid rgba(226, 232, 240, 0.8) !important;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.3), 0 0 1px 1px rgba(0, 0, 0, 0.05) !important;
+      overflow: hidden;
+      padding: 0;
+      margin-top: 0.65rem !important;
+    }
+
+    [data-bs-theme="dark"] .user-menu-dropdown {
+      background-color: #1e293b !important;
+      border-color: rgba(255, 255, 255, 0.1) !important;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
+    }
+
+    .user-dropdown-hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #1e3a8a 100%);
+      color: #ffffff;
+      padding: 1.75rem 1.25rem 1.25rem 1.25rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .user-dropdown-hero::after {
+      content: '';
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      width: 120px;
+      height: 120px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0) 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .avatar-upload-wrapper {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 0.75rem auto;
+    }
+
+    .avatar-dropdown-img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 3px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+      background-color: #1e293b;
+    }
+
+    .avatar-dropdown-badge {
+      position: absolute;
+      bottom: 0px;
+      right: 0px;
+      background: #2563eb;
+      color: #ffffff;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease;
+    }
+
+    .avatar-dropdown-badge:hover {
+      transform: scale(1.15);
+      background: #1d4ed8;
+    }
+
+    .user-dropdown-menu-item {
+      padding: 0.65rem 0.85rem;
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 500;
+      font-size: 0.88rem;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+
+    .user-dropdown-menu-item:hover {
+      background: rgba(15, 23, 42, 0.05);
+      transform: translateX(2px);
+    }
+
+    [data-bs-theme="dark"] .user-dropdown-menu-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .user-dropdown-menu-item.item-danger {
+      color: #ef4444;
+    }
+
+    .user-dropdown-menu-item.item-danger:hover {
+      background: rgba(239, 68, 68, 0.1);
+      color: #dc2626;
+    }
+
+    /* Regras Globais: Ícone do WhatsApp em botões/pills com fundo azul (contraste #FFFFFF) */
+    .btn-primary .bi-whatsapp,
+    .btn-info .bi-whatsapp,
+    .nav-pills .nav-link.active .bi-whatsapp,
+    .badge.bg-primary .bi-whatsapp {
+      color: #ffffff !important;
+    }
+
+    /* Regras Globais: Inputs no Dark Mode com fonte digitada PRETA e fundo claro/branco para máxima legibilidade */
+    [data-bs-theme="dark"] .form-control,
+    [data-bs-theme="dark"] .form-select,
+    [data-bs-theme="dark"] input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="reset"]),
+    [data-bs-theme="dark"] select,
+    [data-bs-theme="dark"] textarea {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      color: #000000 !important;
+      font-weight: 500;
+    }
+
+    [data-bs-theme="dark"] .form-control:focus,
+    [data-bs-theme="dark"] .form-select:focus,
+    [data-bs-theme="dark"] input:focus,
+    [data-bs-theme="dark"] select:focus,
+    [data-bs-theme="dark"] textarea:focus {
+      background-color: #ffffff !important;
+      color: #000000 !important;
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
+    }
+
+    [data-bs-theme="dark"] .form-floating > label {
+      color: #475569 !important;
+    }
+
+    [data-bs-theme="dark"] .form-control::placeholder,
+    [data-bs-theme="dark"] input::placeholder,
+    [data-bs-theme="dark"] textarea::placeholder {
+      color: #64748b !important;
+      opacity: 0.85 !important;
     }
   </style>
 </head>
@@ -234,61 +402,83 @@
             </a>
           </li>
 
-          <!-- User Menu Dropdown -->
+          <!-- User Menu Dropdown (Premium High-End Redesign) -->
           <?php
             $nomeUserLayout = isset($usuario->nome) ? trim($usuario->nome) : 'Usuário';
-            $partesNomeUser = preg_split('/\s+/', $nomeUserLayout);
-            $iniciaisUser = '';
-            if (count($partesNomeUser) >= 2) {
-                $iniciaisUser = mb_strtoupper(mb_substr($partesNomeUser[0], 0, 1) . mb_substr(end($partesNomeUser), 0, 1));
-            } elseif (!empty($nomeUserLayout)) {
-                $iniciaisUser = mb_strtoupper(mb_substr($nomeUserLayout, 0, 2));
-            } else {
-                $iniciaisUser = 'US';
-            }
+            $loginUserLayout = isset($usuario->usuario) ? trim($usuario->usuario) : '';
+            $perfilUserLayout = isset($usuario->nome_perfil) ? trim($usuario->nome_perfil) : 'Perfil Acesso';
+            $defaultAvatarUser = 'https://ui-avatars.com/api/?name=' . urlencode($nomeUserLayout) . '&background=2563eb&color=fff&size=160&bold=true';
             $fotoUserLayout = !empty($usuario->foto_url) ? $usuario->foto_url : (!empty($usuario->foto) ? $usuario->foto : null);
+            $fotoSrcUser = $fotoUserLayout ?: $defaultAvatarUser;
           ?>
           <li class="nav-item dropdown user-menu">
-            <a href="#" class="nav-link dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown">
-              <?php if ($fotoUserLayout) { ?>
-                <img src="<?= esc($fotoUserLayout) ?>" class="user-avatar-circle shadow-sm" alt="Foto do Usuário" />
-              <?php } else { ?>
-                <span class="user-avatar-circle shadow-sm d-inline-flex align-items-center justify-content-center fw-bold text-white text-center" style="background: linear-gradient(135deg, #0284c7 0%, #1d4ed8 100%); font-size: 0.85rem; letter-spacing: 0.5px;">
-                  <?= esc($iniciaisUser) ?>
-                </span>
-              <?php } ?>
-              <span class="d-none d-md-inline fw-semibold"><?= esc($nomeUserLayout); ?></span>
+            <a href="#" class="nav-link dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false">
+              <img src="<?= esc($fotoSrcUser) ?>" class="user-avatar-circle shadow-sm" id="userNavbarAvatarMain" alt="Foto do Usuário" onerror="this.onerror=null;this.src='<?= $defaultAvatarUser ?>';" />
+              <div class="d-none d-md-flex flex-column text-start" style="line-height: 1.15;">
+                <span class="fw-bold text-body" style="font-size: 0.88rem;"><?= esc($nomeUserLayout); ?></span>
+                <span class="text-secondary small" style="font-size: 0.72rem;"><?= esc($perfilUserLayout); ?></span>
+              </div>
+              <i class="bi bi-chevron-down fs-7 text-muted ms-0.5"></i>
             </a>
-            <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end shadow-lg rounded-3 border-0">
-              <!--begin::User Header-->
-              <li class="user-header text-bg-primary rounded-top p-4 text-center">
-                <?php if ($fotoUserLayout) { ?>
-                  <img src="<?= esc($fotoUserLayout) ?>" class="rounded-circle shadow mb-2" style="width: 70px; height: 70px; object-fit: cover;" alt="Foto do Usuário" />
-                <?php } else { ?>
-                  <div class="rounded-circle shadow mb-2 d-inline-flex align-items-center justify-content-center fw-bold text-white mx-auto border border-3 border-white-50" style="width: 70px; height: 70px; font-size: 1.6rem; letter-spacing: 1px; background: linear-gradient(135deg, #0284c7 0%, #1e40af 100%);">
-                    <?= esc($iniciaisUser) ?>
-                  </div>
-                <?php } ?>
-                <p class="mb-0 fw-bold fs-6">
+
+            <div class="dropdown-menu dropdown-menu-end user-menu-dropdown shadow-lg border-0">
+              <!-- Header com Avatar, Upload Instantâneo e Badges -->
+              <div class="user-dropdown-hero">
+                <div class="avatar-upload-wrapper">
+                  <img src="<?= esc($fotoSrcUser) ?>" id="userNavbarAvatarDropdown" class="avatar-dropdown-img" alt="Foto do Usuário" onerror="this.onerror=null;this.src='<?= $defaultAvatarUser ?>';">
+                  <label for="inputUploadFotoNavbar" class="avatar-dropdown-badge" title="Alterar Foto de Perfil" id="labelUploadFotoNavbar">
+                    <i class="bi bi-camera-fill" id="iconCameraNavbar" style="font-size: 0.75rem;"></i>
+                    <div class="spinner-border spinner-border-sm text-white d-none" id="spinnerCameraNavbar" role="status" style="width: 0.8rem; height: 0.8rem;"></div>
+                  </label>
+                  <input type="file" id="inputUploadFotoNavbar" class="d-none" accept="image/*" onchange="uploadFotoNavbarAutomatico(this)">
+                </div>
+
+                <h6 class="fw-bold mb-0 text-white" style="letter-spacing: -0.2px; font-size: 1.05rem;">
                   <?= esc($nomeUserLayout); ?>
-                </p>
-                <small class="text-white-50"><?= isset($usuario->nome_perfil) ? esc($usuario->nome_perfil) : 'Perfil Acesso'; ?></small>
-              </li>
-              <!--end::User Header-->
-              
-              <!--begin::User Actions-->
-              <li class="user-footer p-3 bg-body">
-                <div class="d-flex flex-column gap-2">
-                  <a href="<?= base_url('usuario/senha/' . (isset($usuario->hash_user) ? $usuario->hash_user : '')) ?>" class="btn btn-outline-secondary btn-sm text-start d-flex align-items-center gap-2">
-                    <i class="bi bi-key-fill text-warning"></i> Alterar Senha
+                </h6>
+                <?php if (!empty($loginUserLayout)) { ?>
+                  <small class="text-white-50 d-block mb-2" style="font-size: 0.78rem;">@<?= esc($loginUserLayout); ?></small>
+                <?php } ?>
+
+                <div class="d-inline-flex align-items-center gap-1.5 px-2.5 py-0.5 rounded-pill mt-1" style="background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.25); backdrop-filter: blur(4px);">
+                  <i class="bi bi-shield-lock-fill text-warning" style="font-size: 0.72rem;"></i>
+                  <span class="fw-bold text-white text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.5px;">
+                    <?= esc($perfilUserLayout); ?>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Menu Actions -->
+              <div class="p-2 bg-body">
+                <div class="d-flex flex-column gap-1">
+                  <!-- Alterar Senha -->
+                  <a href="<?= base_url('usuario/senha/' . (isset($usuario->hash_user) ? $usuario->hash_user : '')) ?>" class="user-dropdown-menu-item text-body">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-3 bg-warning-subtle text-warning-emphasis flex-shrink-0" style="width: 34px; height: 34px;">
+                      <i class="bi bi-key-fill fs-6"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                      <div class="small fw-bold">Alterar Senha</div>
+                      <div class="text-muted" style="font-size: 0.7rem;">Atualize suas credenciais</div>
+                    </div>
+                    <i class="bi bi-chevron-right text-muted fs-7"></i>
                   </a>
-                  <a href="<?= base_url('dshlogout') ?>" class="btn btn-danger btn-sm text-start d-flex align-items-center gap-2">
-                    <i class="bi bi-box-arrow-right"></i> Sair do Sistema
+
+                  <div class="border-top my-1 opacity-50"></div>
+
+                  <!-- Sair do Sistema -->
+                  <a href="<?= base_url('dshlogout') ?>" class="user-dropdown-menu-item item-danger">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded-3 bg-danger-subtle text-danger flex-shrink-0" style="width: 34px; height: 34px;">
+                      <i class="bi bi-box-arrow-right fs-6"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                      <div class="small fw-bold">Sair do Sistema</div>
+                      <div class="text-muted" style="font-size: 0.7rem;">Encerrar sessão ativa</div>
+                    </div>
+                    <i class="bi bi-box-arrow-up-right fs-7 opacity-75"></i>
                   </a>
                 </div>
-              </li>
-              <!--end::User Actions-->
-            </ul>
+              </div>
+            </div>
           </li>
         </ul>
         <!--end::End Navbar Links-->
@@ -387,6 +577,29 @@
     <div id="divModalConfirmaDelete" class="modal fade" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered" id="divModalDelete"></div>
     </div>
+
+    <!-- Modal Global de Confirmação Padrão (System Design) -->
+    <div class="modal fade" id="usGlobalConfirmModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow-lg border-0">
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title fw-bold" id="usGlobalConfirmTitle">
+              <i id="usGlobalConfirmIcon" class="bi bi-exclamation-triangle-fill text-danger me-2"></i> <span>Confirmação</span>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body py-3">
+            <div id="usGlobalConfirmMessage" class="fs-6 text-body"></div>
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal" id="usGlobalConfirmBtnCancel">Cancelar</button>
+            <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold" id="usGlobalConfirmBtnOk">
+              <i class="bi bi-check-lg me-1"></i> Confirmar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   <!--end::App Wrapper-->
 
@@ -404,6 +617,69 @@
   <script src="<?= base_url('framework/us/toast-banner/toast-banner.js') ?>"></script>
   <script src="<?= base_url('framework/us/message-alert/message-alert.js') ?>"></script>
   <script src="<?= base_url('framework/us/framework.js') ?>"></script>
+
+  <!-- Global Confirm Engine (System Design) -->
+  <script>
+    window.usConfirm = function(options, onConfirm) {
+      if (typeof options === 'string') {
+        options = { message: options };
+      }
+      options = options || {};
+      const title = options.title || 'Confirmação';
+      const message = options.message || 'Deseja realmente prosseguir com esta ação?';
+      const confirmText = options.confirmText || 'Confirmar';
+      const cancelText = options.cancelText || 'Cancelar';
+      const type = (options.type || 'danger').toLowerCase();
+      
+      let iconClass = 'bi-exclamation-triangle-fill text-danger';
+      let btnClass = 'btn-danger';
+
+      if (type === 'warning') {
+        iconClass = 'bi-exclamation-circle-fill text-warning';
+        btnClass = 'btn-warning text-dark';
+      } else if (type === 'primary') {
+        iconClass = 'bi-question-circle-fill text-primary';
+        btnClass = 'btn-primary';
+      } else if (type === 'success') {
+        iconClass = 'bi-check-circle-fill text-success';
+        btnClass = 'btn-success';
+      } else if (type === 'info') {
+        iconClass = 'bi-info-circle-fill text-info';
+        btnClass = 'btn-info text-white';
+      }
+
+      if (options.icon) iconClass = options.icon;
+      if (options.btnClass) btnClass = options.btnClass;
+
+      const modalEl = document.getElementById('usGlobalConfirmModal');
+      if (!modalEl) {
+        if (window.confirm(message)) {
+          if (typeof onConfirm === 'function') onConfirm();
+        }
+        return;
+      }
+
+      $('#usGlobalConfirmTitle span').text(title);
+      $('#usGlobalConfirmIcon').attr('class', 'bi ' + iconClass + ' me-2');
+      $('#usGlobalConfirmMessage').html(message);
+      $('#usGlobalConfirmBtnCancel').text(cancelText);
+      
+      const $btnOk = $('#usGlobalConfirmBtnOk');
+      $btnOk.attr('class', 'btn rounded-pill px-4 fw-bold ' + btnClass);
+      $btnOk.html('<i class="bi bi-check-lg me-1"></i> ' + confirmText);
+
+      const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+      $btnOk.off('click').on('click', function() {
+        modalInstance.hide();
+        if (typeof onConfirm === 'function') {
+          onConfirm();
+        }
+      });
+
+      modalInstance.show();
+    };
+  </script>
 
   <!--Theme Toggler Script & Sidebar Initializer-->
   <script>
@@ -478,6 +754,64 @@
         });
       }
     });
+
+    // Upload Instantâneo de Foto do Usuário (Admin Navbar)
+    function uploadFotoNavbarAutomatico(input) {
+      if (!input.files || !input.files[0]) return;
+
+      const file = input.files[0];
+      if (!file.type.match('image.*')) {
+        if (typeof usShowToast === 'function') {
+          usShowToast('warning', 'Arquivo Inválido', 'Por favor, selecione um arquivo de imagem válido (JPG, PNG ou WEBP).');
+        } else {
+          alert('Por favor, selecione um arquivo de imagem válido (JPG, PNG ou WEBP).');
+        }
+        return;
+      }
+
+      const iconCam = document.getElementById('iconCameraNavbar');
+      const spinnerCam = document.getElementById('spinnerCameraNavbar');
+      if (iconCam) iconCam.classList.add('d-none');
+      if (spinnerCam) spinnerCam.classList.remove('d-none');
+
+      const formData = new FormData();
+      formData.append('foto_file', file);
+
+      $.ajax({
+        url: '<?= base_url('usuario/uploadFotoPerfil') ?>',
+        type: 'POST',
+        data: formData,
+        contentType: false,
+        processData: false,
+        success: function(res) {
+          if (iconCam) iconCam.classList.remove('d-none');
+          if (spinnerCam) spinnerCam.classList.add('d-none');
+
+          if (res.status === 'success' && res.foto_url) {
+            const newUrl = res.foto_url + '?t=' + new Date().getTime();
+            const elMain = document.getElementById('userNavbarAvatarMain');
+            const elDropdown = document.getElementById('userNavbarAvatarDropdown');
+            if (elMain) elMain.src = newUrl;
+            if (elDropdown) elDropdown.src = newUrl;
+            if (typeof usShowToast === 'function') {
+              usShowToast('success', 'Foto Atualizada', 'Sua foto de perfil foi salva com sucesso!');
+            }
+          } else {
+            if (typeof usShowToast === 'function') {
+              usShowToast('error', 'Erro', res.message || 'Erro ao atualizar foto de perfil.');
+            }
+          }
+        },
+        error: function(xhr) {
+          if (iconCam) iconCam.classList.remove('d-none');
+          if (spinnerCam) spinnerCam.classList.add('d-none');
+          const msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Erro ao processar upload da foto.';
+          if (typeof usShowToast === 'function') {
+            usShowToast('error', 'Erro', msg);
+          }
+        }
+      });
+    }
   </script>
   <!--end::Script-->
 </body>

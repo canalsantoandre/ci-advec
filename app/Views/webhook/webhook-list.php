@@ -121,9 +121,9 @@
                         <?php } ?>
 
                         <?php if (!empty($sys_action->delete)) { ?>
-                          <a href="<?= base_url('webhook/apagar/' . $wh->id_webhook) ?>" class="btn btn-outline-danger" title="Excluir" onclick="return confirm('Deseja realmente excluir este webhook?')">
+                          <button type="button" class="btn btn-outline-danger" title="Excluir" onclick="confirmarExclusaoWebhook('<?= $wh->id_webhook ?>', '<?= esc($wh->nome_identificador) ?>')">
                             <i class="bi bi-trash3-fill"></i>
-                          </a>
+                          </button>
                         <?php } ?>
                       </div>
                     </td>
@@ -203,6 +203,17 @@
     modalTesteInstance.show();
   }
 
+  function confirmarExclusaoWebhook(id, nome) {
+    usConfirm({
+      title: 'Excluir Webhook',
+      message: `Deseja realmente excluir o webhook "<strong>${nome}</strong>"?`,
+      confirmText: 'Sim, Excluir',
+      type: 'danger'
+    }, function() {
+      window.location.href = '<?= base_url('webhook/apagar/') ?>/' + id;
+    });
+  }
+
   function dispararTesteWebhook() {
     const telefone = document.getElementById('teste_telefone').value.trim();
     const idWebhook = document.getElementById('teste_id_webhook').value;
@@ -211,7 +222,11 @@
     const alerta = document.getElementById('teste_alerta_resultado');
 
     if (!telefone) {
-      alert('Por favor, informe o número de WhatsApp para teste.');
+      if (typeof usShowToast === 'function') {
+        usShowToast('warning', 'Atenção', 'Por favor, informe o número de WhatsApp para teste.');
+      } else {
+        alert('Por favor, informe o número de WhatsApp para teste.');
+      }
       return;
     }
 

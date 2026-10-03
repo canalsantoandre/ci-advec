@@ -42,6 +42,10 @@ class SessionModel extends Model{
         // ->usuario
         $obj->reset_password= is_int(array_search('reset_password', $action)) || $isSysAdm;
 
+        // ->voluntario / convites
+        $obj->send_invite = is_int(array_search('send_invite', $action)) || $isSysAdm;
+        $obj->approve_invite = is_int(array_search('approve_invite', $action)) || $isSysAdm;
+
         $data['sys_action'] = $obj;
         /* -------------------------------------------------------- */
 

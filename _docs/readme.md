@@ -292,7 +292,45 @@ flowchart TD
   - Substituição de checkboxes estáticos por input dinâmico de Tags/Chips.
   - Permite digitação livre de novas ações (ex: `update_past`, `export`, `approve`) com normalização automática para `snake_case`.
   - Pílulas com sugestões rápidas (`read`, `create`, `update`, `delete`, `update_past`) para adição com 1 clique.
-  - Sincronização automática com a tabela `tb_sys_modulo_acao` e vinculação imediata das novas ações ao perfil de Administrador (`SysAdm`).
+### 12. Self-Onboarding via Convite & Fluxo de Aprovação de Voluntários
+- **Segurança de Links Externos & Proteção Anti-SQL Injection**:
+  - **Tokens Criptográficos Aleatórios**: Todos os links externos compartilhados utilizam exclusivamente tokens hexadecimais aleatórios de 128-bit (`bin2hex(random_bytes(16))`), nunca expondo IDs numéricos sequenciais do banco de dados (ex: `id_convite` ou `id_departamento`).
+  - **Validação Regex Estrita**: As rotas públicas (`/convite/{token}`, `/convite/solicitar-otp`, `/convite/validar-otp`, `/convite/concluir-cadastro`) validam estritamente o formato com expressão regular `^[a-f0-9]{16,64}$` antes de consultar o banco.
+  - **Prepared Statements (PDO Query Builder)**: Imunidade total a ataques de SQL Injection através de binding de parâmetros em todas as camadas de banco de dados.
+- **Permissões de Acesso**:
+  - Acesso à geração de convites restrito a usuários com a permissão/ação `send_invite` no módulo de voluntários (ou `SysAdm`).
+- **Modalidades de Convite ([`DepartamentoConviteModel.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Models/DepartamentoConviteModel.php))**:
+  - **Convite Direto (Único):** O líder informa o número de WhatsApp do candidato. O link gerado é de uso único e atrelado estritamente àquele número. Disparo automático via integração de WhatsApp (`WebhookService`). O link é invalidado assim que o cadastro for finalizado.
+  - **Convite em Lote (Capacidade):** O líder define a capacidade máxima de cadastros (ex: 10, 20 usos) e validade em dias. Link compartilhável para grupos. Decrementa o contador a cada uso até expirar ou atingir a capacidade.
+  - **Encerramento Antecipado:** O líder pode invalidar/encerrar o link a qualquer momento no painel antes de completar a quantidade.
+- **Experiência do Voluntário (Mobile-First - [`landing.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/convite/landing.php))**:
+  - **Validação OTP:** O voluntário acessa o link `/convite/{token}` e valida seu número de WhatsApp com código de segurança de 6 dígitos enviado por mensagem instantânea.
+  - **Formulário de Pré-Cadastro:** Nome Completo, Apelido/Nickname, Upload de Foto com preview dinâmico, Data de Nascimento, Sub-área de Atuação (filtrada exclusivamente pelo departamento que emitiu o convite) e Redes Sociais.
+  - **Disponibilidade de Cultos (N:N):** Componente idêntico ao padrão de [`perfil.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/portal_voluntario/perfil.php) com banner explicativo de regras (ícone informativo com pulsação suave), botões de ação rápida (*Todos* / *Limpar*) e seleção de cultos/horários com bordas coloridas institucionais, sincronizando automaticamente em `tb_voluntario_culto`.
+  - **Tela de Sucesso:** Mensagem informativa de que o cadastro foi enviado para análise da liderança.
+- **Área de Gestão e Aprovação ([`voluntario-list.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/voluntario/voluntario-list.php))**:
+  - Aba de **"Cadastros Pendentes"** com badge visual de alerta indicando novos candidatos.
+  - Modal **"Revisar & Aprovar"** para o líder ajustar sub-área, nível de conhecimento (Aprendiz, Junior, Pleno, Senior), limite mensal de escalas e notas internas.
+  - **Notificação Automática de Liberação:** Ao aprovar, o sistema define o status como Ativo e dispara uma mensagem via API do WhatsApp contendo o link oficial de acesso ao portal (`/portal/login`) e instruções detalhadas de primeiro acesso.
+
+### 13. Menu de Usuário Premium & Upload Instantâneo de Foto
+- **Design High-End ([`_layout.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/_layout.php))**:
+  - Dropdown elevado com gradiente Midnight Navy & Cobalt (`linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #1e3a8a 100%)`), sombras suaves e cantos arredondados (`rounded-4`).
+  - Badge de perfil de acesso (`SysAdm`, `Administrador`, etc.) estilizado com efeito de vidro (*glassmorphic blur*).
+  - Ações com ícones dedicados e micro-animações no hover (*Alterar Senha* e *Sair do Sistema*).
+- **Upload Automático de Foto de Perfil**:
+  - Badge interativo de câmera no avatar do usuário.
+  - Ao selecionar a imagem, o upload é processado instantaneamente via AJAX ([`Usuario::uploadFotoPerfil`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Controllers/Usuario.php)), persistindo no banco (`tb_sys_usuario.foto_url`), atualizando a sessão e sincronizando a imagem da barra superior em tempo real.
+
+### 14. Patch de Acessibilidade Visual, Padronização de Toasts e Travas de Segurança
+- **Acessibilidade Visual (UI/UX)**:
+  - **Ícones do WhatsApp em Botões Azuis:** Ajustada a estilização para que elementos com fundo azul (ex: pills ativas, botões primários) exibam o ícone do WhatsApp em branco (`#FFFFFF`), garantindo alto contraste e conformidade com acessibilidade.
+  - **Inputs no Dark Mode:** No padrão escuro (`[data-bs-theme="dark"]`), os campos de formulário (`input`, `select`, `textarea`) foram configurados para que a cor da fonte digitada seja estritamente **preta (`#000000`)** sobre fundo claro, eliminando problemas de visualização e contraste.
+  - **Padronização de Notificações:** Remoção completa e sistemática de `alert()` nativo do navegador, padronizando todas as mensagens de feedback, validação e sucesso através do componente oficial [`USToast`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/public/framework/us/toast-banner/toast-banner.js) / `usShowToast()`.
+- **Travas de Segurança contra Duplicidade no Backend**:
+  - **Bloqueio no Envio (Convite Direto):** No momento da criação de um convite direto em [`Voluntario::gerarConvite`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Controllers/Voluntario.php), o sistema consulta a existência do número na base com [`VoluntarioModel::existeTelefone()`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Models/VoluntarioModel.php). Caso o voluntário já exista, a criação é abortada e uma notificação em Toast é exibida.
+  - **Bloqueio no Uso (Convite Aberto/Lote):** Na Landing Page do convite ([`Convite::solicitarOtp`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Controllers/Convite.php)), quando o candidato insere seu telefone para receber o OTP, o sistema valida se o número já possui cadastro e bloqueia o prosseguimento.
+  - **Otimização de Banco de Dados:** Criação do índice `idx_voluntario_telefone` em `tb_voluntario(telefone_whatsapp)` e normalização de busca indexada de múltiplos formatos para tempo de resposta sub-milissegundo.
 
 ---
 
@@ -308,6 +346,11 @@ flowchart TD
 | [`01102026_resource_library_tables.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/01102026_resource_library_tables.sql) | `01102026_resource_library_tables_rollback.sql` | Tabelas `resource_types`, `resources`, `collections`, `collection_resources`, `schedule_resources` |
 | [`02102026_avatar_stack_participantes_escala.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/02102026_avatar_stack_participantes_escala.sql) | `02102026_avatar_stack_participantes_escala_rollback.sql` | Índices para otimização da consulta de participantes da equipe |
 | [`02102026_gestao_escalas_bloqueio_retroativo_ranking.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/02102026_gestao_escalas_bloqueio_retroativo_ranking.sql) | `02102026_gestao_escalas_bloqueio_retroativo_ranking_rollback.sql` | Cadastro da permissão `update_past` no módulo de escalas e índices de status/pontuação |
+| [`02102026_self_onboarding_convites_voluntarios.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/02102026_self_onboarding_convites_voluntarios.sql) | `02102026_self_onboarding_convites_voluntarios_rollback.sql` | Tabela `tb_departamento_convite`, colunas de aprovação em `tb_voluntario` e ação `send_invite` |
+| [`02102026_foto_perfil_usuario_admin.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/02102026_foto_perfil_usuario_admin.sql) | `02102026_foto_perfil_usuario_admin_rollback.sql` | Coluna `foto_url` na tabela `tb_sys_usuario` |
+| [`02102026_indice_telefone_voluntario.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/02102026_indice_telefone_voluntario.sql) | [`02102026_indice_telefone_voluntario_rollback.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/02102026_indice_telefone_voluntario_rollback.sql) | Criação do índice de performance `idx_voluntario_telefone` em `tb_voluntario(telefone_whatsapp)` |
+
+
 
 
 
