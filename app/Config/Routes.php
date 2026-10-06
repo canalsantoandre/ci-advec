@@ -159,7 +159,10 @@ $routes->group('escala', static function ($routes) {
     $routes->post('salvarEscala', 'Escala::salvarEscala', ['filter' => 'auth']);
     $routes->post('removerEscala', 'Escala::removerEscala', ['filter' => 'auth']);
     $routes->post('alternarPresenca', 'Escala::alternarPresenca', ['filter' => 'auth']);
-    $routes->get('getVoluntariosPorArea', 'Escala::getVoluntariosPorArea', ['filter' => 'auth']);
+    $routes->match(['GET', 'POST'], 'getVoluntariosPorArea', 'Escala::getVoluntariosPorArea', ['filter' => 'auth']);
+    $routes->get('getPendentesConfirmacao', 'Escala::getPendentesConfirmacao', ['filter' => 'auth']);
+    $routes->post('enviarCobrancaIndividual', 'Escala::enviarCobrancaIndividual', ['filter' => 'auth']);
+    $routes->post('enviarCobrancaLote', 'Escala::enviarCobrancaLote', ['filter' => 'auth']);
     $routes->get('imprimir/(:num)/(:num)/(:num)', 'Escala::imprimir/$1/$2/$3', ['filter' => 'auth']);
     $routes->get('imprimir', 'Escala::imprimir', ['filter' => 'auth']);
 });

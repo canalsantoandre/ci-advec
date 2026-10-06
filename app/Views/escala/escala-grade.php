@@ -292,6 +292,58 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     }
   }
 
+  /* Collapse Toggle Icon Rotation */
+  .collapse-toggle-icon {
+    transition: transform 0.25s ease-in-out;
+  }
+
+  .collapsed .collapse-toggle-icon,
+  [aria-expanded="false"] .collapse-toggle-icon {
+    transform: rotate(-90deg);
+  }
+
+  [aria-expanded="true"] .collapse-toggle-icon {
+    transform: rotate(0deg);
+  }
+
+  /* Checkboxes no Modal de Lembrete / Dark Mode */
+  #modalCobrancaLote .form-check-input {
+    background-color: transparent !important;
+    border: 2px solid #6c757d !important;
+    cursor: pointer;
+  }
+
+  #modalCobrancaLote .form-check-input:checked {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
+  }
+
+  #modalCobrancaLote .form-check-input:indeterminate {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10h8'/%3e%3c/svg%3e") !important;
+  }
+
+  #modalCobrancaLote .form-check-input:disabled {
+    opacity: 0.40 !important;
+    cursor: not-allowed !important;
+  }
+
+  /* Item da Lista de Pendentes Selecionado */
+  #modalCobrancaLote .item-pendente-row {
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+    background-color: transparent;
+  }
+
+  #modalCobrancaLote .item-pendente-row.is-selected {
+    background-color: rgba(13, 110, 253, 0.12) !important;
+  }
+
+  #modalCobrancaLote .item-pendente-row:hover:not(.is-disabled) {
+    background-color: rgba(13, 110, 253, 0.07) !important;
+  }
+
   .vol-card-item {
     background-color: #ffffff;
     border: 1px solid #e2e8f0 !important;
@@ -860,38 +912,38 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     <!-- ========================================== -->
     <!-- 3. DASHBOARD KPI WIDGETS -->
     <!-- ========================================== -->
-    <div class="row g-3 mb-4">
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-5 g-3 mb-4">
       <!-- Card 1: Total de Cultos no Mês -->
-      <div class="col-6 col-lg-3">
+      <div class="col">
         <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden bg-primary bg-gradient text-white">
-          <div class="card-body p-3">
+          <div class="card-body p-3 d-flex flex-column justify-content-between">
             <div class="d-flex align-items-center justify-content-between">
               <div>
                 <span class="text-white-50 small fw-bold text-uppercase d-block mb-1">Cultos no Mês</span>
                 <h2 class="mb-0 fw-bold font-monospace"><?= $totalCultosMes ?></h2>
               </div>
               <div class="rounded-circle bg-white bg-opacity-25 p-3 text-white">
-                <i class="bi bi-calendar-event fs-3"></i>
+                <i class="bi bi-calendar-event fs-4"></i>
               </div>
             </div>
             <div class="mt-2 text-white-50 small">
-              <i class="bi bi-clock me-1"></i> Agendamentos do mês <?= sprintf('%02d', $mes) ?>/<?= $ano ?>
+              <i class="bi bi-clock me-1"></i> <?= sprintf('%02d', $mes) ?>/<?= $ano ?>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Card 2: Escalações Preenchidas -->
-      <div class="col-6 col-lg-3">
+      <div class="col">
         <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden bg-success bg-gradient text-white">
-          <div class="card-body p-3">
+          <div class="card-body p-3 d-flex flex-column justify-content-between">
             <div class="d-flex align-items-center justify-content-between">
               <div>
                 <span class="text-white-50 small fw-bold text-uppercase d-block mb-1">Vagas Preenchidas</span>
                 <h2 class="mb-0 fw-bold font-monospace"><?= $totalEscalasPreenchidas ?></h2>
               </div>
               <div class="rounded-circle bg-white bg-opacity-25 p-3 text-white">
-                <i class="bi bi-check-circle-fill fs-3"></i>
+                <i class="bi bi-check-circle-fill fs-4"></i>
               </div>
             </div>
             <div class="mt-2 text-white-50 small">
@@ -902,43 +954,70 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
       </div>
 
       <!-- Card 3: Voluntários Únicos Escalados -->
-      <div class="col-6 col-lg-3">
+      <div class="col">
         <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden text-white" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);">
-          <div class="card-body p-3">
+          <div class="card-body p-3 d-flex flex-column justify-content-between">
             <div class="d-flex align-items-center justify-content-between">
               <div>
                 <span class="text-white-50 small fw-bold text-uppercase d-block mb-1">Voluntários Escalados</span>
                 <h2 class="mb-0 fw-bold font-monospace"><?= $totalVoluntariosUnicos ?></h2>
               </div>
               <div class="rounded-circle bg-white bg-opacity-25 p-3 text-white">
-                <i class="bi bi-people-fill fs-3"></i>
+                <i class="bi bi-people-fill fs-4"></i>
               </div>
             </div>
             <div class="mt-2 text-white-50 small">
-              <i class="bi bi-person-badge me-1"></i> Membros atuando no mês
+              <i class="bi bi-person-badge me-1"></i> Membros no mês
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Card 4: Cultos Pendentes -->
-      <div class="col-6 col-lg-3">
+      <!-- Card 4: Aguardando Confirmação (Pendentes) -->
+      <div class="col">
+        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden text-white position-relative" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+          <div class="card-body p-3 d-flex flex-column justify-content-between">
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <span class="text-white-50 small fw-bold text-uppercase d-block mb-1">Não Confirmados</span>
+                <h2 class="mb-0 fw-bold font-monospace"><?= $totalPendentesFuturos ?></h2>
+              </div>
+              <div class="rounded-circle bg-white bg-opacity-25 p-3 text-white">
+                <i class="bi bi-hourglass-split fs-4"></i>
+              </div>
+            </div>
+            <div class="mt-2 d-flex align-items-center justify-content-between gap-1 flex-wrap">
+              <button type="button" class="btn btn-xs btn-light text-dark fw-bold rounded-pill px-2 py-0.5 shadow-xs" onclick="filtrarPendentesRapido()" title="Filtrar voluntários pendentes na grade">
+                <i class="bi bi-funnel-fill me-1 text-warning"></i> Filtrar
+              </button>
+              <?php if ($totalPendentesFuturos > 0 && !empty($sys_action->update)) { ?>
+                <button type="button" class="btn btn-xs btn-success fw-bold rounded-pill px-2 py-0.5 shadow-xs" onclick="abrirModalCobrancaLote()" title="Enviar lembrete por WhatsApp para todos os <?= $totalPendentesFuturos ?> voluntários pendentes">
+                  <i class="bi bi-whatsapp me-1"></i> Lembrar
+                </button>
+              <?php } ?>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 5: Cultos sem Escala -->
+      <div class="col">
         <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden <?= $cultosSemEscala > 0 ? 'bg-danger bg-gradient text-white' : 'bg-secondary bg-gradient text-white' ?>">
-          <div class="card-body p-3">
+          <div class="card-body p-3 d-flex flex-column justify-content-between">
             <div class="d-flex align-items-center justify-content-between">
               <div>
                 <span class="text-white-50 small fw-bold text-uppercase d-block mb-1">Cultos sem Escala</span>
                 <h2 class="mb-0 fw-bold font-monospace"><?= $cultosSemEscala ?></h2>
               </div>
               <div class="rounded-circle bg-white bg-opacity-25 p-3 text-white">
-                <i class="bi bi-exclamation-triangle-fill fs-3"></i>
+                <i class="bi bi-exclamation-triangle-fill fs-4"></i>
               </div>
             </div>
             <div class="mt-2 text-white-50 small">
               <?php if ($cultosSemEscala > 0) { ?>
-                <span class="badge bg-white text-danger fw-bold rounded-pill px-2 py-0 me-1">Atenção!</span> Preencher equipe
+                <span class="badge bg-white text-danger fw-bold rounded-pill px-2 py-0 me-1">Atenção!</span> Preencher
               <?php } else { ?>
-                <span class="badge bg-white text-secondary fw-bold rounded-pill px-2 py-0 me-1">100%</span> Todos com voluntários
+                <span class="badge bg-white text-secondary fw-bold rounded-pill px-2 py-0 me-1">100%</span> Completo
               <?php } ?>
             </div>
           </div>
@@ -1012,12 +1091,21 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
             <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 btnFilterRow" data-filter="com_escala">
               <i class="bi bi-person-check-fill me-1 text-success"></i> Escalados (<?= $cultosComEscala ?>)
             </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 btnFilterRow" data-filter="pendente" id="btnFilterPendente">
+              <i class="bi bi-hourglass-split me-1 text-warning"></i> Pendentes (<?= $totalPendentesFuturos ?>)
+            </button>
             <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 btnFilterRow" data-filter="sem_escala">
               <i class="bi bi-exclamation-triangle-fill me-1 text-danger"></i> Sem Escala (<?= $cultosSemEscala ?>)
             </button>
             <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 btnFilterRow" data-filter="fim_semana">
               Fins de Semana
             </button>
+
+            <?php if ($totalPendentesFuturos > 0 && !empty($sys_action->update)) { ?>
+              <button type="button" class="btn btn-sm btn-success rounded-pill px-3 fw-bold d-inline-flex align-items-center gap-1.5 shadow-sm ms-lg-1" onclick="abrirModalCobrancaLote()" title="Enviar lembrete por WhatsApp para todos os <?= $totalPendentesFuturos ?> voluntários pendentes">
+                <i class="bi bi-whatsapp"></i> &nbsp;&nbsp;Lembrar Pendentes
+              </button>
+            <?php } ?>
 
             <!-- Toggle Inteligente de Dias Anteriores no Mês Atual -->
             <?php if ($isMesAtual && $totalDiasPassados > 0) { ?>
@@ -1052,15 +1140,27 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
           <table class="table table-bordered align-middle mb-0" id="tblGradeEscala">
             <thead class="table-dark text-uppercase small">
               <tr>
-                <th scope="col" class="text-center py-3" style="width: 110px;">Dia</th>
-                <th scope="col" class="py-3" style="width: 130px;">Dia Semana</th>
+                <th scope="col" class="text-center py-3 user-select-none" style="width: 110px; cursor: pointer;" id="thSortDia" title="Clique para alternar a ordenação por Dia do Mês">
+                  <div class="d-inline-flex align-items-center justify-content-center gap-1">
+                    <span>Dia</span>
+                    <i class="bi bi-arrow-down-up opacity-50" id="iconSortDia" style="font-size: 0.75rem;"></i>
+                  </div>
+                </th>
+                <th scope="col" class="py-3 user-select-none" style="width: 140px; cursor: pointer;" id="thSortDiaSemana" title="Clique para ordenar todos os eventos por Dia da Semana (ex: Domingos juntos, Terças juntas)">
+                  <div class="d-inline-flex align-items-center gap-1">
+                    <span>Dia Semana</span>
+                    <i class="bi bi-arrow-down-up text-warning" id="iconSortDiaSemana" style="font-size: 0.75rem;"></i>
+                  </div>
+                </th>
                 <th scope="col" class="py-3" style="width: 220px;">Culto / Evento</th>
                 <th scope="col" class="py-3">Sub-áreas & Voluntários Escalados</th>
                 <th scope="col" class="text-end py-3 pe-4" style="width: 100px;">Ações</th>
               </tr>
             </thead>
             <tbody>
-              <?php foreach ($diasGrade as $dia) {
+              <?php
+              $origRowIndex = 0;
+              foreach ($diasGrade as $dia) {
                 $isFimSemana = $dia['is_fim_semana'];
                 $bgClass = $isFimSemana ? 'table-warning-custom' : '';
                 $temCulto = !empty($dia['cultos_agendados']);
@@ -1076,7 +1176,17 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
                     $statusFiltro = $temEscalaNoCulto ? 'com_escala' : 'sem_escala';
                     $dataCultosAttr = trim((string)$c->titulo_culto);
               ?>
-                    <tr class="grade-row <?= $bgClass ?> <?= $rowPastClass ?>" data-status-escala="<?= $statusFiltro ?>" data-is-weekend="<?= $isFimSemana ? '1' : '0' ?>" data-cultos="<?= esc($dataCultosAttr) ?>" data-is-past="<?= $isDiaPassado ? '1' : '0' ?>" style="<?= $styleOculto ?>">
+                    <tr class="grade-row <?= $bgClass ?> <?= $rowPastClass ?>"
+                      data-status-escala="<?= $statusFiltro ?>"
+                      data-tem-pendente="<?= !empty($c->temPendenteConfirmar) ? '1' : '0' ?>"
+                      data-is-weekend="<?= $isFimSemana ? '1' : '0' ?>"
+                      data-cultos="<?= esc($dataCultosAttr) ?>"
+                      data-is-past="<?= $isDiaPassado ? '1' : '0' ?>"
+                      data-dia-semana="<?= (int)$dia['num_dia_semana'] ?>"
+                      data-data-iso="<?= $dia['data_iso'] ?>"
+                      data-hora-inicio="<?= !empty($c->horario_inicio) ? $c->horario_inicio : '00:00:00' ?>"
+                      data-orig-index="<?= $origRowIndex++ ?>"
+                      style="<?= $styleOculto ?>">
 
                       <!-- Dia -->
                       <td class="text-center fw-bold font-monospace fs-6">
@@ -1190,11 +1300,38 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
                                           <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-1.5 py-0.5 d-inline-flex align-items-center gap-1" data-bs-toggle="tooltip" title="Não confirmou até a data do evento (Omissão/Falta)">
                                             <i class="bi bi-exclamation-octagon-fill text-danger" style="font-size: 0.75rem;"></i> Falta
                                           </span>
-                                        <?php } else { ?>
+                                        <?php } else {
+                                          $agoraDt = date('Y-m-d H:i:s');
+                                          $horaIniCulto = !empty($c->horario_inicio) ? $c->horario_inicio : '00:00:00';
+                                          $cultoDt = $c->data_culto . ' ' . $horaIniCulto;
+                                          $isCultoFuturo = ($cultoDt > $agoraDt);
+                                        ?>
                                           <!-- Voluntário Pendente: Ampulheta com Efeito Pulsante -->
                                           <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-1.5 py-0.5 d-inline-flex align-items-center justify-content-center pulse-pending" data-bs-toggle="tooltip" title="Pendente de confirmação do voluntário">
                                             <i class="bi bi-hourglass-split text-warning" style="font-size: 0.78rem;"></i>
                                           </span>
+
+                                          <?php
+                                          $jaEnviadoHoje = (!empty($esc->data_ultimo_lembrete) && date('Y-m-d', strtotime($esc->data_ultimo_lembrete)) === date('Y-m-d'));
+                                          $horaEnvioHoje = $jaEnviadoHoje ? date('H:i', strtotime($esc->data_ultimo_lembrete)) : '';
+                                          ?>
+                                          <?php if ($isCultoFuturo && !empty($esc->telefone_whatsapp) && !empty($sys_action->update)) { ?>
+                                            <?php if ($jaEnviadoHoje) { ?>
+                                              <span class="d-inline-flex align-items-center justify-content-center text-muted"
+                                                style="width: 20px; height: 20px;"
+                                                data-bs-toggle="tooltip"
+                                                title="Lembrete já enviado hoje às <?= $horaEnvioHoje ?>. Limite de 1 envio por dia.">
+                                                <i class="bi bi-check2-all text-primary" style="font-size: 0.95rem;"></i>
+                                              </span>
+                                            <?php } else { ?>
+                                              <button type="button" class="btn btn-xs btn-outline-success border-0 p-0 text-success d-inline-flex align-items-center justify-content-center shadow-none"
+                                                style="width: 20px; height: 20px;"
+                                                title="Enviar lembrete por WhatsApp para <?= esc($esc->nome_voluntario) ?>"
+                                                onclick="enviarCobrancaIndividualWhatsApp(<?= $esc->id_escala_voluntario ?>, '<?= esc(addslashes($esc->nome_voluntario)) ?>')">
+                                                <i class="bi bi-whatsapp" style="font-size: 0.85rem;"></i>
+                                              </button>
+                                            <?php } ?>
+                                          <?php } ?>
                                         <?php } ?>
 
                                         <?php if (!empty($sys_action->delete) && $permiteEditarEsteSlot) { ?>
@@ -1294,7 +1431,17 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
                   } // Fim foreach cultos
                 } else { // Sem culto no dia
                   ?>
-                  <tr class="grade-row <?= $bgClass ?> <?= $rowPastClass ?>" data-status-escala="sem_culto" data-is-weekend="<?= $isFimSemana ? '1' : '0' ?>" data-cultos="" data-is-past="<?= $isDiaPassado ? '1' : '0' ?>" style="<?= $styleOculto ?>">
+                  <tr class="grade-row <?= $bgClass ?> <?= $rowPastClass ?>"
+                    data-status-escala="sem_culto"
+                    data-tem-pendente="0"
+                    data-is-weekend="<?= $isFimSemana ? '1' : '0' ?>"
+                    data-cultos=""
+                    data-is-past="<?= $isDiaPassado ? '1' : '0' ?>"
+                    data-dia-semana="<?= (int)$dia['num_dia_semana'] ?>"
+                    data-data-iso="<?= $dia['data_iso'] ?>"
+                    data-hora-inicio="00:00:00"
+                    data-orig-index="<?= $origRowIndex++ ?>"
+                    style="<?= $styleOculto ?>">
 
                     <!-- Dia -->
                     <td class="text-center fw-bold font-monospace fs-6">
@@ -1626,6 +1773,182 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
   </div>
 </div>
 
+<!-- Modal de Disparo de Lembrete por WhatsApp em Lote (10 em 10 a cada 10s) -->
+<div class="modal fade" id="modalCobrancaLote" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+    <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
+
+      <!-- Header com Gradiente WhatsApp -->
+      <div class="modal-header border-0 text-white p-3 px-4" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+        <div class="d-flex align-items-center gap-2.5">
+          <div class="rounded-circle bg-white bg-opacity-25 p-2 text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+            <i class="bi bi-whatsapp fs-5"></i>
+          </div>
+          <div>
+            <h5 class="modal-title fw-bold mb-0">Lembrete de Confirmação por WhatsApp</h5>
+            <small class="text-white-50">Envio automático espaçado em lotes de 10 a cada 10 segundos</small>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar" id="btnFecharModalCobranca"></button>
+      </div>
+
+      <div class="modal-body p-4 bg-body-tertiary">
+
+        <!-- Box Informativo & Regras -->
+        <div class="p-3 bg-body rounded-4 border shadow-xs mb-3">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1 fw-bold">
+                  <i class="bi bi-shield-check me-1"></i> Validação Inteligente
+                </span>
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 fw-bold">
+                  <i class="bi bi-clock-history me-1"></i> Somente Cultos Futuros
+                </span>
+              </div>
+              <p class="small text-secondary mb-0">
+                O sistema selecionou apenas as escalas com status <strong>PENDENTE</strong> de cultos que <strong>ainda vão acontecer</strong> no mês.
+              </p>
+            </div>
+            <div class="d-inline-flex align-items-center gap-1.5 bg-body-secondary px-3 py-1.5 rounded-pill border">
+              <span class="small text-body-secondary fw-semibold">Selecionados:</span>
+              <span class="fs-6 fw-bold text-success font-monospace" id="lblTotalSelecionados">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barra de Progresso e Status do Envio em Lote -->
+        <div id="progressoContainer" class="p-3 bg-body rounded-4 border shadow-xs mb-3 d-none">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="small fw-bold text-body">
+              <i class="bi bi-send-fill text-success me-1"></i> Progresso do Envio:
+            </span>
+            <span class="small font-monospace text-muted" id="lblProgressoStatus">0 / 0</span>
+          </div>
+          <div class="progress rounded-pill mb-2" style="height: 12px;">
+            <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" id="progressBarCobranca" role="progressbar" style="width: 0%;">0%</div>
+          </div>
+          <div id="statusLoteDisplay" class="small mt-2"></div>
+        </div>
+
+        <!-- Lista de Voluntários Pendentes (Collapsible) -->
+        <div class="card border-0 shadow-xs rounded-4 mb-3 overflow-hidden bg-body">
+          <div class="card-header bg-body py-2.5 px-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="form-check d-flex align-items-center gap-2 mb-0 ps-0">
+              <input class="form-check-input ms-0 mt-0 me-2" type="checkbox" id="checkTodosPendentes" checked onchange="toggleTodosPendentes(this.checked)" style="cursor: pointer; width: 1.15em; height: 1.15em;">
+              <label class="form-check-label small fw-bold text-body user-select-none" for="checkTodosPendentes" style="cursor: pointer;">
+                Marcar / Desmarcar Todos
+              </label>
+            </div>
+            <div class="d-flex align-items-center gap-2.5 ms-auto">
+              <small class="text-secondary fw-semibold" id="lblQtdPendentesCarregados">0 voluntário(s)</small>&nbsp;&nbsp;
+              <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill d-flex align-items-center justify-content-center p-0" data-bs-toggle="collapse" data-bs-target="#collapseListaPendentes" aria-expanded="true" aria-controls="collapseListaPendentes" title="Recolher / Expandir lista de voluntários" style="width: 26px; height: 26px;">
+                <i class="bi bi-chevron-down collapse-toggle-icon"></i>
+              </button>
+            </div>
+          </div>
+          <div class="collapse show" id="collapseListaPendentes">
+            <div class="card-body p-0" style="max-height: 240px; overflow-y: auto;" id="listaPendentesContainer">
+              <!-- Renderizado via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Edição da Mensagem & Tags Dinâmicas (Collapsible) -->
+        <div class="card border-0 shadow-xs rounded-4 mb-2 overflow-hidden bg-body">
+          <div class="card-header bg-body py-2.5 px-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <span class="small fw-bold text-secondary d-flex align-items-center gap-1.5">
+              <i class="bi bi-chat-text-fill text-primary"></i> &nbsp;&nbsp;Mensagem WhatsApp:
+            </span>
+            <div class="d-flex align-items-center gap-2 ms-auto">
+              <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill px-2.5 py-0.5" onclick="restaurarMensagemPadrao()" title="Restaurar texto padrão da mensagem">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Restaurar Padrão
+              </button>
+              <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill d-flex align-items-center justify-content-center p-0" data-bs-toggle="collapse" data-bs-target="#collapseModeloMensagem" aria-expanded="true" aria-controls="collapseModeloMensagem" title="Recolher / Expandir mensagem" style="width: 26px; height: 26px;">
+                <i class="bi bi-chevron-down collapse-toggle-icon"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="collapse show" id="collapseModeloMensagem">
+            <div class="card-body p-3">
+              <!-- Tags / Placeholders Clicáveis -->
+              <div class="mb-2">
+                <span class="small text-muted d-block mb-1" style="font-size: 0.72rem;">
+                  <i class="bi bi-hand-index-thumb me-1"></i> Clique na tag para inserir no texto:
+                </span>
+                <div class="d-flex flex-wrap gap-1.5 align-items-center">
+                  <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 fw-semibold" onclick="inserirPlaceholderMensagem('[Nome]')" title="Primeiro nome do voluntário">
+                    + [Nome]
+                  </button>
+                  <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 fw-semibold" onclick="inserirPlaceholderMensagem('[Nome Completo]')" title="Nome completo do voluntário">
+                    + [Nome Completo]
+                  </button>
+                  <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 fw-semibold" onclick="inserirPlaceholderMensagem('[Departamento]')" title="Nome do departamento">
+                    + [Departamento]
+                  </button>
+                  <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 fw-semibold" onclick="inserirPlaceholderMensagem('[Cultos]')" title="Lista completa dos cultos e horários escalados">
+                    + [Cultos]
+                  </button>
+                  <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 fw-semibold" onclick="inserirPlaceholderMensagem('[Sub-área]')" title="Área / Função da escala">
+                    + [Sub-área]
+                  </button>
+                  <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 fw-semibold" onclick="inserirPlaceholderMensagem('[Culto]')" title="Título do Culto">
+                    + [Culto]
+                  </button>
+                  <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 fw-semibold" onclick="inserirPlaceholderMensagem('[Data]')" title="Data do Culto (DD/MM/AAAA)">
+                    + [Data]
+                  </button>
+                  <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 fw-semibold" onclick="inserirPlaceholderMensagem('[Horário]')" title="Horário de início (HH:MM)">
+                    + [Horário]
+                  </button>
+                  <button type="button" class="btn btn-xs btn-outline-success rounded-pill px-2 py-0.5 fw-bold" onclick="inserirPlaceholderMensagem('[Link]')" title="Link do Portal do Voluntário">
+                    <i class="bi bi-link-45deg me-0.5"></i> + [Link]
+                  </button>
+                </div>
+              </div>
+
+              <textarea id="txtModeloMensagemCobranca" class="form-control font-monospace small bg-body-tertiary" rows="7" style="resize: vertical; font-size: 0.80rem; line-height: 1.45;" placeholder="Digite aqui o texto da mensagem...">ADVEC: Olá, *[Nome]*! 🙌
+
+Você possui escala(s) no departamento *[Departamento]*:
+[Cultos]
+
+Por favor, acesse o link abaixo para *confirmar sua presença* ou informar uma justificativa:
+👉 [Link]
+
+Contamos com você! Deus abençoe! 🙏</textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Log de Execução dos Lotes -->
+        <div id="logDisparoContainer" class="p-3 bg-body rounded-4 border shadow-xs d-none">
+          <span class="small fw-bold text-secondary d-block mb-1.5">
+            <i class="bi bi-journal-text me-1"></i> Log de Transmissão em Tempo Real:
+          </span>
+          <div class="p-2 bg-body-tertiary rounded-3 font-monospace text-muted" style="max-height: 110px; overflow-y: auto; font-size: 0.72rem; line-height: 1.3;" id="logDisparoList"></div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer bg-body border-0 p-3 px-4 d-flex align-items-center justify-content-between">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">
+          Fechar
+        </button>
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" class="btn btn-outline-danger rounded-pill px-3 d-none" id="btnCancelarEnvioLote" onclick="cancelarDisparoLoteWhatsApp()">
+            <i class="bi bi-stop-circle-fill me-1"></i> Interromper Envio
+          </button>
+          <button type="button" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm" id="btnIniciarEnvioLote" onclick="iniciarDisparoLoteWhatsApp()">
+            <i class="bi bi-send-fill me-1"></i> Iniciar Envio dos Lembretes
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <script>
   let modalEscalarInstance = null;
   let modalRemoverEscalaInstance = null;
@@ -1839,7 +2162,7 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
               ${v.tem_conflito_agenda ? `
                 <div class="d-flex align-items-center gap-1 text-danger fw-semibold mt-0.5" style="font-size: 0.70rem; line-height: 1.1;">
                   <i class="bi bi-calendar-x-fill text-danger"></i>
-                  <span>Já escalado em: <strong>${escapeHtml(v.conflito_departamento)} ${escapeHtml(v.conflito_subarea)}</strong></span>
+                  <span>Já escalado em: <strong>${escapeHtml(v.conflito_departamento)} ${escapeHtml(v.conflito_subarea)}</strong>${v.conflito_horario ? ` às <strong class="text-danger">${escapeHtml(v.conflito_horario)}</strong>` : ''}${v.conflito_culto ? ` <span class="text-muted">(${escapeHtml(v.conflito_culto)})</span>` : ''}</span>
                 </div>
               ` : ''}
             </div>
@@ -1873,7 +2196,9 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
       if (temConflitoAgenda) {
         const depto = (voluntarioObj.conflito_departamento || '').toUpperCase();
         const area = (voluntarioObj.conflito_subarea || '').toUpperCase();
-        const msg = `Este voluntário não pode ser escalado, pois já tem uma agenda confirmada para este dia/culto:<br>• <strong>${escapeHtml(depto)} ${escapeHtml(area)}</strong>`;
+        const hora = voluntarioObj.conflito_horario ? ` às ${voluntarioObj.conflito_horario}` : '';
+        const culto = voluntarioObj.conflito_culto ? ` (${voluntarioObj.conflito_culto})` : '';
+        const msg = `Este voluntário não pode ser escalado, pois já tem uma agenda confirmada para este dia/culto${culto}${hora}:<br>• <strong>${escapeHtml(depto)} ${escapeHtml(area)}</strong>`;
         if (typeof USToast !== 'undefined' && USToast.show) {
           USToast.show('warning', 'Conflito de Agenda', msg);
         } else if (typeof usShowToast === 'function') {
@@ -2092,6 +2417,8 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
         atendeStatus = (status !== 'sem_culto');
       } else if (filter === 'com_escala') {
         atendeStatus = (status === 'com_escala');
+      } else if (filter === 'pendente') {
+        atendeStatus = (row.getAttribute('data-tem-pendente') === '1');
       } else if (filter === 'sem_escala') {
         atendeStatus = (status === 'sem_escala');
       } else if (filter === 'fim_semana') {
@@ -2130,6 +2457,526 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
   document.getElementById('toggleDiasAnteriores')?.addEventListener('change', function() {
     aplicarFiltrosGrade();
   });
+
+  // ==========================================
+  // ORDENAÇÃO DINÂMICA DA GRADE DE ESCALAS
+  // ==========================================
+  let direcaoDiaSemana = 'none'; // 'none' -> 'asc' -> 'desc'
+  let direcaoDia = 'asc'; // 'asc' -> 'desc'
+
+  function ordenarGradeTabela(criterio, direcao) {
+    const tbody = document.querySelector('#tblGradeEscala tbody');
+    if (!tbody) return;
+
+    const rows = Array.from(tbody.querySelectorAll('tr.grade-row'));
+
+    rows.sort((a, b) => {
+      if (criterio === 'dia_semana') {
+        const diaSemA = parseInt(a.getAttribute('data-dia-semana') || '0', 10);
+        const diaSemB = parseInt(b.getAttribute('data-dia-semana') || '0', 10);
+        if (diaSemA !== diaSemB) {
+          return direcao === 'asc' ? diaSemA - diaSemB : diaSemB - diaSemA;
+        }
+        // Critério secundário: data ISO e hora de início
+        const dataA = a.getAttribute('data-data-iso') || '';
+        const dataB = b.getAttribute('data-data-iso') || '';
+        if (dataA !== dataB) {
+          return dataA.localeCompare(dataB);
+        }
+        const horaA = a.getAttribute('data-hora-inicio') || '';
+        const horaB = b.getAttribute('data-hora-inicio') || '';
+        return horaA.localeCompare(horaB);
+      } else if (criterio === 'data') {
+        const dataA = a.getAttribute('data-data-iso') || '';
+        const dataB = b.getAttribute('data-data-iso') || '';
+        if (dataA !== dataB) {
+          return direcao === 'asc' ? dataA.localeCompare(dataB) : dataB.localeCompare(dataA);
+        }
+        const horaA = a.getAttribute('data-hora-inicio') || '';
+        const horaB = b.getAttribute('data-hora-inicio') || '';
+        return direcao === 'asc' ? horaA.localeCompare(horaB) : horaB.localeCompare(horaA);
+      }
+      return 0;
+    });
+
+    rows.forEach(row => tbody.appendChild(row));
+  }
+
+  // Clique no cabeçalho Dia da Semana
+  document.getElementById('thSortDiaSemana')?.addEventListener('click', function() {
+    const iconSemana = document.getElementById('iconSortDiaSemana');
+    const iconDia = document.getElementById('iconSortDia');
+
+    if (direcaoDiaSemana === 'none' || direcaoDiaSemana === 'desc') {
+      direcaoDiaSemana = 'asc';
+      ordenarGradeTabela('dia_semana', 'asc');
+      if (iconSemana) iconSemana.className = 'bi bi-sort-numeric-down text-warning fw-bold';
+    } else if (direcaoDiaSemana === 'asc') {
+      direcaoDiaSemana = 'desc';
+      ordenarGradeTabela('dia_semana', 'desc');
+      if (iconSemana) iconSemana.className = 'bi bi-sort-numeric-up text-warning fw-bold';
+    }
+
+    // Reseta estado da coluna Dia
+    if (iconDia) iconDia.className = 'bi bi-arrow-down-up opacity-50';
+    direcaoDia = 'none';
+  });
+
+  // Clique no cabeçalho Dia
+  document.getElementById('thSortDia')?.addEventListener('click', function() {
+    const iconDia = document.getElementById('iconSortDia');
+    const iconSemana = document.getElementById('iconSortDiaSemana');
+
+    if (direcaoDia === 'asc') {
+      direcaoDia = 'desc';
+      ordenarGradeTabela('data', 'desc');
+      if (iconDia) iconDia.className = 'bi bi-sort-numeric-up text-white fw-bold';
+    } else {
+      direcaoDia = 'asc';
+      ordenarGradeTabela('data', 'asc');
+      if (iconDia) iconDia.className = 'bi bi-sort-numeric-down text-white fw-bold';
+    }
+
+    // Reseta estado da coluna Dia Semana
+    if (iconSemana) iconSemana.className = 'bi bi-arrow-down-up text-warning opacity-75';
+    direcaoDiaSemana = 'none';
+  });
+
+  // ==========================================
+  //  LEMBRETES DE CONFIRMAÇÃO POR WHATSAPP
+  // ==========================================
+  let listaPendentesDisparo = [];
+  let processoEnvioCancelado = false;
+  let modalCobrancaLoteInstance = null;
+
+  function filtrarPendentesRapido() {
+    const btnPendente = document.getElementById('btnFilterPendente');
+    if (btnPendente) {
+      btnPendente.click();
+      document.getElementById('tblGradeEscala')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  }
+
+  function enviarCobrancaIndividualWhatsApp(idEscala, nomeVoluntario) {
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        title: 'Enviar Lembrete por WhatsApp?',
+        html: `Deseja enviar lembrete de confirmação para <strong>${escapeHtml(nomeVoluntario)}</strong>?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-whatsapp me-1"></i> Sim, enviar!',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          executarEnvioIndividualWhatsApp(idEscala);
+        }
+      });
+    } else {
+      if (confirm(`Deseja enviar lembrete de confirmação por WhatsApp para ${nomeVoluntario}?`)) {
+        executarEnvioIndividualWhatsApp(idEscala);
+      }
+    }
+  }
+
+  function executarEnvioIndividualWhatsApp(idEscala) {
+    const formData = new FormData();
+    formData.append('id_escala_voluntario', idEscala);
+
+    if (typeof USToast !== 'undefined' && USToast.show) {
+      USToast.show('info', 'Enviando WhatsApp...', 'Disparando lembrete de confirmação.');
+    }
+
+    fetch('<?= base_url('escala/enviarCobrancaIndividual') ?>', {
+        method: 'POST',
+        body: formData
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') {
+          if (typeof USToast !== 'undefined' && USToast.show) {
+            USToast.show('success', 'Lembrete Enviado', data.message);
+          } else if (typeof usShowToast === 'function') {
+            usShowToast('success', 'Lembrete Enviado', data.message);
+          }
+        } else {
+          if (typeof USToast !== 'undefined' && USToast.show) {
+            USToast.show('error', 'Falha no Envio', data.message || 'Erro ao enviar WhatsApp.');
+          } else if (typeof usShowToast === 'function') {
+            usShowToast('error', 'Falha no Envio', data.message || 'Erro ao enviar WhatsApp.');
+          }
+        }
+      })
+      .catch(err => {
+        if (typeof USToast !== 'undefined' && USToast.show) {
+          USToast.show('error', 'Erro de Conexão', 'Não foi possível comunicar com o servidor.');
+        }
+      });
+  }
+
+  const textoMensagemPadrao = "ADVEC: Olá, *[Nome]*! 🙌\n\n" +
+    "Você possui escala(s) no departamento *[Departamento]*:\n" +
+    "[Cultos]\n\n" +
+    "Por favor, acesse o link abaixo para *confirmar sua presença* ou informar uma justificativa:\n" +
+    "👉 [Link]\n\n" +
+    "Contamos com você! Deus abençoe! 🙏";
+
+  function restaurarMensagemPadrao() {
+    const txtArea = document.getElementById('txtModeloMensagemCobranca');
+    if (txtArea) {
+      txtArea.value = textoMensagemPadrao;
+      txtArea.focus();
+    }
+  }
+
+  function inserirPlaceholderMensagem(placeholder) {
+    const txtArea = document.getElementById('txtModeloMensagemCobranca');
+    if (!txtArea) return;
+
+    const start = txtArea.selectionStart ?? txtArea.value.length;
+    const end = txtArea.selectionEnd ?? txtArea.value.length;
+    const currentVal = txtArea.value;
+
+    txtArea.value = currentVal.substring(0, start) + placeholder + currentVal.substring(end);
+    txtArea.focus();
+    txtArea.selectionStart = txtArea.selectionEnd = start + placeholder.length;
+  }
+
+  function abrirModalCobrancaLote() {
+    const modalEl = document.getElementById('modalCobrancaLote');
+    if (!modalEl) return;
+
+    if (!modalCobrancaLoteInstance) {
+      modalCobrancaLoteInstance = new bootstrap.Modal(modalEl);
+    }
+    modalCobrancaLoteInstance.show();
+
+    // Reseta estado da UI do modal
+    document.getElementById('progressoContainer').classList.add('d-none');
+    document.getElementById('logDisparoContainer').classList.add('d-none');
+    document.getElementById('logDisparoList').innerHTML = '';
+    document.getElementById('statusLoteDisplay').innerHTML = '';
+    document.getElementById('btnIniciarEnvioLote').disabled = false;
+    document.getElementById('btnCancelarEnvioLote').classList.add('d-none');
+
+    const txtArea = document.getElementById('txtModeloMensagemCobranca');
+    if (txtArea && !txtArea.value.trim()) {
+      txtArea.value = textoMensagemPadrao;
+    }
+
+    carregarListaPendentesModal();
+  }
+
+  function carregarListaPendentesModal() {
+    const container = document.getElementById('listaPendentesContainer');
+    container.innerHTML = `
+      <div class="text-center py-4 text-muted small">
+        <div class="spinner-border spinner-border-sm text-warning me-2" role="status"></div>
+        Consultando escalas pendentes em cultos futuros...
+      </div>
+    `;
+
+    const idDep = <?= (int)$id_departamento ?>;
+    const ano = <?= (int)$ano ?>;
+    const mes = <?= (int)$mes ?>;
+
+    fetch(`<?= base_url('escala/getPendentesConfirmacao') ?>?id_departamento=${idDep}&ano=${ano}&mes=${mes}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'success') {
+          listaPendentesDisparo = data.pendentes || [];
+          renderizarListaPendentesModal(listaPendentesDisparo, data.total_escalas);
+        } else {
+          container.innerHTML = `<div class="p-3 text-center text-danger small">${escapeHtml(data.message || 'Erro ao consultar.')}</div>`;
+        }
+      })
+      .catch(err => {
+        container.innerHTML = `<div class="p-3 text-center text-danger small">Falha na conexão ao carregar lista de pendências.</div>`;
+      });
+  }
+
+  function renderizarListaPendentesModal(lista, totalEscalas) {
+    const container = document.getElementById('listaPendentesContainer');
+    const qtdEsc = totalEscalas || lista.reduce((acc, it) => acc + (it.escalas ? it.escalas.length : 1), 0);
+    document.getElementById('lblQtdPendentesCarregados').textContent = `${lista.length} voluntário(s) (${qtdEsc} escala${qtdEsc !== 1 ? 's' : ''})`;
+
+    if (lista.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-4 text-muted small">
+          <i class="bi bi-check-circle-fill text-success fs-4 d-block mb-1"></i>
+          Nenhum voluntário com confirmação pendente em cultos futuros neste mês!
+        </div>
+      `;
+      document.getElementById('btnIniciarEnvioLote').disabled = true;
+      document.getElementById('lblTotalSelecionados').textContent = '0';
+      return;
+    }
+
+    let html = '<div class="list-group list-group-flush">';
+    lista.forEach(item => {
+      const temFone = Boolean(item.telefone_whatsapp);
+      const jaEnviado = Boolean(item.ja_enviado_hoje);
+      const podeEnviar = temFone && !jaEnviado;
+      const numEscalas = (item.escalas && item.escalas.length) ? item.escalas.length : 1;
+      const jsonIds = JSON.stringify(item.ids_escala || []);
+
+      let cultosHtml = '';
+      (item.escalas || []).forEach(esc => {
+        cultosHtml += `
+          <div class="small text-secondary d-flex align-items-center gap-1.5 mt-1" style="font-size: 0.73rem;">
+            <span><i class="bi bi-calendar3 me-1 text-primary"></i>${escapeHtml(esc.data_formatada)} (${escapeHtml(esc.horario_inicio)})</span>
+            <span>•</span>
+            <span class="text-body-secondary"><i class="bi bi-building me-1"></i>${escapeHtml(esc.titulo_culto)}</span>
+            <span class="badge bg-secondary-subtle text-secondary border rounded-pill px-1.5 py-0" style="font-size: 0.62rem;">${escapeHtml(esc.nome_area)}</span>
+          </div>
+        `;
+      });
+
+      html += `
+        <div class="list-group-item list-group-item-action item-pendente-row p-2.5 px-3 mb-0 ${podeEnviar ? 'is-selected' : 'is-disabled'}" style="${podeEnviar ? '' : 'opacity: 0.75;'}">
+          <div class="d-flex align-items-start justify-content-between gap-2">
+            <div class="d-flex align-items-start min-w-0 flex-grow-1">
+              <input class="form-check-input check-pendente-item flex-shrink-0 mt-1 me-3" 
+                     type="checkbox" 
+                     id="chk_vol_${item.id_voluntario}" 
+                     value="${item.id_voluntario}" 
+                     data-escalas='${jsonIds}'
+                     ${podeEnviar ? 'checked' : 'disabled'} 
+                     onchange="atualizarContadorSelecionados()" 
+                     style="cursor: ${podeEnviar ? 'pointer' : 'not-allowed'}; width: 1.15em; height: 1.15em;">
+              <label class="min-w-0 ps-1 flex-grow-1 mb-0 user-select-none" for="chk_vol_${item.id_voluntario}" style="cursor: ${podeEnviar ? 'pointer' : 'default'};">
+                <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                  <strong class="text-body small text-truncate">${escapeHtml(item.nome_voluntario)}</strong>
+                  ${numEscalas > 1 ? `
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0 fw-bold" style="font-size: 0.65rem;">
+                      ${numEscalas} escalas em 1 mensagem
+                    </span>
+                  ` : ''}
+                </div>
+                <div class="ps-0.5 mt-0.5">
+                  ${cultosHtml}
+                </div>
+              </label>
+            </div>
+            <div class="text-end flex-shrink-0 ms-2 mt-0.5">
+              ${jaEnviado ? `
+                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle rounded-pill px-2 py-1" style="font-size: 0.70rem;" title="Lembrete já disparado hoje às ${escapeHtml(item.hora_ultimo_lembrete)}. Limite de 1 por dia.">
+                  <i class="bi bi-check2-all me-1 text-primary"></i>Enviado hoje (${escapeHtml(item.hora_ultimo_lembrete)})
+                </span>
+              ` : (temFone ? `
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1" style="font-size: 0.70rem;">
+                  <i class="bi bi-whatsapp me-1"></i>${escapeHtml(item.telefone_whatsapp)}
+                </span>
+              ` : `
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1" style="font-size: 0.70rem;" title="Sem WhatsApp cadastrado">
+                  <i class="bi bi-exclamation-circle me-1"></i>Sem WhatsApp
+                </span>
+              `)}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+
+    container.innerHTML = html;
+    atualizarContadorSelecionados();
+  }
+
+  function toggleTodosPendentes(checked) {
+    const isChecked = Boolean(checked);
+    document.querySelectorAll('.check-pendente-item:not(:disabled)').forEach(chk => {
+      chk.checked = isChecked;
+    });
+    atualizarContadorSelecionados();
+  }
+
+  function atualizarContadorSelecionados() {
+    const todosDisponiveis = document.querySelectorAll('.check-pendente-item:not(:disabled)');
+    const marcados = document.querySelectorAll('.check-pendente-item:checked');
+    const totalVols = marcados.length;
+
+    // Atualiza classe visual das linhas
+    document.querySelectorAll('.item-pendente-row').forEach(row => {
+      const chk = row.querySelector('.check-pendente-item');
+      if (chk && chk.checked) {
+        row.classList.add('is-selected');
+      } else {
+        row.classList.remove('is-selected');
+      }
+    });
+
+    let totalEscalasMarcadas = 0;
+    marcados.forEach(chk => {
+      try {
+        const ids = JSON.parse(chk.getAttribute('data-escalas') || '[]');
+        totalEscalasMarcadas += ids.length || 1;
+      } catch (e) {
+        totalEscalasMarcadas++;
+      }
+    });
+
+    const lbl = document.getElementById('lblTotalSelecionados');
+    if (lbl) {
+      lbl.textContent = `${totalVols} voluntário(s)` + (totalEscalasMarcadas > 0 ? ` (${totalEscalasMarcadas} escala${totalEscalasMarcadas !== 1 ? 's' : ''})` : '');
+    }
+    document.getElementById('btnIniciarEnvioLote').disabled = (totalVols === 0);
+
+    const checkTodos = document.getElementById('checkTodosPendentes');
+    if (checkTodos) {
+      if (todosDisponiveis.length === 0) {
+        checkTodos.checked = false;
+        checkTodos.indeterminate = false;
+      } else if (totalVols === todosDisponiveis.length) {
+        checkTodos.checked = true;
+        checkTodos.indeterminate = false;
+      } else if (totalVols === 0) {
+        checkTodos.checked = false;
+        checkTodos.indeterminate = false;
+      } else {
+        checkTodos.checked = false;
+        checkTodos.indeterminate = true;
+      }
+    }
+  }
+
+  async function iniciarDisparoLoteWhatsApp() {
+    const checkboxes = document.querySelectorAll('.check-pendente-item:checked');
+    const idsVoluntarios = Array.from(checkboxes).map(c => parseInt(c.value, 10)).filter(id => id > 0);
+
+    if (idsVoluntarios.length === 0) {
+      if (typeof USToast !== 'undefined' && USToast.show) {
+        USToast.show('warning', 'Atenção', 'Selecione pelo menos um voluntário para enviar.');
+      }
+      return;
+    }
+
+    processoEnvioCancelado = false;
+    document.getElementById('btnIniciarEnvioLote').disabled = true;
+    document.getElementById('btnCancelarEnvioLote').classList.remove('d-none');
+    document.getElementById('btnFecharModalCobranca').disabled = true;
+    document.getElementById('progressoContainer').classList.remove('d-none');
+    document.getElementById('logDisparoContainer').classList.remove('d-none');
+
+    const tamanhoLote = 10;
+    const intervaloSegundos = 10;
+    const totalGeral = idsVoluntarios.length;
+    let totalProcessados = 0;
+    let totalSucesso = 0;
+    let totalFalhas = 0;
+
+    const chunks = [];
+    for (let i = 0; i < idsVoluntarios.length; i += tamanhoLote) {
+      chunks.push(idsVoluntarios.slice(i, i + tamanhoLote));
+    }
+
+    const statusBox = document.getElementById('statusLoteDisplay');
+    const progressBar = document.getElementById('progressBarCobranca');
+    const lblProgresso = document.getElementById('lblProgressoStatus');
+    const modeloMensagem = document.getElementById('txtModeloMensagemCobranca')?.value || '';
+
+    for (let idx = 0; idx < chunks.length; idx++) {
+      if (processoEnvioCancelado) {
+        adicionarLogDisparo('⛔ Processo de envio interrompido pelo gestor.');
+        break;
+      }
+
+      const loteAtual = chunks[idx];
+      const numLote = idx + 1;
+
+      statusBox.innerHTML = `
+        <div class="d-flex align-items-center gap-2 text-primary fw-bold">
+          <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+          <span>Enviando Lote ${numLote} de ${chunks.length} (${loteAtual.length} voluntários)...</span>
+        </div>
+      `;
+
+      try {
+        const formData = new FormData();
+        loteAtual.forEach(id => formData.append('ids_voluntario[]', id));
+        formData.append('modelo_mensagem', modeloMensagem);
+
+        const resp = await fetch('<?= base_url('escala/enviarCobrancaLote') ?>', {
+          method: 'POST',
+          body: formData
+        });
+        const resJson = await resp.json();
+
+        if (resJson.status === 'success') {
+          totalSucesso += (resJson.enviados || 0);
+          totalFalhas += (resJson.falhas || 0);
+          (resJson.detalhes || []).forEach(det => adicionarLogDisparo(det));
+        } else {
+          totalFalhas += loteAtual.length;
+          adicionarLogDisparo(`❌ Falha no Lote ${numLote}: ${resJson.message || 'Erro'}`);
+        }
+      } catch (e) {
+        totalFalhas += loteAtual.length;
+        adicionarLogDisparo(`❌ Erro de rede no Lote ${numLote}: ${e.message}`);
+      }
+
+      totalProcessados += loteAtual.length;
+      const pct = Math.round((totalProcessados / totalGeral) * 100);
+      if (progressBar) {
+        progressBar.style.width = `${pct}%`;
+        progressBar.innerText = `${pct}%`;
+      }
+      if (lblProgresso) {
+        lblProgresso.innerText = `${totalProcessados} / ${totalGeral}`;
+      }
+
+      // Se houver próximo lote e o envio não foi cancelado, aguarda 10 segundos com contador
+      if (idx < chunks.length - 1 && !processoEnvioCancelado) {
+        let segRestantes = intervaloSegundos;
+        while (segRestantes > 0 && !processoEnvioCancelado) {
+          statusBox.innerHTML = `
+            <div class="d-flex align-items-center gap-2 text-warning fw-bold">
+              <i class="bi bi-clock-history"></i>
+              <span>Lote ${numLote} finalizado. Intervalo de segurança: aguardando <span class="badge bg-warning text-dark font-monospace">${segRestantes}s</span> para o Lote ${numLote + 1}...</span>
+            </div>
+          `;
+          await new Promise(r => setTimeout(r, 1000));
+          segRestantes--;
+        }
+      }
+    }
+
+    if (!processoEnvioCancelado) {
+      statusBox.innerHTML = `
+        <div class="alert alert-success d-flex align-items-center gap-2 mb-0 py-2">
+          <i class="bi bi-check-circle-fill fs-5 text-success"></i>
+          <div>
+            <strong>Transmissão concluída com sucesso!</strong><br>
+            Total de voluntários notificados: <b>${totalSucesso}</b> | Não enviados/erros: <b>${totalFalhas}</b>.
+          </div>
+        </div>
+      `;
+    }
+
+    document.getElementById('btnIniciarEnvioLote').disabled = false;
+    document.getElementById('btnCancelarEnvioLote').classList.add('d-none');
+    document.getElementById('btnFecharModalCobranca').disabled = false;
+  }
+
+  function cancelarDisparoLoteWhatsApp() {
+    processoEnvioCancelado = true;
+    document.getElementById('btnCancelarEnvioLote').disabled = true;
+    document.getElementById('btnCancelarEnvioLote').innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Cancelando...';
+  }
+
+  function adicionarLogDisparo(msg) {
+    const logBox = document.getElementById('logDisparoList');
+    if (!logBox) return;
+    const now = new Date().toLocaleTimeString();
+    const line = document.createElement('div');
+    line.innerHTML = `<span class="text-secondary">[${now}]</span> ${escapeHtml(msg)}`;
+    logBox.appendChild(line);
+    logBox.scrollTop = logBox.scrollHeight;
+  }
 
   function safeDecode(text) {
     if (!text) return '';

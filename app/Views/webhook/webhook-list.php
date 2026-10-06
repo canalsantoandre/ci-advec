@@ -121,7 +121,7 @@
                         <?php } ?>
 
                         <?php if (!empty($sys_action->delete)) { ?>
-                          <button type="button" class="btn btn-outline-danger" title="Excluir" onclick="confirmarExclusaoWebhook('<?= $wh->id_webhook ?>', '<?= esc($wh->nome_identificador) ?>')">
+                          <button type="button" class="btn btn-outline-danger" title="Excluir" onclick="confirmarExclusaoWebhook('<?= $wh->id_webhook ?>', '<?= esc(addslashes($wh->nome)) ?>')">
                             <i class="bi bi-trash3-fill"></i>
                           </button>
                         <?php } ?>

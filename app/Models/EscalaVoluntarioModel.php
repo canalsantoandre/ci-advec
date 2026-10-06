@@ -20,6 +20,7 @@ class EscalaVoluntarioModel extends Model
         'status_confirmacao',
         'justificativa_recusa',
         'data_resposta',
+        'data_ultimo_lembrete',
         'observacao'
     ];
 
@@ -73,10 +74,14 @@ class EscalaVoluntarioModel extends Model
         $builder->select('
             ev.*,
             d.nome as nome_departamento,
-            a.nome_area
+            a.nome_area,
+            cp.nome_culto as titulo_culto,
+            cp.horario_inicio,
+            cp.horario_termino
         ');
         $builder->join('tb_departamento as d', 'd.id_departamento = ev.id_departamento', 'inner');
         $builder->join('tb_departamento_area as a', 'a.id_area = ev.id_area', 'inner');
+        $builder->join('tb_culto_padrao as cp', 'cp.id_culto_padrao = ev.id_culto_padrao', 'left');
         $builder->where('ev.id_voluntario', $id_voluntario);
         $builder->where('ev.data_culto', $data_culto);
         $builder->where('ev.id_culto_padrao', $id_culto_padrao);
