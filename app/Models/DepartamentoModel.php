@@ -17,8 +17,23 @@ class DepartamentoModel extends Model
         'responsavel_nome',
         'responsavel_telefone',
         'cor_identificacao',
+        'notificar_whatsapp',
+        'whatsapp_group_id',
+        'receber_notificacao_agenda',
         'status'
     ];
+
+    /**
+     * Retorna os departamentos configurados para receber notificações da agenda de cultos via grupo do WhatsApp
+     */
+    public function getDepartamentosNotificacaoAgenda()
+    {
+        return $this->where('status', 1)
+            ->where('receber_notificacao_agenda', 1)
+            ->where('whatsapp_group_id IS NOT NULL')
+            ->where('whatsapp_group_id !=', '')
+            ->findAll();
+    }
 
     /**
      * Retorna todos os departamentos com contadores de áreas e voluntários vinculados

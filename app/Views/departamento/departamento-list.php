@@ -119,15 +119,33 @@
                     </td>
 
                     <td class="text-center">
-                      <?php if ($d->status == 1) { ?>
-                        <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle rounded-pill px-3 py-1 fw-semibold">
-                          <i class="bi bi-check-circle-fill me-1"></i> Ativo
-                        </span>
-                      <?php } else { ?>
-                        <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-pill px-3 py-1 fw-semibold">
-                          <i class="bi bi-x-circle-fill me-1"></i> Inativo
-                        </span>
-                      <?php } ?>
+                      <div class="d-flex flex-column align-items-center gap-1">
+                        <?php if ($d->status == 1) { ?>
+                          <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle rounded-pill px-3 py-1 fw-semibold">
+                            <i class="bi bi-check-circle-fill me-1"></i> Ativo
+                          </span>
+                        <?php } else { ?>
+                          <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-pill px-3 py-1 fw-semibold">
+                            <i class="bi bi-x-circle-fill me-1"></i> Inativo
+                          </span>
+                        <?php } ?>
+
+                        <?php if (($d->notificar_whatsapp ?? 1) == 1) { ?>
+                          <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0 small" style="font-size: 0.7rem;" title="Notificação WhatsApp automática ativa ao escalar">
+                            <i class="bi bi-whatsapp me-1"></i>Whats ON
+                          </span>
+                        <?php } else { ?>
+                          <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2 py-0 small" style="font-size: 0.7rem;" title="Notificação WhatsApp desativada">
+                            <i class="bi bi-whatsapp me-1"></i>Whats OFF
+                          </span>
+                        <?php } ?>
+
+                        <?php if (!empty($d->receber_notificacao_agenda)) { ?>
+                          <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-0 small" style="font-size: 0.7rem;" title="Notificação de Artes da Agenda ativa para grupo: <?= esc($d->whatsapp_group_id ?? '') ?>">
+                            <i class="bi bi-palette me-1"></i>Artes ON
+                          </span>
+                        <?php } ?>
+                      </div>
                     </td>
 
                     <td class="text-end pe-4">

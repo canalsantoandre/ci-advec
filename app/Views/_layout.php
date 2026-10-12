@@ -319,13 +319,45 @@
 
     [data-bs-theme="dark"] .form-control:focus,
     [data-bs-theme="dark"] .form-select:focus,
-    [data-bs-theme="dark"] input:focus,
+    [data-bs-theme="dark"] input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="reset"]):focus,
     [data-bs-theme="dark"] select:focus,
     [data-bs-theme="dark"] textarea:focus {
       background-color: #ffffff !important;
       color: #000000 !important;
       border-color: #3b82f6 !important;
       box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25) !important;
+    }
+
+    /* Regras Globais para Switches e Checkboxes: Garantir contraste perfeito nos estados normal, checked e focus */
+    .form-check-input {
+      cursor: pointer;
+    }
+    .form-switch .form-check-input {
+      background-color: #cbd5e1;
+      border-color: #94a3b8;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%2364748b'/%3e%3c/svg%3e");
+      transition: background-position .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out;
+    }
+    .form-switch .form-check-input:checked {
+      background-color: #0d6efd !important;
+      border-color: #0d6efd !important;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23ffffff'/%3e%3c/svg%3e") !important;
+      background-position: right center !important;
+    }
+    .form-switch .form-check-input:focus {
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
+    }
+    [data-bs-theme="dark"] .form-switch .form-check-input:not(:checked) {
+      background-color: #334155 !important;
+      border-color: #475569 !important;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23cbd5e1'/%3e%3c/svg%3e") !important;
+    }
+    [data-bs-theme="dark"] .form-switch .form-check-input:checked {
+      background-color: #2563eb !important;
+      border-color: #2563eb !important;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23ffffff'/%3e%3c/svg%3e") !important;
+      background-position: right center !important;
     }
 
     [data-bs-theme="dark"] .form-floating > label {

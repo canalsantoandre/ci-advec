@@ -7,6 +7,7 @@ use App\Models\VoluntarioAreaModel;
 use App\Models\VoluntarioCultoModel;
 use App\Models\CultoPadraoModel;
 use App\Models\EscalaVoluntarioModel;
+use App\Models\DepartamentoModel;
 use App\Services\WebhookService;
 
 class PortalVoluntario extends BaseController
@@ -458,6 +459,8 @@ class PortalVoluntario extends BaseController
         $ok = $escalaModel->responderEscala($id_escala_voluntario, $voluntario->id_voluntario, 'CONFIRMADO');
 
         if ($ok) {
+            $this->notificarLiderInteracaoEscala($escala, $voluntario, 'CONFIRMADO');
+
             return $this->response->setJSON([
                 'status'  => 'success',
                 'message' => 'Presença confirmada com sucesso! Que Deus abençoe seu serviço.'
@@ -506,6 +509,8 @@ class PortalVoluntario extends BaseController
         $ok = $escalaModel->responderEscala($id_escala_voluntario, $voluntario->id_voluntario, 'RECUSADO', $justificativa);
 
         if ($ok) {
+            $this->notificarLiderInteracaoEscala($escala, $voluntario, 'RECUSADO', $justificativa);
+
             return $this->response->setJSON([
                 'status'  => 'success',
                 'message' => 'Escala desmarcada com sucesso. Sua liderança foi informada.'
@@ -513,6 +518,69 @@ class PortalVoluntario extends BaseController
         }
 
         return $this->response->setJSON(['status' => 'error', 'message' => 'Não foi possível desmarcar esta escala.']);
+    }
+
+    /**
+     * Helper: Notifica o líder do departamento via WhatsApp quando um voluntário interagir com a escala
+     */
+    private function notificarLiderInteracaoEscala($escala, $voluntario, string $status, ?string $justificativa = null): void
+    {
+        try {
+            if (!$escala || empty($escala->id_departamento)) {
+                return;
+            }
+
+            $departamentoModel = new DepartamentoModel();
+            $departamento = $departamentoModel->find($escala->id_departamento);
+
+            if (!$departamento || empty($departamento->responsavel_telefone)) {
+                return;
+            }
+
+            $db = db_connect();
+            $area = !empty($escala->id_area)
+                ? $db->table('tb_departamento_area')->where('id_area', $escala->id_area)->get()->getFirstRow()
+                : null;
+
+            $culto = null;
+            if (!empty($escala->id_culto_padrao)) {
+                $culto = $db->table('tb_culto_padrao')->where('id_culto_padrao', $escala->id_culto_padrao)->get()->getFirstRow();
+            } elseif (!empty($escala->id_culto)) {
+                $culto = $db->table('tb_agenda_culto')->where('id_culto', $escala->id_culto)->get()->getFirstRow();
+            }
+
+            $nomeLider      = !empty($departamento->responsavel_nome) ? explode(' ', trim($departamento->responsavel_nome))[0] : 'Líder';
+            $nomeVoluntario = $voluntario->nome ?? 'Voluntário';
+            $nomeDepto      = $departamento->nome ?? 'Departamento';
+            $nomeArea       = $area ? $area->nome_area : 'Geral';
+            $nomeCulto      = $culto ? ($culto->nome_culto ?? $culto->titulo_culto ?? 'Culto') : 'Culto';
+            $dataFormatada  = !empty($escala->data_culto) ? date('d/m/Y', strtotime($escala->data_culto)) : 'Data informada';
+            $horaFormatada  = (!empty($culto->horario_inicio)) ? substr($culto->horario_inicio, 0, 5) : '';
+
+            if (strtoupper($status) === 'CONFIRMADO') {
+                $msgLider = "ADVEC: Olá, *{$nomeLider}*! 🙌\n\n"
+                    . "O voluntário *{$nomeVoluntario}* acabou de *CONFIRMAR PRESENÇA* na escala do seu departamento (*{$nomeDepto}*):\n\n"
+                    . "🏛️ *Culto:* {$nomeCulto}\n"
+                    . "📅 *Data:* {$dataFormatada}\n"
+                    . ($horaFormatada ? "⏰ *Horário:* {$horaFormatada}\n" : "")
+                    . "🏷️ *Função / Área:* {$nomeArea}\n\n"
+                    . "Status: ✅ *Confirmado*";
+            } else {
+                $msgLider = "ADVEC: Atenção, *{$nomeLider}*! ⚠️\n\n"
+                    . "O voluntário *{$nomeVoluntario}* *DESMARCOU / RECUSOU* a escala no seu departamento (*{$nomeDepto}*):\n\n"
+                    . "🏛️ *Culto:* {$nomeCulto}\n"
+                    . "📅 *Data:* {$dataFormatada}\n"
+                    . ($horaFormatada ? "⏰ *Horário:* {$horaFormatada}\n" : "")
+                    . "🏷️ *Função / Área:* {$nomeArea}\n\n"
+                    . "❌ *Motivo / Justificativa:*\n"
+                    . "\"" . trim((string)$justificativa) . "\"\n\n"
+                    . "Por favor, acesse o sistema para verificar a grade de escalas e providenciar a substituição, se necessário.";
+            }
+
+            WebhookService::dispararMensagemWhatsApp($departamento->responsavel_telefone, $msgLider);
+        } catch (\Throwable $e) {
+            log_message('error', '[PortalVoluntario::notificarLiderInteracaoEscala] Erro ao enviar WhatsApp para o líder: ' . $e->getMessage());
+        }
     }
 
     /**

@@ -166,20 +166,7 @@ class Agenda extends BaseController
             }
 
             $cultoConvidadoModel = new CultoConvidadoModel();
-            $totalAdicionados = 0;
-
-            foreach ($ids_convidados as $id_convidado) {
-                $id_convidado = (int)$id_convidado;
-                $exists = $cultoConvidadoModel->where(['id_culto' => $id_culto, 'id_convidado' => $id_convidado])->countAllResults();
-                if ($exists == 0) {
-                    $cultoConvidadoModel->insert([
-                        'id_culto'        => $id_culto,
-                        'id_convidado'    => $id_convidado,
-                        'status_presenca' => 1
-                    ]);
-                    $totalAdicionados++;
-                }
-            }
+            $totalAdicionados = $cultoConvidadoModel->vincularConvidados($id_culto, $ids_convidados);
 
             return $this->response->setJSON([
                 'status'  => 'success',
@@ -412,6 +399,9 @@ class Agenda extends BaseController
         $data['convidados']   = $convidados;
         $data['cultosPadrao'] = $cultosPadrao;
         $data['diasGrade']    = $diasGrade;
+        $data['hojeIso']      = date('Y-m-d');
+        $data['isMesAtual']   = ($ano === (int)date('Y') && $mes === (int)date('m'));
+        $data['isMesPassado'] = ($ano < (int)date('Y') || ($ano === (int)date('Y') && $mes < (int)date('m')));
 
         $data['content_view'] = view('agenda/agenda-grade', $data);
         return view('_layout', $data);

@@ -37,6 +37,24 @@ class WebhookService
     }
 
     /**
+     * Formata destino que pode ser telefone individual ou JID de grupo WhatsApp (ex: 120363023456789012@g.us)
+     */
+    public static function formatarDestinoWhatsApp($destino)
+    {
+        $destino = trim((string)$destino);
+        if (empty($destino)) {
+            return '';
+        }
+
+        // Se for grupo ou JID do WhatsApp
+        if (stripos($destino, '@g.us') !== false || stripos($destino, '@s.whatsapp.net') !== false) {
+            return $destino;
+        }
+
+        return self::formatarTelefoneWhatsApp($destino);
+    }
+
+    /**
      * Dispara mensagem de WhatsApp através do Webhook ativo cadastrado no sistema
      * 
      * Payload OBRIGATÓRIO em formato de Lista/Array:
@@ -62,11 +80,11 @@ class WebhookService
             ];
         }
 
-        $numeroFormatado = self::formatarTelefoneWhatsApp($telefone);
+        $numeroFormatado = self::formatarDestinoWhatsApp($telefone);
         if (empty($numeroFormatado)) {
             return [
                 'success'   => false,
-                'message'   => 'Número de telefone inválido para envio.',
+                'message'   => 'Destino / Número de telefone inválido para envio.',
                 'http_code' => null
             ];
         }

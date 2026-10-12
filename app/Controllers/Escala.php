@@ -316,9 +316,16 @@ class Escala extends BaseController
                 return $this->response->setJSON(['status' => 'error', 'message' => 'Você não possui permissão para gerenciar escalas deste departamento.']);
             }
 
-            $voluntarioModel = new VoluntarioModel();
-            $escalaModel     = new EscalaVoluntarioModel();
-            $db              = db_connect();
+            $voluntarioModel   = new VoluntarioModel();
+            $departamentoModel = new DepartamentoModel();
+            $escalaModel       = new EscalaVoluntarioModel();
+            $db                = db_connect();
+
+            $departamento = $departamentoModel->find($id_departamento);
+            $area         = $db->table('tb_departamento_area')->where('id_area', $id_area)->get()->getFirstRow();
+            $culto        = $db->table('tb_culto_padrao')->where('id_culto_padrao', $id_culto_padrao)->get()->getFirstRow();
+
+            $notificarWhatsapp = ($departamento && (int)($departamento->notificar_whatsapp ?? 1) === 1);
 
             $anoCulto = (int)date('Y', strtotime($data_culto));
             $mesCulto = (int)date('m', strtotime($data_culto));
@@ -373,6 +380,34 @@ class Escala extends BaseController
                 $id_escala = $escalaModel->escalarVoluntario($data_culto, $id_culto_padrao, $id_departamento, $id_area, $id_voluntario, $observacao);
                 if ($id_escala) {
                     $escaladosSucesso++;
+
+                    // Dispara notificação via WhatsApp se o departamento estiver configurado para notificar
+                    if ($notificarWhatsapp && !empty($voluntario->telefone_whatsapp)) {
+                        $primeiroNome  = explode(' ', trim($voluntario->nome))[0];
+                        $nomeDepto     = $departamento->nome ?? 'ADVEC';
+                        $nomeArea      = $area ? $area->nome_area : '';
+                        $nomeCulto     = $culto ? $culto->nome_culto : 'Culto';
+                        $dataFormatada = date('d/m/Y', strtotime($data_culto));
+                        $horaFormatada = (!empty($culto->horario_inicio)) ? substr($culto->horario_inicio, 0, 5) : '';
+                        $linkPortal    = base_url('portal/agenda');
+
+                        $msgWhats = "ADVEC: Olá, *{$primeiroNome}*! 🙌\n\n"
+                            . "Você foi escalado(a) para servir no departamento *{$nomeDepto}*:\n\n"
+                            . "🏛️ *Culto:* {$nomeCulto}\n"
+                            . "📅 *Data:* {$dataFormatada}\n"
+                            . ($horaFormatada ? "⏰ *Horário:* {$horaFormatada}\n" : "")
+                            . ($nomeArea ? "🏷️ *Função / Área:* {$nomeArea}\n\n" : "\n")
+                            . "Por favor, acesse o link abaixo para visualizar e *confirmar sua presença*:\n"
+                            . "👉 {$linkPortal}\n\n"
+                            . "Contamos com você! Deus abençoe! 🙏";
+
+                        try {
+                            WebhookService::dispararMensagemWhatsApp($voluntario->telefone_whatsapp, $msgWhats);
+                            $escalaModel->update($id_escala, ['data_ultimo_lembrete' => date('Y-m-d H:i:s')]);
+                        } catch (\Throwable $e) {
+                            log_message('error', '[Escala::salvarEscala] Erro ao disparar WhatsApp para voluntário ' . $voluntario->id_voluntario . ': ' . $e->getMessage());
+                        }
+                    }
                 }
             }
 
@@ -523,8 +558,11 @@ class Escala extends BaseController
         // Calcula total de escalas do mês, limite, disponibilidade do culto e conflito de agenda em outro departamento
         $enriquecerVoluntario = function(&$lista) use ($voluntarioModel, $voluntarioCultoModel, $escalaVoluntarioModel, $anoCulto, $mesCulto, $id_culto_padrao, $data_culto, $id_departamento) {
             foreach ($lista as &$v) {
+                // Busca SEMPRE os dados atualizados diretamente do cadastro (tb_voluntario)
+                $volCadastro = $voluntarioModel->find($v->id_voluntario);
+                $maxMes = ($volCadastro && isset($volCadastro->max_escalas_mes)) ? (int)$volCadastro->max_escalas_mes : (int)($v->max_escalas_mes ?? 0);
+
                 $totalNoMes = $voluntarioModel->countEscalasMes($v->id_voluntario, $anoCulto, $mesCulto);
-                $maxMes = isset($v->max_escalas_mes) ? (int)$v->max_escalas_mes : 0;
 
                 $v->total_escalas_mes = $totalNoMes;
                 $v->max_escalas_mes   = $maxMes;

@@ -29,23 +29,28 @@
     <!-- Action Bar -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
       <div class="d-flex flex-wrap align-items-center gap-2">
-        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-2">
-          <i class="bi bi-sun-fill me-1"></i> Finais de semana em destaque
+        <span class="badge badge-legend-weekend rounded-pill d-inline-flex align-items-center gap-2 shadow-sm">
+          <i class="bi bi-sun-fill text-danger fs-6"></i>
+          <span>Finais de semana em destaque</span>
         </span>
-        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2">
-          <i class="bi bi-palette-fill me-1"></i> Cores personalizadas por culto
+        <span class="badge badge-legend-colors rounded-pill d-inline-flex align-items-center gap-2 shadow-sm">
+          <i class="bi bi-palette-fill text-primary fs-6"></i>
+          <span>Cores personalizadas por culto</span>
         </span>
       </div>
 
       <div class="d-flex flex-wrap align-items-center gap-2">
-        <a href="<?= base_url('agenda/imprimir') ?>" target="_blank" class="btn btn-outline-dark rounded-pill px-3 fw-semibold" id="btnImprimirAgendaCal" title="Imprimir / Salvar PDF do mês consultado">
-          <i class="bi bi-printer-fill me-1"></i> Imprimir Agenda (PDF)
+        <a href="<?= base_url('agenda/imprimir') ?>" target="_blank" class="btn btn-agenda-print rounded-pill px-3 py-2 d-inline-flex align-items-center gap-2" id="btnImprimirAgendaCal" title="Imprimir / Salvar PDF do mês consultado">
+          <i class="bi bi-printer-fill fs-6 text-warning-emphasis"></i>
+          <span>Imprimir Agenda (PDF)</span>
         </a>
-        <a href="<?= base_url('agenda/grade') ?>" class="btn btn-outline-success rounded-pill px-3 fw-bold">
-          <i class="bi bi-grid-3x3-gap-fill me-1"></i> Grade Mensal Dinâmica (Modo Tabela)
+        <a href="<?= base_url('agenda/grade') ?>" class="btn btn-agenda-grade rounded-pill px-3 py-2 d-inline-flex align-items-center gap-2" title="Visualização em matriz de dias e cultos">
+          <i class="bi bi-grid-3x3-gap-fill fs-6"></i>
+          <span>Grade Mensal Dinâmica</span>
         </a>
-        <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold" id="btnNovoCulto">
-          <i class="bi bi-plus-lg me-1"></i> Cadastrar Novo Culto / Evento
+        <button type="button" class="btn btn-agenda-novo rounded-pill px-4 py-2 d-inline-flex align-items-center gap-2 shadow-sm" id="btnNovoCulto">
+          <i class="bi bi-plus-circle-fill fs-6"></i>
+          <span>Cadastrar Novo Culto / Evento</span>
         </button>
       </div>
     </div>
@@ -219,7 +224,7 @@
                         <div class="fw-semibold text-body small mb-0"><?= esc($conv->nome_convidado) ?></div>
                         <small class="text-secondary" style="font-size: 0.75rem;">
                           <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-2 py-0 me-1"><?= esc($conv->nm_funcao_eclesiastica ?? 'Sem Função') ?></span>
-                          <?= !empty($conv->nick_instagram) ? '&bull; @' . esc($conv->nick_instagram) : '' ?>
+                          <?= !empty($conv->nick_instagram) ? '&bull; @' . esc(ltrim(trim($conv->nick_instagram), '@')) : '' ?>
                         </small>
                       </div>
                     </label>
@@ -346,6 +351,114 @@
   }
   .cursor-pointer {
     cursor: pointer;
+  }
+
+  /* ============================================================ */
+  /* BOTÕES E INDICADORES DA BARRA DE AÇÃO DA AGENDA */
+  /* ============================================================ */
+  .badge-legend-weekend {
+    background-color: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 0.5rem 0.95rem;
+    transition: all 0.2s ease;
+  }
+  [data-bs-theme="dark"] .badge-legend-weekend {
+    background-color: rgba(239, 68, 68, 0.22);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.45);
+  }
+
+  .badge-legend-colors {
+    background-color: rgba(59, 130, 246, 0.12);
+    color: #2563eb;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 0.5rem 0.95rem;
+    transition: all 0.2s ease;
+  }
+  [data-bs-theme="dark"] .badge-legend-colors {
+    background-color: rgba(59, 130, 246, 0.22);
+    color: #93c5fd;
+    border-color: rgba(59, 130, 246, 0.45);
+  }
+
+  /* Botão Imprimir Agenda (PDF) */
+  .btn-agenda-print {
+    background-color: #f8fafc;
+    color: #1e293b !important;
+    border: 1.5px solid #cbd5e1;
+    font-weight: 600;
+    font-size: 0.88rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .btn-agenda-print:hover {
+    background-color: #e2e8f0;
+    color: #0f172a !important;
+    border-color: #94a3b8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+  }
+  [data-bs-theme="dark"] .btn-agenda-print {
+    background-color: #334155;
+    color: #f8fafc !important;
+    border-color: #64748b;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+  }
+  [data-bs-theme="dark"] .btn-agenda-print:hover {
+    background-color: #475569;
+    color: #ffffff !important;
+    border-color: #94a3b8;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  }
+
+  /* Botão Grade Mensal Dinâmica */
+  .btn-agenda-grade {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: #ffffff !important;
+    border: 1.5px solid #059669;
+    font-weight: 700;
+    font-size: 0.88rem;
+    box-shadow: 0 2px 5px rgba(16, 185, 129, 0.3);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .btn-agenda-grade:hover {
+    background: linear-gradient(135deg, #047857 0%, #059669 100%);
+    color: #ffffff !important;
+    border-color: #047857;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.45);
+  }
+  [data-bs-theme="dark"] .btn-agenda-grade {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    border-color: #34d399;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+  }
+
+  /* Botão Cadastrar Novo Culto */
+  .btn-agenda-novo {
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    color: #ffffff !important;
+    border: 1.5px solid #2563eb;
+    font-weight: 700;
+    font-size: 0.88rem;
+    box-shadow: 0 2px 5px rgba(37, 99, 235, 0.35);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .btn-agenda-novo:hover {
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+    color: #ffffff !important;
+    border-color: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.5);
+  }
+  [data-bs-theme="dark"] .btn-agenda-novo {
+    border-color: #60a5fa;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.5);
   }
 </style>
 

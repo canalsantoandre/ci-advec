@@ -117,8 +117,11 @@ class Departamento extends BaseController
         $responsavel_telefone = trim((string)$this->request->getPost('responsavel_telefone'));
         $descricao            = trim((string)$this->request->getPost('descricao'));
         $cor_identificacao    = (string)$this->request->getPost('cor_identificacao') ?: '#2563eb';
-        $status               = (int)$this->request->getPost('status');
-        $logo_url_manual      = trim((string)$this->request->getPost('logo_url_manual'));
+        $status                     = (int)$this->request->getPost('status');
+        $notificar_whatsapp         = (int)($this->request->getPost('notificar_whatsapp') ?? 1);
+        $whatsapp_group_id          = trim((string)$this->request->getPost('whatsapp_group_id')) ?: null;
+        $receber_notificacao_agenda = (int)($this->request->getPost('receber_notificacao_agenda') ?? 0);
+        $logo_url_manual            = trim((string)$this->request->getPost('logo_url_manual'));
 
         if (empty($nome) || empty($responsavel_nome) || empty($responsavel_telefone)) {
             session()->setFlashdata('error', 'Preencha todos os campos obrigatórios (*).');
@@ -140,13 +143,16 @@ class Departamento extends BaseController
         }
 
         $dados = [
-            'id_filial'            => 1,
-            'nome'                 => $nome,
-            'descricao'            => $descricao,
-            'responsavel_nome'     => $responsavel_nome,
-            'responsavel_telefone' => $responsavel_telefone,
-            'cor_identificacao'    => $cor_identificacao,
-            'status'               => $status
+            'id_filial'                  => 1,
+            'nome'                       => $nome,
+            'descricao'                  => $descricao,
+            'responsavel_nome'           => $responsavel_nome,
+            'responsavel_telefone'       => $responsavel_telefone,
+            'cor_identificacao'          => $cor_identificacao,
+            'notificar_whatsapp'         => $notificar_whatsapp,
+            'whatsapp_group_id'          => $whatsapp_group_id,
+            'receber_notificacao_agenda' => $receber_notificacao_agenda,
+            'status'                     => $status
         ];
 
         if ($logo_url !== null) {

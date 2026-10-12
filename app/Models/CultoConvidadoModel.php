@@ -75,6 +75,9 @@ class CultoConvidadoModel extends Model
                     'status_presenca' => 1
                 ]);
                 $vinculados++;
+
+                // Dispara notificação de solicitação de arte para o grupo de WhatsApp do departamento responsável
+                \App\Services\AgendaNotificacaoService::notificarNovoConvidadoAgendado((int)$id_culto, $id_convidado);
             }
         }
         return $vinculados;

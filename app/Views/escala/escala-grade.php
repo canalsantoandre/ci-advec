@@ -103,6 +103,46 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
     border-color: rgba(148, 163, 184, 0.25);
   }
 
+  /* Componente Switch "Exibir dias anteriores" */
+  .switch-dias-anteriores-container {
+    transition: all 0.2s ease-in-out;
+  }
+  .switch-dias-anteriores-container:hover {
+    border-color: #94a3b8 !important;
+  }
+  .switch-dias-anteriores-container:has(#toggleDiasAnteriores:checked) {
+    border-color: rgba(37, 99, 235, 0.45) !important;
+    background-color: rgba(37, 99, 235, 0.06) !important;
+  }
+  #toggleDiasAnteriores {
+    cursor: pointer;
+    width: 2.3em !important;
+    height: 1.22em !important;
+    border-radius: 2em;
+    transition: background-color 0.2s ease, border-color 0.2s ease, background-position 0.2s ease;
+  }
+  #toggleDiasAnteriores:not(:checked) {
+    background-color: #cbd5e1 !important;
+    border-color: #94a3b8 !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%2364748b'/%3e%3c/svg%3e") !important;
+    background-position: left center !important;
+  }
+  [data-bs-theme="dark"] #toggleDiasAnteriores:not(:checked) {
+    background-color: #334155 !important;
+    border-color: #475569 !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23cbd5e1'/%3e%3c/svg%3e") !important;
+  }
+  #toggleDiasAnteriores:checked {
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23ffffff'/%3e%3c/svg%3e") !important;
+    background-position: right center !important;
+  }
+  #toggleDiasAnteriores:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25) !important;
+  }
+
   /* Estilos para Botão e Menu de Meses Anteriores com Alto Contraste */
   .btn-meses-anteriores {
     background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
@@ -1109,9 +1149,9 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
 
             <!-- Toggle Inteligente de Dias Anteriores no Mês Atual -->
             <?php if ($isMesAtual && $totalDiasPassados > 0) { ?>
-              <div class="form-check form-switch d-inline-flex align-items-center gap-2 mb-0 px-3 py-1 bg-body border rounded-pill shadow-xs ms-lg-2" style="min-height: 31px;">
-                <input class="form-check-input ms-0 mt-0" type="checkbox" role="switch" id="toggleDiasAnteriores" style="cursor: pointer; width: 2.2em; height: 1.15em;">
-                <label class="form-check-label small fw-semibold text-secondary user-select-none" for="toggleDiasAnteriores" style="cursor: pointer;">
+              <div class="form-check form-switch d-inline-flex align-items-center gap-2 mb-0 px-3 py-1 bg-body border rounded-pill shadow-xs ms-lg-2 switch-dias-anteriores-container" style="min-height: 31px;">
+                <input class="form-check-input ms-0 mt-0" type="checkbox" role="switch" id="toggleDiasAnteriores">
+                <label class="form-check-label small fw-semibold text-body user-select-none" for="toggleDiasAnteriores" style="cursor: pointer;">
                   <i class="bi bi-clock-history me-1 text-primary"></i> Exibir dias anteriores
                   <span class="badge bg-secondary-subtle text-secondary rounded-pill ms-1" style="font-size: 0.7rem;"><?= $totalDiasPassados ?></span>
                 </label>
@@ -2096,14 +2136,14 @@ Contamos com você! Deus abençoe! 🙏</textarea>
         dispTagHtml = `<span class="badge-stacked-disp bg-secondary text-white"><i class="bi bi-clock-history"></i> Indisp.</span>`;
       }
 
-      // Mensal tag (Abaixo)
+      // Mensal tag (Abaixo) - reflete exatamente o cadastro atual do voluntário
       let limiteTagHtml = '';
       if (v.atingiu_limite) {
-        limiteTagHtml = `<span class="badge-stacked-limit bg-danger-subtle text-danger border-danger-subtle fw-bold"><i class="bi bi-exclamation-circle me-1"></i>${v.total_escalas_mes}/${v.max_escalas_mes} Limite</span>`;
+        limiteTagHtml = `<span class="badge-stacked-limit bg-danger text-white border-danger fw-bold" title="Limite mensal atingido (${v.total_escalas_mes} de máx. ${v.max_escalas_mes} no cadastro)"><i class="bi bi-exclamation-circle me-1"></i>${v.total_escalas_mes}/${v.max_escalas_mes} Limite</span>`;
       } else if (v.max_escalas_mes > 0) {
-        limiteTagHtml = `<span class="badge-stacked-limit">${v.total_escalas_mes}/${v.max_escalas_mes} por mês</span>`;
+        limiteTagHtml = `<span class="badge-stacked-limit" title="Total no mês: ${v.total_escalas_mes} de ${v.max_escalas_mes} permitidas no cadastro"><i class="bi bi-speedometer2 me-1"></i>${v.total_escalas_mes}/${v.max_escalas_mes} no mês</span>`;
       } else {
-        limiteTagHtml = `<span class="badge-stacked-limit">${v.total_escalas_mes} por mês</span>`;
+        limiteTagHtml = `<span class="badge-stacked-limit text-muted" title="Cadastro sem limite mensal de escalas (${v.total_escalas_mes} escalas realizadas no mês)"><i class="bi bi-infinity me-1"></i>${v.total_escalas_mes} no mês (Livre)</span>`;
       }
 
       const itemClass = isSelected ?

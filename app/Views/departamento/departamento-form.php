@@ -1,9 +1,9 @@
 <?php
-  $isEdit = !empty($departamento);
-  $idDep  = $isEdit ? $departamento->id_departamento : 0;
-  $cor    = $isEdit && !empty($departamento->cor_identificacao) ? $departamento->cor_identificacao : '#2563eb';
-  $defaultLogo = 'https://ui-avatars.com/api/?name=' . ($isEdit ? urlencode($departamento->nome) : 'Departamento') . '&background=' . str_replace('#', '', $cor) . '&color=fff&size=150&bold=true';
-  $logoSrc = $isEdit && !empty($departamento->logo_url) ? $departamento->logo_url : $defaultLogo;
+$isEdit = !empty($departamento);
+$idDep  = $isEdit ? $departamento->id_departamento : 0;
+$cor    = $isEdit && !empty($departamento->cor_identificacao) ? $departamento->cor_identificacao : '#2563eb';
+$defaultLogo = 'https://ui-avatars.com/api/?name=' . ($isEdit ? urlencode($departamento->nome) : 'Departamento') . '&background=' . str_replace('#', '', $cor) . '&color=fff&size=150&bold=true';
+$logoSrc = $isEdit && !empty($departamento->logo_url) ? $departamento->logo_url : $defaultLogo;
 ?>
 
 <!-- Content Header (Page header) -->
@@ -46,18 +46,18 @@
     <?php } ?>
 
     <div class="row g-4">
-      
+
       <!-- ========================================== -->
       <!-- COLUNA ESQUERDA: CARD DE PREVIEW HERO -->
       <!-- ========================================== -->
       <div class="col-lg-4">
         <div class="card card-outline card-primary shadow-sm border-0 rounded-4 sticky-lg-top" style="top: 80px;">
           <div class="card-body text-center p-4">
-            
+
             <!-- Logo Preview -->
             <div class="position-relative d-inline-block mb-3">
               <img src="<?= esc($logoSrc) ?>" id="imgLogoPreview" class="rounded-4 shadow border border-3 border-white" style="width: 120px; height: 120px; object-fit: cover;" alt="Logo do Departamento" onerror="this.onerror=null;this.src='<?= $defaultLogo ?>';">
-              
+
               <span class="position-absolute bottom-0 end-0 badge rounded-circle p-2 bg-<?= ($isEdit && $departamento->status == 0 ? 'danger' : 'success') ?> border border-2 border-white" id="badgeStatusPreview" title="Status">
                 <span class="visually-hidden">Status</span>
               </span>
@@ -79,9 +79,15 @@
                 <span class="text-muted d-block">Responsável:</span>
                 <strong class="text-body" id="previewRespNome"><?= $isEdit ? esc($departamento->responsavel_nome) : '-' ?></strong>
               </div>
-              <div>
+              <div class="mb-2">
                 <span class="text-muted d-block">WhatsApp:</span>
                 <strong class="text-success" id="previewRespTel"><?= $isEdit ? esc($departamento->responsavel_telefone) : '-' ?></strong>
+              </div>
+              <div>
+                <span class="text-muted d-block">Notificar Voluntários:</span>
+                <span class="badge bg-<?= (!$isEdit || ($departamento->notificar_whatsapp ?? 1) == 1) ? 'success' : 'secondary' ?> rounded-pill px-2 py-1" id="previewNotificarWhatsApp">
+                  <i class="bi bi-whatsapp me-1"></i><?= (!$isEdit || ($departamento->notificar_whatsapp ?? 1) == 1) ? 'Sim (Ativo)' : 'Não (Desativado)' ?>
+                </span>
               </div>
             </div>
 
@@ -102,7 +108,7 @@
       <!-- COLUNA DIREITA: FORMULÁRIO E SUB-ÁREAS -->
       <!-- ========================================== -->
       <div class="col-lg-8">
-        
+
         <!-- Formulário de Dados Principais -->
         <form method="post" action="<?= base_url('departamento/salvar') ?>" enctype="multipart/form-data" id="formDepartamento" class="card card-outline card-primary shadow-sm border-0 rounded-4 mb-4">
           <input type="hidden" name="id_departamento" id="id_departamento" value="<?= $idDep ?>">
@@ -115,7 +121,7 @@
 
           <div class="card-body p-4">
             <div class="row g-3">
-              
+
               <div class="col-md-8">
                 <label for="nome" class="form-label fw-semibold">Nome do Departamento <span class="text-danger">*</span></label>
                 <input type="text" name="nome" id="nome" class="form-control" placeholder="Ex: Comunicação, Transmissão, Louvor" value="<?= $isEdit ? esc($departamento->nome) : '' ?>" required maxlength="150">
@@ -142,6 +148,65 @@
               <div class="col-md-6">
                 <label for="responsavel_telefone" class="form-label fw-semibold">Telefone / WhatsApp do Líder <span class="text-danger">*</span></label>
                 <input type="text" name="responsavel_telefone" id="responsavel_telefone" class="form-control" placeholder="(11) 99999-9999" value="<?= $isEdit ? esc($departamento->responsavel_telefone) : '' ?>" required maxlength="30">
+              </div>
+
+              <!-- Bloco de Configurações de WhatsApp e Notificações -->
+              <div class="col-12">
+                <div class="p-3 rounded-3 border bg-body-tertiary">
+                  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
+                    <div class="me-2">
+                      <label for="notificar_whatsapp" class="form-label fw-bold mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-whatsapp text-success fs-5"></i>
+                        <span>Notificar Voluntário via WhatsApp ao Escalar? <span class="text-danger">*</span></span>
+                      </label>
+                      <div class="text-secondary small">
+                        Quando marcado como <strong>SIM</strong>, os voluntários deste departamento serão notificados automaticamente com os detalhes da escala ao serem convidados.
+                      </div>
+                    </div>
+                    <div style="min-width: 180px;">
+                      <select name="notificar_whatsapp" id="notificar_whatsapp" class="form-select fw-semibold border-success-subtle shadow-sm" required>
+                        <option value="1" <?= (!$isEdit || ($departamento->notificar_whatsapp ?? 1) == 1) ? 'selected' : '' ?>>
+                          Sim (Notificar)
+                        </option>
+                        <option value="0" <?= ($isEdit && isset($departamento->notificar_whatsapp) && (int)$departamento->notificar_whatsapp === 0) ? 'selected' : '' ?>>
+                          Não (Desativado)
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Notificação de Novos Convidados na Agenda (Solicitação de Artes) -->
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label for="receber_notificacao_agenda" class="form-label fw-bold mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-calendar-event text-primary"></i>
+                        <span>Receber Notificação de Novos Convidados da Agenda?</span>
+                      </label>
+                      <select name="receber_notificacao_agenda" id="receber_notificacao_agenda" class="form-select fw-semibold shadow-sm">
+                        <option value="0" <?= (!$isEdit || empty($departamento->receber_notificacao_agenda)) ? 'selected' : '' ?>>
+                          Não (Desativado)
+                        </option>
+                        <option value="1" <?= ($isEdit && !empty($departamento->receber_notificacao_agenda)) ? 'selected' : '' ?>>
+                          Sim (Receber Notificação de Agenda / Artes)
+                        </option>
+                      </select>
+                      <small class="text-muted d-block mt-1">
+                        Ativa o envio automático para o grupo do WhatsApp de solicitações de arte sempre que um convidado for vinculado a um culto.
+                      </small>
+                    </div>
+
+                    <div class="col-md-6">
+                      <label for="whatsapp_group_id" class="form-label fw-bold mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-people text-success"></i>
+                        <span>ID / JID do Grupo do WhatsApp</span>
+                      </label>
+                      <input type="text" name="whatsapp_group_id" id="whatsapp_group_id" class="form-control font-monospace shadow-sm" placeholder="Ex: 120363023456789012@g.us" value="<?= $isEdit ? esc($departamento->whatsapp_group_id ?? '') : '' ?>" maxlength="150">
+                      <small class="text-muted d-block mt-1">
+                        Identificador (JID) do grupo no WhatsApp que receberá as mensagens deste departamento.
+                      </small>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div class="col-md-4">
@@ -233,7 +298,7 @@
                 <small class="text-muted">Ex: No departamento Comunicação, as sub-áreas são Fotografia, Reels, Telão, etc.</small>
               </div>
               <button type="button" class="btn btn-info btn-sm text-white rounded-pill px-3 fw-bold shadow-sm" onclick="abrirModalArea()">
-                <i class="bi bi-plus-lg me-1"></i> Adicionar Sub-área
+                <i class="bi bi-plus-lg me-1"></i> Adicionar
               </button>
             </div>
 
@@ -401,6 +466,18 @@
   document.getElementById('responsavel_telefone')?.addEventListener('input', function() {
     document.getElementById('previewRespTel').textContent = this.value || '-';
   });
+  document.getElementById('notificar_whatsapp')?.addEventListener('change', function() {
+    const badge = document.getElementById('previewNotificarWhatsApp');
+    if (badge) {
+      if (this.value === '1') {
+        badge.className = 'badge bg-success rounded-pill px-2 py-1';
+        badge.innerHTML = '<i class="bi bi-whatsapp me-1"></i>Sim (Ativo)';
+      } else {
+        badge.className = 'badge bg-secondary rounded-pill px-2 py-1';
+        badge.innerHTML = '<i class="bi bi-whatsapp me-1"></i>Não (Desativado)';
+      }
+    }
+  });
   document.getElementById('cor_identificacao')?.addEventListener('input', function() {
     const cor = this.value;
     document.getElementById('cor_hex_display').value = cor;
@@ -427,7 +504,7 @@
     document.getElementById('modal_descricao_area').value = '';
     document.getElementById('modal_status_area').value = '1';
     document.getElementById('modalAreaTitle').innerHTML = '<i class="bi bi-plus-circle-fill me-2"></i> Nova Sub-área';
-    
+
     if (!modalAreaInstance) {
       modalAreaInstance = new bootstrap.Modal(document.getElementById('modalFormArea'));
     }
@@ -440,7 +517,7 @@
     document.getElementById('modal_descricao_area').value = area.descricao || '';
     document.getElementById('modal_status_area').value = area.status;
     document.getElementById('modalAreaTitle').innerHTML = '<i class="bi bi-pencil-fill me-2"></i> Editar Sub-área';
-    
+
     if (!modalAreaInstance) {
       modalAreaInstance = new bootstrap.Modal(document.getElementById('modalFormArea'));
     }
@@ -455,34 +532,34 @@
     btn.disabled = true;
 
     fetch('<?= base_url('departamento/salvarArea') ?>', {
-      method: 'POST',
-      body: formData
-    })
-    .then(r => r.json())
-    .then(data => {
-      btn.disabled = false;
-      if (data.status === 'success') {
-        renderizarAreas(data.areas);
-        modalAreaInstance.hide();
-        if (typeof USToast !== 'undefined' && USToast.show) {
-          USToast.show('success', 'Sub-área Salva', data.message);
-        } else if (typeof usShowToast === 'function') {
-          usShowToast('success', 'Sub-área Salva', data.message);
+        method: 'POST',
+        body: formData
+      })
+      .then(r => r.json())
+      .then(data => {
+        btn.disabled = false;
+        if (data.status === 'success') {
+          renderizarAreas(data.areas);
+          modalAreaInstance.hide();
+          if (typeof USToast !== 'undefined' && USToast.show) {
+            USToast.show('success', 'Sub-área Salva', data.message);
+          } else if (typeof usShowToast === 'function') {
+            usShowToast('success', 'Sub-área Salva', data.message);
+          }
+        } else {
+          if (typeof USToast !== 'undefined' && USToast.show) {
+            USToast.show('error', 'Atenção', data.message || 'Erro ao salvar sub-área.');
+          } else if (typeof usShowToast === 'function') {
+            usShowToast('error', 'Atenção', data.message || 'Erro ao salvar sub-área.');
+          }
         }
-      } else {
+      })
+      .catch(err => {
+        btn.disabled = false;
         if (typeof USToast !== 'undefined' && USToast.show) {
-          USToast.show('error', 'Atenção', data.message || 'Erro ao salvar sub-área.');
-        } else if (typeof usShowToast === 'function') {
-          usShowToast('error', 'Atenção', data.message || 'Erro ao salvar sub-área.');
+          USToast.show('error', 'Erro de Conexão', 'Falha ao comunicar com o servidor.');
         }
-      }
-    })
-    .catch(err => {
-      btn.disabled = false;
-      if (typeof USToast !== 'undefined' && USToast.show) {
-        USToast.show('error', 'Erro de Conexão', 'Falha ao comunicar com o servidor.');
-      }
-    });
+      });
   }
 
   function excluirArea(id_area, nome) {
@@ -502,33 +579,33 @@
     formData.append('id_area', idAreaParaExcluir);
 
     fetch('<?= base_url('departamento/excluirArea') ?>', {
-      method: 'POST',
-      body: formData
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (modalDeleteAreaInstance) modalDeleteAreaInstance.hide();
-      if (data.status === 'success') {
-        renderizarAreas(data.areas);
-        if (typeof USToast !== 'undefined' && USToast.show) {
-          USToast.show('success', 'Sub-área Removida', data.message);
-        } else if (typeof usShowToast === 'function') {
-          usShowToast('success', 'Sub-área Removida', data.message);
+        method: 'POST',
+        body: formData
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (modalDeleteAreaInstance) modalDeleteAreaInstance.hide();
+        if (data.status === 'success') {
+          renderizarAreas(data.areas);
+          if (typeof USToast !== 'undefined' && USToast.show) {
+            USToast.show('success', 'Sub-área Removida', data.message);
+          } else if (typeof usShowToast === 'function') {
+            usShowToast('success', 'Sub-área Removida', data.message);
+          }
+        } else {
+          if (typeof USToast !== 'undefined' && USToast.show) {
+            USToast.show('error', 'Não foi possível excluir', data.message || 'Não foi possível excluir a sub-área.');
+          } else if (typeof usShowToast === 'function') {
+            usShowToast('error', 'Não foi possível excluir', data.message || 'Não foi possível excluir a sub-área.');
+          }
         }
-      } else {
+      })
+      .catch(err => {
+        if (modalDeleteAreaInstance) modalDeleteAreaInstance.hide();
         if (typeof USToast !== 'undefined' && USToast.show) {
-          USToast.show('error', 'Não foi possível excluir', data.message || 'Não foi possível excluir a sub-área.');
-        } else if (typeof usShowToast === 'function') {
-          usShowToast('error', 'Não foi possível excluir', data.message || 'Não foi possível excluir a sub-área.');
+          USToast.show('error', 'Erro de Conexão', 'Falha ao comunicar com o servidor.');
         }
-      }
-    })
-    .catch(err => {
-      if (modalDeleteAreaInstance) modalDeleteAreaInstance.hide();
-      if (typeof USToast !== 'undefined' && USToast.show) {
-        USToast.show('error', 'Erro de Conexão', 'Falha ao comunicar com o servidor.');
-      }
-    });
+      });
   });
 
   function renderizarAreas(areas) {
@@ -548,9 +625,9 @@
 
     let html = '';
     areas.forEach(a => {
-      const statusBadge = a.status == 1 
-        ? '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1">Ativo</span>'
-        : '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1">Inativo</span>';
+      const statusBadge = a.status == 1 ?
+        '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1">Ativo</span>' :
+        '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1">Inativo</span>';
 
       const jsonStr = JSON.stringify(a).replace(/"/g, '&quot;');
 
@@ -627,4 +704,3 @@
       .replace(/'/g, "&#039;");
   }
 </script>
-
