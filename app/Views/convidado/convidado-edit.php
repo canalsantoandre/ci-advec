@@ -23,6 +23,18 @@
 <div class="app-content">
   <div class="container-fluid">
 
+    <!-- Alert Messages -->
+    <?php if (session()->getFlashdata('success')) { ?>
+      <div class="alert alert-success border-0 shadow-sm rounded-3 mb-3" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i><?= session()->getFlashdata('success') ?>
+      </div>
+    <?php } ?>
+    <?php if (session()->getFlashdata('error')) { ?>
+      <div class="alert alert-danger border-0 shadow-sm rounded-3 mb-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i><?= session()->getFlashdata('error') ?>
+      </div>
+    <?php } ?>
+
     <form method="post" id="frm_convidado" name="frm_convidado" action="<?= base_url('/convidado/atualizar') ?>">
       <input type="hidden" name="id_convidado" id="id_convidado" value="<?= esc($convidado->id_convidado) ?>">
       <input type="hidden" name="hash_convidado" id="hash_convidado" value="<?= esc($convidado->hash_convidado); ?>">
@@ -61,18 +73,29 @@
                 </span>
               </div>
 
-              <?php if (!empty($convidado->nick_instagram)) { ?>
-                <div class="mb-3">
+              <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                <?php if (!empty($convidado->nick_instagram)) { ?>
                   <a href="https://instagram.com/<?= str_replace('@', '', $convidado->nick_instagram) ?>" target="_blank" class="btn btn-sm btn-outline-danger rounded-pill px-3">
                     <i class="bi bi-instagram me-1"></i> @<?= esc(str_replace('@', '', $convidado->nick_instagram)) ?>
                   </a>
-                </div>
-              <?php } ?>
+                <?php } ?>
+
+                <?php if (!empty($convidado->link_fotos)) { ?>
+                  <a href="<?= esc($convidado->link_fotos) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary rounded-pill px-3" title="Abrir galeria de fotos principal">
+                    <i class="bi bi-images me-1"></i> Fotos
+                  </a>
+                <?php } ?>
+              </div>
 
               <hr class="my-3 opacity-25">
 
               <!-- Atalhos Rápidos -->
               <div class="d-grid gap-2">
+                <?php if (!empty($convidado->link_fotos)) { ?>
+                  <a href="<?= esc($convidado->link_fotos) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-primary rounded-pill fw-semibold btn-sm shadow-sm">
+                    <i class="bi bi-images me-1"></i> Acessar Link de Fotos Principal
+                  </a>
+                <?php } ?>
                 <a href="<?= base_url('agenda/dashConvidado/' . $convidado->id_convidado) ?>" class="btn btn-outline-info rounded-pill fw-semibold btn-sm">
                   <i class="bi bi-graph-up-arrow me-1"></i> Ver Dashboard de Assiduidade
                 </a>
@@ -182,9 +205,9 @@
                     <label for="txtConvidadoFotoUrl" class="form-label fw-semibold">URL da Foto do Perfil</label>
                     <div class="input-group">
                       <span class="input-group-text"><i class="bi bi-person-square text-primary"></i></span>
-                      <input type="url" name="txtConvidadoFotoUrl" id="txtConvidadoFotoUrl" value="<?= esc($convidado->url_foto_instagram); ?>" class="form-control" placeholder="https://exemplo.com/foto.jpg ou URL do Instagram">
+                      <textarea name="txtConvidadoFotoUrl" id="txtConvidadoFotoUrl" class="form-control" rows="3" placeholder="Cole aqui a URL direta ou link longo de CDN do Instagram / web..."><?= esc($convidado->url_foto_instagram); ?></textarea>
                     </div>
-                    <small class="text-secondary">Cole a URL direta da imagem para exibir a foto de perfil do convidado no sistema.</small>
+                    <small class="text-secondary">Suporta textos e URLs longas de CDN do Instagram, Facebook ou hospedagem externa.</small>
                   </div>
 
                   <div class="row g-3 mb-3">
@@ -192,8 +215,9 @@
                       <label for="txtConvidadoInstagram" class="form-label fw-semibold">Usuário do @Instagram</label>
                       <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-instagram text-danger"></i></span>
-                        <input type="text" name="txtConvidadoInstagram" id="txtConvidadoInstagram" value="<?= esc(str_replace('@', '', $convidado->nick_instagram)); ?>" class="form-control" maxlength="30" placeholder="usuario_instagram">
+                        <input type="text" name="txtConvidadoInstagram" id="txtConvidadoInstagram" value="<?= esc(str_replace('@', '', $convidado->nick_instagram)); ?>" class="form-control instagram-input semespaco" maxlength="50" placeholder="usuario_instagram">
                       </div>
+                      <small class="text-secondary small">Salvo automaticamente sem espaços e em minúsculo.</small>
                     </div>
 
                     <div class="col-md-6">
@@ -287,6 +311,15 @@
           imgPreview.src = defaultAvatar;
         }
       });
+    }
+
+    const instaInput = document.getElementById('txtConvidadoInstagram');
+    if (instaInput) {
+      const sanitizeInsta = function () {
+        instaInput.value = instaInput.value.replace(/\s+/g, '').toLowerCase();
+      };
+      instaInput.addEventListener('input', sanitizeInsta);
+      instaInput.addEventListener('blur', sanitizeInsta);
     }
   });
 </script>

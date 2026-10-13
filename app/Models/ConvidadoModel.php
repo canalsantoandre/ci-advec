@@ -11,7 +11,10 @@ class ConvidadoModel extends Model
     protected $primaryKey = 'id_convidado';
     protected $returnType     = 'object';
     protected $allowedFields = [
-        'hash_convidado','nome_convidado_visualizacao', 'nome_convidado', 'email', 'telefone', 'status_convidado', 'id_funcao_eclesiastica', 'data_nascimento', 'link_fotos','nick_instagram', 'observacao'
+        'hash_convidado', 'nome_convidado_visualizacao', 'nome_convidado', 'email', 'telefone',
+        'status_convidado', 'id_funcao_eclesiastica', 'data_nascimento', 'link_fotos',
+        'nick_instagram', 'url_foto_instagram', 'url_foto_google', 'url_foto_facebook',
+        'observacao', 'senha_usuario'
     ];
 
     public function listaConvidados()

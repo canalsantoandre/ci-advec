@@ -12,6 +12,8 @@ class ResourceModel extends Model
     protected $useAutoIncrement = true;
     protected $allowedFields    = [
         'title',
+        'author',
+        'genre',
         'description',
         'url',
         'content_text',
@@ -133,8 +135,82 @@ class ResourceModel extends Model
     }
 
     /**
+     * Tenta identificar o gênero musical com base em palavras-chave no texto/título/tags.
+     * Caso não consiga identificar com certeza, retorna null (deixa em branco).
+     */
+    public static function detectGenre(?string ...$textSources): ?string
+    {
+        $combined = '';
+        foreach ($textSources as $txt) {
+            if (!empty($txt)) {
+                $combined .= ' ' . $txt;
+            }
+        }
+        if (trim($combined) === '') {
+            return null;
+        }
+
+        $lower = mb_strtolower($combined, 'UTF-8');
+
+        // 1. Gospel / Louvor / Worship
+        if (preg_match('/\b(worship)\b/iu', $lower)) {
+            return 'Worship';
+        }
+        if (preg_match('/\b(gospel|louvor|adoração|adoracao|hino|harpa cristã|evangélico|evangelico|cristã|cristao|advec|igreja|ministerio|ministério)\b/ui', $lower)) {
+            return 'Gospel / Louvor';
+        }
+
+        // 2. Outros gêneros comuns se identificáveis
+        if (preg_match('/\b(sertanejo|modão|modao)\b/ui', $lower)) {
+            return 'Sertanejo';
+        }
+        if (preg_match('/\b(pop rock|rock)\b/ui', $lower)) {
+            return 'Rock';
+        }
+        if (preg_match('/\b(pop)\b/ui', $lower)) {
+            return 'Pop';
+        }
+        if (preg_match('/\b(mpb|bossa nova)\b/ui', $lower)) {
+            return 'MPB';
+        }
+        if (preg_match('/\b(eletrônica|eletronica|electronic|remix|edm)\b/ui', $lower)) {
+            return 'Eletrônica';
+        }
+        if (preg_match('/\b(rap|hip hop|trap)\b/ui', $lower)) {
+            return 'Rap / Hip-Hop';
+        }
+        if (preg_match('/\b(reggae)\b/ui', $lower)) {
+            return 'Reggae';
+        }
+        if (preg_match('/\b(forró|forro)\b/ui', $lower)) {
+            return 'Forró';
+        }
+        if (preg_match('/\b(coral|instrumental|orquestra|acústico|acustico)\b/ui', $lower)) {
+            return 'Instrumental / Coral';
+        }
+
+        // Caso não consiga identificar, retorna null (em branco)
+        return null;
+    }
+
+    /**
+     * Tenta extrair o autor/artista a partir do título quando no padrão "Artista - Título"
+     */
+    public static function extractAuthorFromTitle(?string $title): ?string
+    {
+        if (empty($title)) return null;
+        if (preg_match('/^([^\-–—\|]{2,70})\s*[\-–—]\s*(.+)$/u', $title, $matches)) {
+            $candidate = trim($matches[1]);
+            if (!preg_match('/^(clipe|video|vídeo|audio|áudio|oficial|official|letra|cifra|aula|ouça|assista)\b/ui', $candidate)) {
+                return $candidate;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Auto-Parser de URLs para identificação de Provedores (YouTube, Spotify, Cifra Club, Drive, PDF)
-     * e extração de Títulos, Cifras/Letras, Thumbnails e URLs de Embed seguras
+     * e extração de Títulos, Autores, Gêneros Musicais, Cifras/Letras, Thumbnails e URLs de Embed seguras
      */
     public static function parseUrl(string $url, int $resource_type_id = 1): array
     {
@@ -142,6 +218,8 @@ class ResourceModel extends Model
         $result = [
             'url'               => $url,
             'title'             => null,
+            'author'            => null,
+            'genre'             => null,
             'content_text'      => null,
             'suggested_type_id' => null,
             'provider'          => 'generic',
@@ -170,15 +248,41 @@ class ResourceModel extends Model
                 'watch_url'=> "https://www.youtube.com/watch?v={$youtubeId}"
             ];
 
-            // Tenta obter título oficial via oEmbed público do YouTube
+            // Tenta obter título oficial e canal via oEmbed público do YouTube
             $oembedUrl = "https://www.youtube.com/oembed?url=" . urlencode($url) . "&format=json";
             $oembedData = self::fetchJson($oembedUrl);
             if (!empty($oembedData['title'])) {
                 $result['title'] = html_entity_decode($oembedData['title'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                if (!empty($oembedData['author_name'])) {
-                    $result['metadata']['author'] = $oembedData['author_name'];
+            }
+            if (!empty($oembedData['author_name'])) {
+                $channelAuthor = html_entity_decode($oembedData['author_name'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                $channelAuthor = trim(preg_replace('/(?:\s*-\s*Topic|\s*Oficial|\s*Official|\s*VEVO)\s*$/i', '', $channelAuthor));
+                $result['author'] = $channelAuthor;
+                $result['metadata']['author'] = $channelAuthor;
+            }
+
+            // Se o título tiver o padrão "Artista - Nome da Música", refina o autor
+            $titleAuthor = self::extractAuthorFromTitle($result['title']);
+            if (!empty($titleAuthor)) {
+                if (empty($result['author']) || mb_stripos($result['title'], $result['author']) !== false) {
+                    $result['author'] = $titleAuthor;
+                    $result['metadata']['author'] = $titleAuthor;
                 }
             }
+
+            // Tenta obter keywords da página do YouTube para identificar o gênero musical com precisão
+            $youtubeKeywords = null;
+            $html = self::fetchHttpContent($url, 3);
+            if ($html && preg_match('/<meta name="keywords" content="([^"]+)"/i', $html, $km)) {
+                $youtubeKeywords = html_entity_decode($km[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            }
+
+            // Gênero Musical (extrai automaticamente ou deixa null em branco)
+            $result['genre'] = self::detectGenre($result['title'], $result['author'] ?? '', $youtubeKeywords ?? '');
+            if (!empty($result['genre'])) {
+                $result['metadata']['genre'] = $result['genre'];
+            }
+
             return $result;
         }
 
@@ -207,7 +311,39 @@ class ResourceModel extends Model
                 if (!empty($oembedData['thumbnail_url'])) {
                     $result['thumbnail_url'] = $oembedData['thumbnail_url'];
                 }
+
+                if (preg_match('/(?:song\s+(?:and\s+lyrics\s+)?by|by)\s+([^\|]+?)(?:\s*\|\s*Spotify)?$/i', $cleanTitle, $am)) {
+                    $result['author'] = trim($am[1]);
+                    $songOnly = trim(preg_replace('/\s*-\s*(?:song\s+(?:and\s+lyrics\s+)?by|by)\s+.*$/i', '', $cleanTitle));
+                    if (!empty($songOnly)) {
+                        $result['title'] = $songOnly;
+                    }
+                }
             }
+
+            // Se ainda não temos o autor, tenta via meta tags do HTML da página
+            if (empty($result['author'])) {
+                $html = self::fetchHttpContent($url);
+                if ($html) {
+                    if (preg_match('/<meta property="og:description" content="([^"]+)"/i', $html, $ogm)) {
+                        $desc = html_entity_decode($ogm[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                        $parts = explode('·', $desc);
+                        if (count($parts) >= 2) {
+                            $result['author'] = trim($parts[0]);
+                        }
+                    }
+                }
+            }
+
+            if (!empty($result['author'])) {
+                $result['metadata']['author'] = $result['author'];
+            }
+
+            $result['genre'] = self::detectGenre($result['title'], $result['author'] ?? '');
+            if (!empty($result['genre'])) {
+                $result['metadata']['genre'] = $result['genre'];
+            }
+
             return $result;
         }
 
@@ -241,11 +377,16 @@ class ResourceModel extends Model
                     $cifraClean = html_entity_decode($cifraClean, ENT_QUOTES | ENT_HTML5, 'UTF-8');
                     $extractedCifra = trim($cifraClean);
                 }
+
+                // Gênero no estilo da página
+                if (preg_match('/\/estilo\/([^\/"]+)\//i', $html, $gm)) {
+                    $result['genre'] = self::slugToTitle($gm[1]);
+                }
             }
 
             // Fallback inteligente pelo slug da URL se a requisição remota foi bloqueada
-            if (empty($extractedTitle) && !empty($artistSlug)) {
-                $artistName = self::slugToTitle($artistSlug);
+            $artistName = !empty($artistSlug) ? self::slugToTitle($artistSlug) : null;
+            if (empty($extractedTitle) && !empty($artistName)) {
                 if (!empty($songSlug)) {
                     $songName = self::slugToTitle($songSlug);
                     $extractedTitle = "{$songName} - {$artistName}";
@@ -255,10 +396,17 @@ class ResourceModel extends Model
             }
 
             $result['title']        = $extractedTitle;
+            $result['author']       = $artistName;
             $result['content_text'] = $extractedCifra;
+
+            if (empty($result['genre'])) {
+                $result['genre'] = self::detectGenre($extractedTitle, $artistName ?? '');
+            }
+
             $result['metadata']     = [
                 'platform' => 'Cifra Club',
-                'artist'   => $artistSlug,
+                'artist'   => $artistName,
+                'genre'    => $result['genre'],
                 'song'     => $songSlug
             ];
 
@@ -282,6 +430,9 @@ class ResourceModel extends Model
                 $rawTitle = html_entity_decode($tm[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
                 $result['title'] = trim(str_replace('- Google Drive', '', $rawTitle));
             }
+
+            $result['author'] = self::extractAuthorFromTitle($result['title']);
+            $result['genre']  = self::detectGenre($result['title']);
             return $result;
         }
 
@@ -293,6 +444,8 @@ class ResourceModel extends Model
             $filename = basename(parse_url($url, PHP_URL_PATH));
             $filenameClean = urldecode(preg_replace('/\.pdf$/i', '', $filename));
             $result['title']             = self::slugToTitle($filenameClean);
+            $result['author']            = self::extractAuthorFromTitle($result['title']);
+            $result['genre']             = self::detectGenre($result['title']);
             $result['metadata']          = ['platform' => 'PDF Document', 'format' => 'pdf'];
             return $result;
         }
@@ -310,7 +463,17 @@ class ResourceModel extends Model
                 $rawTitle = trim(html_entity_decode($tm[1], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
                 $result['title'] = preg_replace('/\s+/', ' ', $rawTitle);
             }
+
+            if (preg_match('/<meta (?:name|property)="(?:author|article:author)" content="([^"]+)"/i', $html, $am)) {
+                $result['author'] = trim(html_entity_decode($am[1], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+            }
         }
+
+        if (empty($result['author']) && !empty($result['title'])) {
+            $result['author'] = self::extractAuthorFromTitle($result['title']);
+        }
+
+        $result['genre'] = self::detectGenre($result['title'], $result['author'] ?? '');
 
         return $result;
     }
@@ -369,6 +532,8 @@ class ResourceModel extends Model
             $termo = trim($filtros['busca']);
             $builder->groupStart()
                 ->like('r.title', $termo)
+                ->orLike('r.author', $termo)
+                ->orLike('r.genre', $termo)
                 ->orLike('r.description', $termo)
                 ->orLike('r.url', $termo)
                 ->orLike('r.content_text', $termo)

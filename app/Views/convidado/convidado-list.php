@@ -26,7 +26,7 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
       <div class="d-flex align-items-center gap-2">
         <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2">
-          <i class="bi bi-people-fill me-1"></i> Total: <?= count($convidados) ?> Convidados
+          <i class="bi bi-people-fill me-1"></i> Total: <span id="countConvidados"><?= count($convidados) ?></span> Convidados
         </span>
         <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-3 py-2">
           <i class="bi bi-calendar-check me-1"></i> Cultos Realizados: <?= $totalCultosGeral ?>
@@ -90,6 +90,12 @@
             </select>
           </div>
 
+          <div class="col-12 d-flex justify-content-end" id="boxLimparFiltros" style="display: none !important;">
+            <button type="button" class="btn btn-sm btn-link text-decoration-none text-muted p-0" id="btnLimparFiltros">
+              <i class="bi bi-x-circle me-1"></i>Limpar filtros
+            </button>
+          </div>
+
         </div>
       </div>
     </div>
@@ -125,7 +131,7 @@
                 $defaultAvatar = 'https://ui-avatars.com/api/?name=' . urlencode($row->nome_convidado) . '&background=2563eb&color=fff&size=90';
                 $avatarUrl = !empty($row->url_foto_instagram) ? esc($row->url_foto_instagram) : $defaultAvatar;
               ?>
-                <tr data-funcao="<?= esc($row->nm_funcao_eclesiastica ?? 'Sem Função') ?>" data-performance="<?= $perfGroup ?>" data-nome="<?= esc(mb_strtolower($row->nome_convidado)) ?>" data-exibicao="<?= esc(mb_strtolower($row->nome_convidado_visualizacao ?? '')) ?>" data-nick="<?= esc(mb_strtolower($row->nick_instagram ?? '')) ?>">
+                <tr class="item-convidado" data-funcao="<?= esc(mb_strtolower($row->nm_funcao_eclesiastica ?? 'Sem Função')) ?>" data-performance="<?= $perfGroup ?>" data-nome="<?= esc(mb_strtolower($row->nome_convidado)) ?>" data-exibicao="<?= esc(mb_strtolower($row->nome_convidado_visualizacao ?? '')) ?>" data-nick="<?= esc(mb_strtolower($row->nick_instagram ?? '')) ?>">
                   
                   <!-- Convidado (Foto / Iniciais & Nomes) -->
                   <td class="ps-4">
@@ -135,7 +141,7 @@
                       </div>
                       <div>
                         <div class="fw-bold text-body">
-                          <a href="<?= base_url('convidado/editar/' . $row->hash_convidado) ?>" class="text-decoration-none text-body hover-primary">
+                          <a href="<?= base_url('convidado/editar/' . ($row->hash_convidado ?: $row->id_convidado)) ?>" class="text-decoration-none text-body hover-primary">
                             <?= esc($row->nome_convidado); ?>
                           </a>
                         </div>
@@ -146,6 +152,13 @@
                           <small class="d-block">
                             <a href="https://www.instagram.com/<?= str_replace('@', '', $row->nick_instagram); ?>" class="text-decoration-none text-danger small" target="_blank">
                               <i class="bi bi-instagram me-1"></i>@<?= esc(str_replace('@', '', $row->nick_instagram)) ?>
+                            </a>
+                          </small>
+                        <?php } ?>
+                        <?php if (!empty($row->link_fotos)) { ?>
+                          <small class="d-block mt-1">
+                            <a href="<?= esc($row->link_fotos); ?>" class="text-decoration-none text-primary small d-inline-flex align-items-center gap-1" target="_blank" rel="noopener noreferrer" title="Abrir Link Principal de Fotos">
+                              <i class="bi bi-images"></i> <span>Link de Fotos</span>
                             </a>
                           </small>
                         <?php } ?>
@@ -189,16 +202,21 @@
                   <!-- Ações -->
                   <td class="text-end pe-4">
                     <div class="btn-group btn-group-sm">
+                      <?php if (!empty($row->link_fotos)) { ?>
+                        <a href="<?= esc($row->link_fotos); ?>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary" title="Abrir Link Principal de Fotos">
+                          <i class="bi bi-images"></i>
+                        </a>
+                      <?php } ?>
                       <?php if ($sys_action->read) { ?>
                         <a href="<?= base_url('agenda/dashConvidado/' . $row->id_convidado) ?>" class="btn btn-outline-info" title="Ver Dashboard de Assiduidade">
                           <i class="bi bi-graph-up-arrow"></i>
                         </a>
-                        <a href="<?= base_url('convidado/editar/' . $row->hash_convidado) ?>" class="btn btn-outline-warning" title="Editar">
+                        <a href="<?= base_url('convidado/editar/' . ($row->hash_convidado ?: $row->id_convidado)) ?>" class="btn btn-outline-warning" title="Editar">
                           <i class="bi bi-pencil-square"></i>
                         </a>
                       <?php } ?>
                       <?php if ($sys_action->delete) { ?>
-                        <button type="button" class="btn btn-outline-danger btnConfirmarDelete" data-titulo="Confirmar exclusão" data-url="<?= base_url('geral/getModalDelete') ?>" data-link="<?= base_url('convidado/apagar/' . $row->hash_convidado) ?>" data-mensagem="Deseja confirmar a exclusão deste convidado <strong><?= esc($row->nome_convidado) ?></strong>?" title="Apagar" data-bs-toggle="modal" data-bs-target="#divModalConfirmaDelete">
+                        <button type="button" class="btn btn-outline-danger" onclick="abrirModalExclusaoConvidado('<?= esc($row->hash_convidado ?: $row->id_convidado) ?>', '<?= esc(addslashes($row->nome_convidado)) ?>')" title="Apagar Convidado">
                           <i class="bi bi-trash"></i>
                         </button>
                       <?php } ?>
@@ -207,6 +225,13 @@
 
                 </tr>
               <?php } ?>
+
+              <tr id="rowNenhumConvidado" style="display: none;">
+                <td colspan="5" class="text-center py-4 text-muted">
+                  <i class="bi bi-search me-1 fs-5 d-block mb-1"></i>
+                  Nenhum convidado encontrado para os filtros selecionados.
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -216,53 +241,108 @@
   </div>
 </div>
 
+<!-- Modal Confirmar Exclusão Convidado -->
+<div class="modal fade" id="modalConfirmarExclusaoConvidado" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 shadow border-0">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold text-danger">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i> Confirmar Exclusão
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body py-3">
+        <p class="mb-0">Deseja realmente excluir o convidado <strong id="modalNomeConvidado"></strong>?</p>
+        <small class="text-danger d-block mt-2">
+          <i class="bi bi-info-circle me-1"></i> Esta ação removerá o convidado, seu histórico de presenças e fotos vinculadas.
+        </small>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+        <a href="#" id="btnConfirmarDeleteConvidado" class="btn btn-danger rounded-pill px-4 fw-bold">
+          <i class="bi bi-trash3-fill me-1"></i> Excluir Convidado
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
+  function abrirModalExclusaoConvidado(hashOuId, nome) {
+    document.getElementById('modalNomeConvidado').textContent = nome;
+    document.getElementById('btnConfirmarDeleteConvidado').href = '<?= base_url('convidado/apagar/') ?>/' + hashOuId;
+    const modalEl = document.getElementById('modalConfirmarExclusaoConvidado');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
-    const searchInput  = document.getElementById('searchConvidadoInput');
-    const filterFuncao = document.getElementById('filterFuncaoSelect');
-    const filterPerf   = document.getElementById('filterPerformanceSelect');
+    const searchInput      = document.getElementById('searchGuest');
+    const filterFuncao     = document.getElementById('filterFuncao');
+    const filterPerf       = document.getElementById('filterPerformance');
+    const btnLimparFiltros = document.getElementById('btnLimparFiltros');
+    const boxLimparFiltros = document.getElementById('boxLimparFiltros');
+    const countBadge       = document.getElementById('countConvidados');
+    const noResultsRow     = document.getElementById('rowNenhumConvidado');
 
     function applyFilters() {
       const q = (searchInput ? searchInput.value : '').toLowerCase().trim();
-      const funcaoId = (filterFuncao ? filterFuncao.value : '').toString();
-      const perfVal  = (filterPerf ? filterPerf.value : '').toString();
+      const qClean = q.replace(/^@/, '');
+      const funcaoVal = (filterFuncao ? filterFuncao.value : '').toLowerCase().trim();
+      const perfVal = (filterPerf ? filterPerf.value : '').toLowerCase().trim();
 
-      document.querySelectorAll('#tblConvidados tbody tr.item-convidado').forEach(row => {
-        const nome   = row.getAttribute('data-nome') || '';
-        const funcao = (row.getAttribute('data-id-funcao') || '').toString();
-        const pres   = parseInt(row.getAttribute('data-presencas') || '0', 10);
+      let visibleCount = 0;
+      const rows = document.querySelectorAll('#tblConvidados tbody tr.item-convidado');
 
-        const matchName   = !q || nome.includes(q);
-        const matchFuncao = !funcaoId || funcao === funcaoId;
-        
-        let matchPerf = true;
-        if (perfVal === 'alta') {
-          matchPerf = (pres >= 5);
-        } else if (perfVal === 'media') {
-          matchPerf = (pres >= 1 && pres <= 4);
-        } else if (perfVal === 'baixa') {
-          matchPerf = (pres === 0);
-        }
+      rows.forEach(row => {
+        const nome      = row.getAttribute('data-nome') || '';
+        const exibicao  = row.getAttribute('data-exibicao') || '';
+        const nick      = row.getAttribute('data-nick') || '';
+        const nickClean = nick.replace(/^@/, '');
+        const funcao    = row.getAttribute('data-funcao') || '';
+        const perf      = row.getAttribute('data-performance') || '';
 
-        if (matchName && matchFuncao && matchPerf) {
+        const matchSearch = !q || 
+          nome.includes(q) || 
+          exibicao.includes(q) || 
+          nick.includes(q) || 
+          nickClean.includes(qClean);
+
+        const matchFuncao = !funcaoVal || funcao === funcaoVal;
+        const matchPerf   = !perfVal || perf === perfVal;
+
+        if (matchSearch && matchFuncao && matchPerf) {
           row.style.display = '';
+          visibleCount++;
         } else {
           row.style.display = 'none';
         }
       });
+
+      if (countBadge) {
+        countBadge.textContent = visibleCount;
+      }
+
+      if (noResultsRow) {
+        noResultsRow.style.display = (visibleCount === 0 && rows.length > 0) ? '' : 'none';
+      }
+
+      if (boxLimparFiltros) {
+        const hasFilter = q !== '' || funcaoVal !== '' || perfVal !== '';
+        boxLimparFiltros.style.setProperty('display', hasFilter ? 'flex' : 'none', 'important');
+      }
     }
 
     if (searchInput) searchInput.addEventListener('input', applyFilters);
     if (filterFuncao) filterFuncao.addEventListener('change', applyFilters);
     if (filterPerf) filterPerf.addEventListener('change', applyFilters);
 
-    // Bootstrap Modal delete trigger handler
-    if (typeof jQuery !== 'undefined') {
-      $(document).on("click", ".btnConfirmarDelete", function (e) {
-        e.preventDefault();
-        if (typeof FrameworkModal !== 'undefined') {
-          FrameworkModal.getModalDelete($(this));
-        }
+    if (btnLimparFiltros) {
+      btnLimparFiltros.addEventListener('click', function () {
+        if (searchInput) searchInput.value = '';
+        if (filterFuncao) filterFuncao.value = '';
+        if (filterPerf) filterPerf.value = '';
+        applyFilters();
       });
     }
   });

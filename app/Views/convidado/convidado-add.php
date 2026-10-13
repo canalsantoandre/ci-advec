@@ -51,8 +51,9 @@
                   <label for="txtConvidadoInstagram" class="form-label fw-semibold">@Instagram</label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-instagram text-danger"></i></span>
-                    <input type="text" name="txtConvidadoInstagram" id="txtConvidadoInstagram" value="" class="form-control" maxlength="30" placeholder="usuario">
+                    <input type="text" name="txtConvidadoInstagram" id="txtConvidadoInstagram" value="" class="form-control instagram-input semespaco" maxlength="50" placeholder="usuario_instagram">
                   </div>
+                  <small class="text-secondary small">Salvo automaticamente sem espaços e em minúsculo.</small>
                 </div>
 
                 <div class="col-md-6">
@@ -61,6 +62,17 @@
                     <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
                     <input type="url" name="txtConvidadoLinkFotos" id="txtConvidadoLinkFotos" value="" class="form-control" maxlength="200" placeholder="https://...">
                   </div>
+                </div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-12">
+                  <label for="txtConvidadoFotoUrl" class="form-label fw-semibold">URL da Foto do Perfil</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person-square text-primary"></i></span>
+                    <textarea name="txtConvidadoFotoUrl" id="txtConvidadoFotoUrl" class="form-control" rows="2" placeholder="Cole aqui a URL direta ou link longo de imagem do Instagram..."></textarea>
+                  </div>
+                  <small class="text-secondary small">Suporta links longos de CDN do Instagram / web.</small>
                 </div>
               </div>
 
@@ -112,3 +124,15 @@
 </div>
 
 <script type="text/javascript" src="<?= base_url('templates/js') ?>/convidado/validacoes.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const instaInput = document.getElementById('txtConvidadoInstagram');
+    if (instaInput) {
+      const sanitizeInsta = function () {
+        instaInput.value = instaInput.value.replace(/\s+/g, '').toLowerCase();
+      };
+      instaInput.addEventListener('input', sanitizeInsta);
+      instaInput.addEventListener('blur', sanitizeInsta);
+    }
+  });
+</script>

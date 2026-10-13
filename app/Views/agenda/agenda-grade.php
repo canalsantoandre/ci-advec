@@ -484,7 +484,7 @@
                                       </span>
                                     <?php } ?>
 
-                                    <span class="fw-bold text-primary-hover"><?= esc($conv->nome_convidado) ?></span>
+                                    <span class="fw-bold text-black"><?= esc($conv->nome_convidado) ?></span>
                                     <?php if (!empty($conv->nm_funcao_eclesiastica)) { ?>
                                       <small class="text-secondary opacity-75">(<?= esc($conv->nm_funcao_eclesiastica) ?>)</small>
                                     <?php } ?>

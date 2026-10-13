@@ -74,6 +74,33 @@ $actionUrl = base_url('resource/salvar');
                 <input type="text" name="title" id="title" class="form-control form-control-lg" placeholder="Ex: Bondade de Deus (Tom G), Escala Especial de Páscoa..." value="<?= $isEdit ? htmlspecialchars_decode(esc($recurso->title)) : '' ?>" required autocomplete="off">
               </div>
 
+              <!-- Linha 2.1: Autor / Artista e Gênero Musical -->
+              <div class="row g-3 mb-3">
+                <div class="col-md-7">
+                  <label for="author" class="form-label fw-semibold d-flex align-items-center justify-content-between">
+                    <span>Autor / Artista / Banda</span>
+                    <span class="badge bg-body-secondary text-secondary-emphasis border rounded-pill px-2 py-0.5" style="font-size: 0.68rem;">Auto-extraível</span>
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-body-tertiary"><i class="bi bi-person-fill"></i></span>
+                    <input type="text" name="author" id="author" class="form-control" placeholder="Ex: Isaías Saad, Nívea Soares, Morada..." value="<?= $isEdit ? htmlspecialchars_decode(esc($recurso->author ?? '')) : '' ?>" autocomplete="off">
+                  </div>
+                  <div class="form-text small">Extraído automaticamente do link ou preenchido manualmente. Deixe em branco se não aplicável.</div>
+                </div>
+
+                <div class="col-md-5">
+                  <label for="genre" class="form-label fw-semibold d-flex align-items-center justify-content-between">
+                    <span>Gênero Musical</span>
+                    <span class="badge bg-body-secondary text-secondary-emphasis border rounded-pill px-2 py-0.5" style="font-size: 0.68rem;">Auto-extraível</span>
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-body-tertiary"><i class="bi bi-music-note-beamed"></i></span>
+                    <input type="text" name="genre" id="genre" class="form-control" placeholder="Ex: Gospel / Louvor, Worship, Coral..." value="<?= $isEdit ? htmlspecialchars_decode(esc($recurso->genre ?? '')) : '' ?>" autocomplete="off">
+                  </div>
+                  <div class="form-text small">Detectado automaticamente pelo link (ou deixe em branco).</div>
+                </div>
+              </div>
+
               <!-- Linha 3: URL com Auto-Parser Inteligente -->
               <div class="mb-3" id="group_url_input">
                 <label for="url" class="form-label fw-semibold d-flex align-items-center justify-content-between">
@@ -204,6 +231,8 @@ function executarAutoParse(forceAlert) {
       if (res.valid && res.data) {
         const d = res.data;
         const titleInput = document.getElementById('title');
+        const authorInput = document.getElementById('author');
+        const genreInput = document.getElementById('genre');
         const contentTextInput = document.getElementById('content_text');
         const typeSelect = document.getElementById('resource_type_id');
         let notificacoes = [];
@@ -216,7 +245,23 @@ function executarAutoParse(forceAlert) {
           notificacoes.push('Título');
         }
 
-        // 2. Ajusta Tipo de Mídia se sugerido
+        // 2. Preenche Autor / Artista
+        if (d.author && (!authorInput.value.trim() || forceAlert || document.activeElement === urlInput)) {
+          authorInput.value = d.author;
+          authorInput.classList.add('is-valid');
+          setTimeout(() => authorInput.classList.remove('is-valid'), 2000);
+          notificacoes.push('Autor (' + d.author + ')');
+        }
+
+        // 3. Preenche Gênero Musical
+        if (d.genre && (!genreInput.value.trim() || forceAlert || document.activeElement === urlInput)) {
+          genreInput.value = d.genre;
+          genreInput.classList.add('is-valid');
+          setTimeout(() => genreInput.classList.remove('is-valid'), 2000);
+          notificacoes.push('Gênero (' + d.genre + ')');
+        }
+
+        // 4. Ajusta Tipo de Mídia se sugerido
         if (d.suggested_type_id) {
           if (!typeSelect.value || typeSelect.value == '1' || forceAlert || d.suggested_type_id === 5) {
             typeSelect.value = d.suggested_type_id;
@@ -225,7 +270,7 @@ function executarAutoParse(forceAlert) {
           }
         }
 
-        // 3. Preenche Conteúdo / Cifra / Letra se veio do Cifra Club ou texto
+        // 5. Preenche Conteúdo / Cifra / Letra se veio do Cifra Club ou texto
         if (d.content_text) {
           contentTextInput.value = d.content_text;
           const groupText = document.getElementById('group_content_text');
@@ -235,7 +280,7 @@ function executarAutoParse(forceAlert) {
           notificacoes.push('Cifra e Letra Completa');
         }
 
-        // 4. Atualiza Box de Pré-visualização
+        // 6. Atualiza Box de Pré-visualização
         document.getElementById('box_auto_parser_preview').classList.remove('d-none');
         document.getElementById('preview_thumb_img').src = d.thumbnail_url || '';
         document.getElementById('preview_thumb_img').style.display = d.thumbnail_url ? 'block' : 'none';
@@ -252,7 +297,13 @@ function executarAutoParse(forceAlert) {
         else if (d.provider === 'pdf') providerMsg = 'Arquivo PDF detectado';
 
         document.getElementById('preview_parsed_title').textContent = d.title || providerMsg;
-        document.getElementById('preview_parsed_details').textContent = `${providerMsg}. Dados alimentados automaticamente no formulário.`;
+
+        let extraInfo = [];
+        if (d.author) extraInfo.push(d.author);
+        if (d.genre) extraInfo.push(d.genre);
+        let extraStr = extraInfo.length > 0 ? ` (${extraInfo.join(' • ')})` : '';
+
+        document.getElementById('preview_parsed_details').textContent = `${providerMsg}${extraStr}. Dados alimentados automaticamente no formulário.`;
         
         const feedbackMsg = notificacoes.length > 0 
           ? `Identificado com sucesso! Campos preenchidos: ${notificacoes.join(', ')}.` 

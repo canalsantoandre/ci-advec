@@ -68,12 +68,22 @@ class Convidado extends BaseController
         $convidadoModel = new \App\Models\ConvidadoModel();
         $senha = password_hash('convidado123', PASSWORD_BCRYPT);
 
+        // Higieniza nick do Instagram: forçar sem espaços, minúsculo e prefixo @
+        $rawInstagram = (string)$this->request->getPost('txtConvidadoInstagram');
+        $nickInstagram = preg_replace('/\s+/', '', $rawInstagram);
+        $nickInstagram = mb_strtolower($nickInstagram);
+        $nickInstagram = ltrim($nickInstagram, '@');
+        if ($nickInstagram !== '') {
+            $nickInstagram = '@' . $nickInstagram;
+        }
+
         $convidadoModel->set('nome_convidado', $this->request->getPost('txtConvidadoNome'));
         $convidadoModel->set('nome_convidado_visualizacao', $this->request->getPost('txtConvidadoNomeExibicao'));
         $convidadoModel->set('email', $this->request->getPost('txtConvidadoEmail'));
         $convidadoModel->set('telefone', $this->request->getPost('txtConvidadoTelefone'));
         $convidadoModel->set('id_funcao_eclesiastica', $this->request->getPost('id_funcao_eclesiastica'));
-        $convidadoModel->set('nick_instagram', $this->request->getPost('txtConvidadoInstagram'));
+        $convidadoModel->set('nick_instagram', $nickInstagram);
+        $convidadoModel->set('url_foto_instagram', $this->request->getPost('txtConvidadoFotoUrl'));
         $convidadoModel->set('link_fotos', $this->request->getPost('txtConvidadoLinkFotos'));
         $convidadoModel->set('observacao', $this->request->getPost('txtConvidadoObservacao'));
         
@@ -88,7 +98,8 @@ class Convidado extends BaseController
 
         $convidadoModel->update($id_convidado, $convidado);
 
-        return redirect()->to('convidado');
+        session()->setFlashdata('success', 'Convidado cadastrado com sucesso!');
+        return redirect()->to('convidado/editar/' . ($convidado->hash_convidado ?: $id_convidado));
     }
 
     public function editarConvidado($hash_convidado)
@@ -100,6 +111,9 @@ class Convidado extends BaseController
 
         $convidadoModel = new \App\Models\ConvidadoModel();
         $data['convidado'] = $convidadoModel->findByColumn('hash_convidado', $hash_convidado);
+        if (!$data['convidado'] && is_numeric($hash_convidado)) {
+            $data['convidado'] = $convidadoModel->find($hash_convidado);
+        }
 
         if ($data['convidado']) { 
             $funcaoModel = new \App\Models\FuncaoModel();
@@ -112,6 +126,7 @@ class Convidado extends BaseController
             $data['content_view'] = view('convidado/convidado-edit', $data);
             return view('_layout', $data);
         } else {
+            session()->setFlashdata('error', 'Convidado não encontrado.');
             return redirect()->to('convidado');
         }
     }
@@ -131,10 +146,24 @@ class Convidado extends BaseController
         $convidadoModel = new \App\Models\ConvidadoModel();
         $convidado = $convidadoModel->find($id_convidado);
 
+        if (!$convidado) {
+            session()->setFlashdata('error', 'Convidado não encontrado.');
+            return redirect()->to('convidado');
+        }
+
+        // Higieniza nick do Instagram: forçar sem espaços, minúsculo e prefixo @
+        $rawInstagram = (string)$this->request->getPost('txtConvidadoInstagram');
+        $nickInstagram = preg_replace('/\s+/', '', $rawInstagram);
+        $nickInstagram = mb_strtolower($nickInstagram);
+        $nickInstagram = ltrim($nickInstagram, '@');
+        if ($nickInstagram !== '') {
+            $nickInstagram = '@' . $nickInstagram;
+        }
+
         $convidado->nome_convidado               = $this->request->getPost('txtConvidadoNome');
         $convidado->nome_convidado_visualizacao  = $this->request->getPost('txtConvidadoNomeExibicao');
         $convidado->email                        = $this->request->getPost('txtConvidadoEmail');
-        $convidado->nick_instagram               = $this->request->getPost('txtConvidadoInstagram');
+        $convidado->nick_instagram               = $nickInstagram;
         $convidado->url_foto_instagram           = $this->request->getPost('txtConvidadoFotoUrl');
         $convidado->data_nascimento              = $this->request->getPost('txtConvidadoDataNascimento');
         $convidado->link_fotos                   = $this->request->getPost('txtConvidadoLinkFotos');
@@ -145,7 +174,7 @@ class Convidado extends BaseController
 
         $convidadoModel->update($id_convidado, $convidado);
         session()->setFlashdata('success', 'Dados do convidado atualizados com sucesso!');
-        return redirect()->to('convidado');
+        return redirect()->to('convidado/editar/' . ($convidado->hash_convidado ?: $id_convidado));
     }
 
     public function apagarConvidado($hash_convidado)
@@ -156,13 +185,29 @@ class Convidado extends BaseController
         }
 
         if (!$hash_convidado) {
+            session()->setFlashdata('error', 'Identificador de convidado não informado.');
             return redirect()->to('convidado');
         }
 
         $convidadoModel = new \App\Models\ConvidadoModel();
-        $convidadoModel->where('hash_convidado', $hash_convidado);
-        $convidadoModel->delete();
+        $convidado = $convidadoModel->findByColumn('hash_convidado', $hash_convidado);
+        if (!$convidado && is_numeric($hash_convidado)) {
+            $convidado = $convidadoModel->find($hash_convidado);
+        }
 
+        if (!$convidado) {
+            session()->setFlashdata('error', 'Convidado não encontrado.');
+            return redirect()->to('convidado');
+        }
+
+        $db = db_connect();
+        // Remove associações de cultos e fotos vinculadas
+        $db->table('tb_culto_convidado')->where('id_convidado', $convidado->id_convidado)->delete();
+        $db->table('tb_convidado_link_foto')->where('id_convidado', $convidado->id_convidado)->delete();
+
+        $convidadoModel->delete($convidado->id_convidado);
+
+        session()->setFlashdata('success', 'Convidado "' . esc($convidado->nome_convidado) . '" excluído com sucesso!');
         return redirect()->to('convidado');
     }
 }

@@ -13,12 +13,17 @@ var Convidado = new function () {
    
     this.SetListeners = function () {
         
-        $(".semespaco").on("blur", function (e) {
+        $(".semespaco").on("input blur", function (e) {
             var str = $(this).val().replace(/\s/g, '');
-   
             $(this).val(str); 
+        });
+
+        $("#txtConvidadoInstagram, .instagram-input").on("input blur", function (e) {
+            var str = $(this).val().replace(/\s+/g, '').toLowerCase();
+            $(this).val(str);
         });
 
     }    
     
 }
+

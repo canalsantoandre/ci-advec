@@ -163,6 +163,9 @@ class Resource extends BaseController
             $department_id    = $this->request->getPost('department_id') !== '' ? (int)$this->request->getPost('department_id') : null;
             $status           = (int)($this->request->getPost('status') ?? 1);
 
+            $author           = trim((string)$this->request->getPost('author'));
+            $genre            = trim((string)$this->request->getPost('genre'));
+
             // Validações Básicas
             if (empty($title)) {
                 return $this->response->setJSON(['status' => 'error', 'message' => 'O título do recurso é obrigatório.']);
@@ -189,12 +192,33 @@ class Resource extends BaseController
             // Auto-Parsing de Metadados (YouTube, Spotify, Drive, PDF)
             $parsed = ResourceModel::parseUrl($url, $resource_type_id);
 
+            // Se o usuário não preencheu autor ou gênero e o parser encontrou, aproveita do parser
+            if (empty($author) && !empty($parsed['author'])) {
+                $author = $parsed['author'];
+            }
+            if (empty($genre) && !empty($parsed['genre'])) {
+                $genre = $parsed['genre'];
+            }
+
+            $authorClean = !empty($author) ? htmlspecialchars(strip_tags($author), ENT_QUOTES, 'UTF-8') : null;
+            $genreClean  = !empty($genre) ? htmlspecialchars(strip_tags($genre), ENT_QUOTES, 'UTF-8') : null;
+
+            $metaArray = !empty($parsed['metadata']) ? $parsed['metadata'] : [];
+            if ($authorClean) {
+                $metaArray['author'] = $authorClean;
+            }
+            if ($genreClean) {
+                $metaArray['genre'] = $genreClean;
+            }
+
             $session = session();
             $user = $session->get('dsh_usuario')['obj_user'] ?? null;
             $userId = $user ? (int)$user->id_usuario : 1;
 
             $dadosSalvar = [
                 'title'            => $titleClean,
+                'author'           => $authorClean,
+                'genre'            => $genreClean,
                 'description'      => $descriptionClean,
                 'url'              => !empty($url) ? $url : null,
                 'content_text'     => !empty($content_text) ? $content_text : null,
@@ -204,7 +228,7 @@ class Resource extends BaseController
                 'external_id'      => $parsed['external_id'],
                 'provider'         => $parsed['provider'],
                 'embed_url'        => $parsed['embed_url'],
-                'metadata'         => !empty($parsed['metadata']) ? json_encode($parsed['metadata']) : null,
+                'metadata'         => !empty($metaArray) ? json_encode($metaArray) : null,
                 'status'           => $status,
                 'created_by'       => $userId
             ];
