@@ -141,6 +141,20 @@
           </div>
 
           <?php
+          // Extrai lista única de nomes/títulos de cultos no mês (para o filtro por culto)
+          $titulosCultosMes = [];
+          if (!empty($diasGrade)) {
+            foreach ($diasGrade as $dItemT) {
+              foreach (($dItemT['cultos_agendados'] ?? []) as $cT) {
+                $t = trim((string)$cT->titulo_culto);
+                if ($t !== '' && !in_array($t, $titulosCultosMes)) {
+                  $titulosCultosMes[] = $t;
+                }
+              }
+            }
+          }
+          sort($titulosCultosMes);
+
           $hojeIso        = isset($hojeIso) ? $hojeIso : date('Y-m-d');
           $anoAtual       = (int)date('Y');
           $mesAtual       = (int)date('m');
@@ -158,6 +172,17 @@
           <!-- Filtros Rápidos de Exibição da Tabela -->
           <div class="d-flex align-items-center gap-2 flex-wrap">
             <span class="small fw-bold text-secondary me-1"><i class="bi bi-funnel-fill me-1"></i> Filtrar Grade:</span>
+
+            <!-- Seletor de Culto Específico -->
+            <div class="me-1">
+              <select id="selectFiltroCulto" class="form-select form-select-sm rounded-pill px-3 fw-semibold bg-body border-primary shadow-sm" style="min-width: 200px;" title="Filtrar ocorrências por tipo de culto">
+                <option value="">🎯 Todos os Cultos (<?= $totalCultosMes ?>)</option>
+                <?php foreach ($titulosCultosMes as $nomeCulto) { ?>
+                  <option value="<?= esc($nomeCulto) ?>"><?= esc($nomeCulto) ?></option>
+                <?php } ?>
+              </select>
+            </div>
+
             <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 btnFilterGradeRow active" data-filter="all">
               Todos (<?= $totalDias ?>d)
             </button>
@@ -200,24 +225,88 @@
       11 => 'NOV',
       12 => 'DEZ'
     ];
+    $anoAtualReal  = (int)date('Y');
+    $mesAtualReal  = (int)date('m');
+    $isAnoCorrente = ($ano === $anoAtualReal);
+    $mesesPassadosComAgenda = isset($mesesPassadosComAgenda) && is_array($mesesPassadosComAgenda) ? $mesesPassadosComAgenda : [];
     ?>
-    <div class="card bg-body-tertiary border-0 rounded-4 shadow-sm mb-4">
-      <div class="card-body p-2 overflow-auto">
-        <div class="d-flex align-items-center justify-content-between flex-nowrap gap-2">
+    <div class="card bg-body-tertiary border-0 rounded-4 shadow-sm mb-4" style="overflow: visible; position: relative; z-index: 20;">
+      <div class="card-body p-2" style="overflow: visible;">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
 
-          <!-- Abas dos Meses -->
-          <div class="d-flex align-items-center gap-1 flex-nowrap">
-            <?php for ($m = 1; $m <= 12; $m++) {
-              $isActive = ($m == $mes);
-            ?>
-              <a href="<?= base_url("agenda/grade/{$ano}/{$m}") ?>" class="btn btn-sm rounded-pill px-3 fw-bold text-nowrap <?= $isActive ? 'btn-primary shadow-sm' : 'btn-outline-secondary border-0' ?>">
-                <?= $mesesNomes[$m] ?>-<?= $ano ?>
-              </a>
+          <!-- Abas dos Meses e Dropdown -->
+          <div class="d-flex align-items-center gap-1 flex-wrap">
+
+            <?php if ($isAnoCorrente) { ?>
+              <!-- Dropdown de Meses Anteriores com Agenda Cadastrada -->
+              <div class="dropdown me-1 position-relative" style="z-index: 25;">
+                <?php if (!empty($mesesPassadosComAgenda)) { ?>
+                  <button class="btn btn-sm btn-meses-anteriores rounded-pill px-3 fw-semibold dropdown-toggle d-inline-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" title="Visualizar meses passados que possuem cultos agendados">
+                    <i class="bi bi-clock-history icon-history"></i> Meses anteriores
+                    <span class="badge badge-count rounded-pill px-2 py-0.5 ms-0.5" style="font-size: 0.72rem;"><?= count($mesesPassadosComAgenda) ?></span>
+                  </button>
+                  <ul class="dropdown-menu dropdown-history-menu mt-1">
+                    <li class="dropdown-header text-uppercase d-flex align-items-center gap-1">
+                      <i class="bi bi-folder2-open text-warning"></i> Meses com Agenda (<?= $ano ?>)
+                    </li>
+                    <?php foreach ($mesesPassadosComAgenda as $mPassado) {
+                      $isItemActive = ($mPassado == $mes);
+                    ?>
+                      <li>
+                        <a class="dropdown-item dropdown-history-item d-flex align-items-center justify-content-between gap-3 <?= $isItemActive ? 'active' : '' ?>" href="<?= base_url("agenda/grade/{$ano}/{$mPassado}") ?>">
+                          <span class="d-inline-flex align-items-center">
+                            <i class="bi bi-calendar2-range me-2 <?= $isItemActive ? 'text-white' : 'text-primary' ?>"></i>
+                            <?= $mesesNomes[$mPassado] ?> - <?= $ano ?>
+                          </span>
+                          <span class="badge <?= $isItemActive ? 'bg-white text-primary' : 'bg-primary-subtle text-primary' ?> rounded-pill" style="font-size: 0.68rem;">Histórico</span>
+                        </a>
+                      </li>
+                    <?php } ?>
+                  </ul>
+                <?php } else { ?>
+                  <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold opacity-60 d-inline-flex align-items-center gap-1" type="button" disabled title="Nenhum mês anterior possui cultos agendados">
+                    <i class="bi bi-clock-history"></i> Meses anteriores
+                  </button>
+                <?php } ?>
+              </div>
+
+              <!-- Se navegou para um mês passado, exibe a aba desse mês em destaque -->
+              <?php if ($mes < $mesAtualReal) { ?>
+                <a href="<?= base_url("agenda/grade/{$ano}/{$mes}") ?>" class="btn btn-sm btn-mes-passado-ativo rounded-pill px-3 fw-bold text-nowrap d-inline-flex align-items-center gap-1">
+                  <i class="bi bi-archive-fill"></i> <?= $mesesNomes[$mes] ?>-<?= $ano ?>
+                  <span class="badge bg-white text-dark rounded-pill ms-1" style="font-size: 0.65rem;">Histórico</span>
+                </a>
+                <div class="vr mx-1 opacity-25" style="height: 24px;"></div>
+              <?php } ?>
+
+              <!-- Meses a partir do Mês Atual até o fim do ano -->
+              <?php for ($m = $mesAtualReal; $m <= 12; $m++) {
+                $isActive = ($m == $mes);
+                $isCurrentMonth = ($m == $mesAtualReal);
+              ?>
+                <a href="<?= base_url("agenda/grade/{$ano}/{$m}") ?>" class="btn btn-sm rounded-pill px-3 fw-bold text-nowrap <?= $isActive ? 'btn-primary shadow-sm' : 'btn-outline-secondary border-0' ?>">
+                  <?= $mesesNomes[$m] ?>-<?= $ano ?>
+                  <?php if ($isCurrentMonth && !$isActive) { ?>
+                    <span class="badge bg-primary-subtle text-primary rounded-pill ms-1" style="font-size: 0.65rem;">Atual</span>
+                  <?php } ?>
+                </a>
+              <?php } ?>
+
+            <?php } else { ?>
+              <!-- Ano Passado ou Futuro: Exibe os 12 meses normalmente -->
+              <?php for ($m = 1; $m <= 12; $m++) {
+                $isActive = ($m == $mes);
+              ?>
+                <a href="<?= base_url("agenda/grade/{$ano}/{$m}") ?>" class="btn btn-sm rounded-pill px-3 fw-bold text-nowrap <?= $isActive ? 'btn-primary shadow-sm' : 'btn-outline-secondary border-0' ?>">
+                  <?= $mesesNomes[$m] ?>-<?= $ano ?>
+                </a>
+              <?php } ?>
             <?php } ?>
+
           </div>
 
           <!-- Seletor de Ano -->
-          <div class="d-flex align-items-center gap-2 ms-3 flex-nowrap">
+          <div class="d-flex align-items-center gap-2 ms-auto flex-nowrap">
             <a href="<?= base_url("agenda/grade/" . ($ano - 1) . "/{$mes}") ?>" class="btn btn-outline-secondary btn-sm rounded-circle" title="Ano Anterior">
               <i class="bi bi-chevron-left"></i>
             </a>
@@ -288,9 +377,11 @@
                 }
 
                 $statusFiltro = $hasCultoSemConvidado ? 'sem_convidado' : ($hasCultoComConvidado ? 'com_convidado' : 'sem_culto');
+                $titulosCultosDia = array_map(fn($cc) => trim((string)$cc->titulo_culto), $dia['cultos_agendados'] ?? []);
               ?>
                 <tr class="grade-row <?= $bgClass ?> <?= $rowPastClass ?>"
                   data-status-convidado="<?= $statusFiltro ?>"
+                  data-cultos="<?= esc(json_encode($titulosCultosDia, JSON_UNESCAPED_UNICODE)) ?>"
                   data-is-past="<?= $isDiaPassado ? '1' : '0' ?>"
                   data-dia-semana="<?= (int)$dia['num_dia_semana'] ?>"
                   data-data-iso="<?= $dia['data_iso'] ?>"
@@ -954,6 +1045,98 @@
     background-color: rgba(30, 41, 59, 0.35) !important;
   }
 
+  /* Botão e Menu de Meses Anteriores (mesmo padrão da grade de escalas) */
+  .btn-meses-anteriores {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+    color: #f8fafc !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-meses-anteriores:hover {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+    border-color: #38bdf8 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.35);
+  }
+
+  .btn-meses-anteriores .icon-history {
+    color: #38bdf8 !important;
+    font-size: 0.95rem;
+    transition: transform 0.25s ease;
+  }
+
+  .btn-meses-anteriores:hover .icon-history {
+    transform: rotate(-30deg) scale(1.15);
+  }
+
+  .btn-meses-anteriores .badge-count {
+    background-color: #38bdf8 !important;
+    color: #0f172a !important;
+    font-weight: 800;
+  }
+
+  .dropdown-history-menu {
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-radius: 0.85rem !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18) !important;
+    min-width: 220px;
+    padding: 0.4rem;
+  }
+
+  [data-bs-theme="dark"] .dropdown-history-menu {
+    background-color: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+  }
+
+  .dropdown-history-menu .dropdown-header {
+    font-size: 0.72rem;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+    color: #64748b;
+    padding: 0.4rem 0.75rem 0.25rem;
+  }
+
+  [data-bs-theme="dark"] .dropdown-history-menu .dropdown-header {
+    color: #94a3b8;
+  }
+
+  .dropdown-history-item {
+    border-radius: 0.6rem;
+    padding: 0.55rem 0.85rem;
+    font-weight: 600;
+    color: #1e293b;
+    transition: all 0.15s ease;
+  }
+
+  [data-bs-theme="dark"] .dropdown-history-item {
+    color: #f1f5f9;
+  }
+
+  .dropdown-history-item:hover {
+    background-color: #e0e7ff !important;
+    color: #3730a3 !important;
+  }
+
+  [data-bs-theme="dark"] .dropdown-history-item:hover {
+    background-color: rgba(99, 102, 241, 0.25) !important;
+    color: #c7d2fe !important;
+  }
+
+  .dropdown-history-item.active {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    color: #ffffff !important;
+  }
+
+  .btn-mes-passado-ativo {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 3px 10px rgba(79, 70, 229, 0.35);
+  }
+
   /* Componente Switch "Exibir dias anteriores" */
   .switch-dias-anteriores-container {
     transition: all 0.2s ease-in-out;
@@ -1176,12 +1359,19 @@
     function aplicarFiltrosGrade() {
       const activeBtn = document.querySelector('.btnFilterGradeRow.active');
       const filter = activeBtn ? activeBtn.getAttribute('data-filter') : 'all';
+      const cultoSelecionado = (document.getElementById('selectFiltroCulto')?.value || '').toLowerCase().trim();
       const toggleDiasAnteriores = document.getElementById('toggleDiasAnteriores');
       const exibirDiasAnteriores = toggleDiasAnteriores ? toggleDiasAnteriores.checked : true;
 
       document.querySelectorAll('#tblGradeMensal tbody tr.grade-row').forEach(row => {
         const status = row.getAttribute('data-status-convidado');
         const isPast = row.getAttribute('data-is-past') === '1';
+        let cultosNaLinha = [];
+        try {
+          cultosNaLinha = JSON.parse(row.getAttribute('data-cultos') || '[]').map(t => String(t).toLowerCase().trim());
+        } catch (e) {
+          cultosNaLinha = [];
+        }
 
         // Se for dia passado no mês corrente e toggle desligado, oculta
         if (isPast && !exibirDiasAnteriores) {
@@ -1198,9 +1388,19 @@
           atendeStatus = (status === 'com_convidado');
         }
 
-        row.style.display = atendeStatus ? '' : 'none';
+        let atendeCulto = true;
+        if (cultoSelecionado !== '') {
+          atendeCulto = cultosNaLinha.includes(cultoSelecionado);
+        }
+
+        row.style.display = (atendeStatus && atendeCulto) ? '' : 'none';
       });
     }
+
+    // Event listener da mudança no dropdown de Cultos
+    document.getElementById('selectFiltroCulto')?.addEventListener('change', function() {
+      aplicarFiltrosGrade();
+    });
 
     // Filtro Rápido da Tabela da Grade por Status do Convidado
     document.querySelectorAll('.btnFilterGradeRow').forEach(btn => {

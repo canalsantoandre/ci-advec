@@ -87,20 +87,35 @@
                   } elseif ($tRec === 'exceto_santa_ceia_domingo') {
                     $lblRec = "Todos Dom. (Exceto Sta. Ceia)";
                     $badgeClass = 'bg-primary-subtle text-primary-emphasis';
+                  } elseif ($tRec === 'avulso') {
+                    $dtFmt = !empty($c->data_especifica) ? date('d/m/Y', strtotime($c->data_especifica)) : 'Data N/D';
+                    $lblRec = "Data Única: {$dtFmt}";
+                    $badgeClass = 'bg-success-subtle text-success-emphasis border border-success-subtle';
                   }
                 ?>
                   <tr>
                     <td class="ps-4">
-                      <div class="fw-bold text-body fs-6"><?= esc($c->nome_culto) ?></div>
+                      <div class="fw-bold text-body fs-6">
+                        <?= esc($c->nome_culto) ?>
+                        <?php if ($tRec === 'avulso') { ?>
+                          <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 ms-1" style="font-size: 0.68rem;">Avulso</span>
+                        <?php } ?>
+                      </div>
                       <?php if (!empty($c->descricao)) { ?>
                         <small class="text-secondary d-block"><?= esc($c->descricao) ?></small>
                       <?php } ?>
                     </td>
 
                     <td>
-                      <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 fw-bold">
-                        <i class="bi bi-calendar-day me-1"></i><?= esc($nomeDia) ?>
-                      </span>
+                      <?php if ($tRec === 'avulso' && !empty($c->data_especifica)) { ?>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2 fw-bold">
+                          <i class="bi bi-calendar-check-fill me-1"></i><?= date('d/m/Y', strtotime($c->data_especifica)) ?> (<?= esc($nomeDia) ?>)
+                        </span>
+                      <?php } else { ?>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 fw-bold">
+                          <i class="bi bi-calendar-day me-1"></i><?= esc($nomeDia) ?>
+                        </span>
+                      <?php } ?>
                     </td>
 
                     <td>
@@ -112,7 +127,7 @@
 
                     <td>
                       <span class="badge rounded-pill px-3 py-2 fw-bold <?= $badgeClass ?>">
-                        <i class="bi bi-repeat me-1"></i><?= esc($lblRec) ?>
+                        <i class="bi <?= ($tRec === 'avulso') ? 'bi-calendar-event' : 'bi-repeat' ?> me-1"></i><?= esc($lblRec) ?>
                       </span>
                     </td>
 

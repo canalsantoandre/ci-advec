@@ -42,7 +42,7 @@
               </div>
 
               <div class="row g-3 mb-3">
-                <div class="col-md-6">
+                <div class="col-md-6" id="divDiaSemana">
                   <label for="dia_semana" class="form-label fw-semibold">Dia da Semana do Culto <span class="text-danger">*</span></label>
                   <select name="dia_semana" id="dia_semana" class="form-select" required>
                     <?php foreach ($diasSemana as $numDia => $nomeDia) { ?>
@@ -51,6 +51,9 @@
                       </option>
                     <?php } ?>
                   </select>
+                  <small class="text-muted d-block mt-1" id="helpDiaSemanaAvulso" style="display: <?= ($cultoPadrao->tipo_recorrencia ?? '') === 'avulso' ? 'block' : 'none' ?>;">
+                    <i class="bi bi-info-circle me-1"></i> Calculado automaticamente pela data do evento avulso.
+                  </small>
                 </div>
 
                 <div class="col-md-6">
@@ -62,14 +65,14 @@
                 </div>
               </div>
 
-              <!-- Configuração de Recorrência Mensal -->
+              <!-- Configuração de Recorrência / Evento Avulso -->
               <div class="card bg-body-tertiary border-0 rounded-3 p-3 mb-3">
                 <h6 class="fw-bold text-primary mb-2">
-                  <i class="bi bi-repeat me-1"></i> Regra de Recorrência no Mês
+                  <i class="bi bi-calendar-event me-1"></i> Tipo de Evento & Regra de Ocorrência
                 </h6>
                 <div class="row g-3">
                   <div class="col-md-7">
-                    <label for="tipo_recorrencia" class="form-label fw-semibold">Frequência no Mês</label>
+                    <label for="tipo_recorrencia" class="form-label fw-semibold">Tipo / Frequência</label>
                     <select name="tipo_recorrencia" id="tipo_recorrencia" class="form-select">
                       <?php 
                         $tipoAtual = $cultoPadrao->tipo_recorrencia ?? 'todas';
@@ -82,6 +85,14 @@
                     </select>
                   </div>
 
+                  <!-- Campo de Data Específica (Evento Avulso) -->
+                  <div class="col-md-5" id="divDataEspecifica" style="display: <?= ($tipoAtual === 'avulso') ? 'block' : 'none' ?>;">
+                    <label for="data_especifica" class="form-label fw-semibold">Data do Evento <span class="text-danger">*</span></label>
+                    <input type="date" name="data_especifica" id="data_especifica" class="form-control" value="<?= esc($cultoPadrao->data_especifica ?? '') ?>" <?= ($tipoAtual === 'avulso') ? 'required' : '' ?>>
+                    <div id="badgeDiaSemanaDetectado" class="mt-1 small text-primary fw-semibold"></div>
+                  </div>
+
+                  <!-- Campo de Posição da Semana (Recorrência por Ocorrência) -->
                   <div class="col-md-5" id="divPosicaoSemana" style="display: <?= in_array($tipoAtual, ['apenas_posicao', 'exceto_posicao']) ? 'block' : 'none' ?>;">
                     <label for="posicao_semana" class="form-label fw-semibold">Ocorrência no Mês</label>
                     <select name="posicao_semana" id="posicao_semana" class="form-select">
@@ -93,8 +104,12 @@
                     </select>
                   </div>
                 </div>
-                <small class="text-secondary d-block mt-2">
-                  <i class="bi bi-info-circle me-1"></i> A regra de recorrência é aplicada pelo gerador de agenda para posicionar o culto apenas nos dias corretos.
+                <small class="text-secondary d-block mt-2" id="ajudaTipoRecorrencia">
+                  <?php if ($tipoAtual === 'avulso') { ?>
+                    <i class="bi bi-check-circle-fill text-success me-1"></i> Este evento ocorrerá exclusivamente na data específica informada acima, sem se repetir nas demais semanas.
+                  <?php } else { ?>
+                    <i class="bi bi-info-circle me-1"></i> A regra de recorrência é aplicada pelo gerador de agenda e pela escala para posicionar o culto apenas nos dias corretos.
+                  <?php } ?>
                 </small>
               </div>
 
@@ -156,15 +171,77 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    const selTipo = document.getElementById('tipo_recorrencia');
-    const divPos  = document.getElementById('divPosicaoSemana');
-    if (selTipo && divPos) {
+    const selTipo        = document.getElementById('tipo_recorrencia');
+    const divPos         = document.getElementById('divPosicaoSemana');
+    const divData        = document.getElementById('divDataEspecifica');
+    const inputData      = document.getElementById('data_especifica');
+    const selDiaSemana   = document.getElementById('dia_semana');
+    const badgeDia       = document.getElementById('badgeDiaSemanaDetectado');
+    const helpDiaAvulso  = document.getElementById('helpDiaSemanaAvulso');
+    const ajudaTexto     = document.getElementById('ajudaTipoRecorrencia');
+
+    const diasNomes = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+
+    function atualizarDiaPorData(dataVal) {
+      if (!dataVal) {
+        if (badgeDia) badgeDia.textContent = '';
+        return;
+      }
+      const partes = dataVal.split('-');
+      if (partes.length === 3) {
+        const dt = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
+        const diaSemanaNum = dt.getDay();
+        if (selDiaSemana) {
+          selDiaSemana.value = diaSemanaNum;
+        }
+        if (badgeDia) {
+          badgeDia.innerHTML = `<i class="bi bi-calendar-check me-1"></i> Dia da semana: <strong>${diasNomes[diaSemanaNum]}</strong>`;
+        }
+      }
+    }
+
+    if (inputData) {
+      inputData.addEventListener('change', function() {
+        atualizarDiaPorData(this.value);
+      });
+      if (inputData.value) {
+        atualizarDiaPorData(inputData.value);
+      }
+    }
+
+    if (selTipo) {
       selTipo.addEventListener('change', function() {
         const val = this.value;
-        if (val === 'apenas_posicao' || val === 'exceto_posicao') {
-          divPos.style.display = 'block';
+
+        if (val === 'avulso') {
+          if (divData) divData.style.display = 'block';
+          if (inputData) inputData.required = true;
+          if (divPos) divPos.style.display = 'none';
+          if (helpDiaAvulso) helpDiaAvulso.style.display = 'block';
+          if (ajudaTexto) {
+            ajudaTexto.innerHTML = '<i class="bi bi-check-circle-fill text-success me-1"></i> Este evento ocorrerá exclusivamente na data específica informada acima, sem se repetir nas demais semanas.';
+          }
+          if (inputData && inputData.value) {
+            atualizarDiaPorData(inputData.value);
+          }
+        } else if (val === 'apenas_posicao' || val === 'exceto_posicao') {
+          if (divData) divData.style.display = 'none';
+          if (inputData) inputData.required = false;
+          if (divPos) divPos.style.display = 'block';
+          if (helpDiaAvulso) helpDiaAvulso.style.display = 'none';
+          if (badgeDia) badgeDia.textContent = '';
+          if (ajudaTexto) {
+            ajudaTexto.innerHTML = '<i class="bi bi-info-circle me-1"></i> A regra de recorrência é aplicada pelo gerador de agenda e pela escala para posicionar o culto apenas nos dias corretos.';
+          }
         } else {
-          divPos.style.display = 'none';
+          if (divData) divData.style.display = 'none';
+          if (inputData) inputData.required = false;
+          if (divPos) divPos.style.display = 'none';
+          if (helpDiaAvulso) helpDiaAvulso.style.display = 'none';
+          if (badgeDia) badgeDia.textContent = '';
+          if (ajudaTexto) {
+            ajudaTexto.innerHTML = '<i class="bi bi-info-circle me-1"></i> A regra de recorrência é aplicada pelo gerador de agenda e pela escala para posicionar o culto apenas nos dias corretos.';
+          }
         }
       });
     }

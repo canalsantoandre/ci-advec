@@ -34,6 +34,9 @@
             <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="window.print()" title="Imprimir Relatório">
               <i class="bi bi-printer me-1"></i> Imprimir
             </button>
+            <a href="<?= base_url('voluntario/ranking') ?>" class="btn btn-sm btn-warning text-dark rounded-pill fw-semibold shadow-xs">
+              <i class="bi bi-trophy-fill me-1"></i> Ranking
+            </a>
             <a href="<?= base_url('voluntario') ?>" class="btn btn-sm btn-outline-primary rounded-pill">
               <i class="bi bi-people me-1"></i> Lista de Voluntários
             </a>
@@ -46,7 +49,7 @@
           <div class="row g-3">
 
             <!-- Período Rápido -->
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-2 col-md-6">
               <label class="form-label small fw-bold text-muted">Período</label>
               <select name="periodo" id="selectPeriodo" class="form-select rounded-3 shadow-none" onchange="toggleDatasCustom(this.value)">
                 <option value="mes_atual" <?= ($filtros['periodo'] === 'mes_atual') ? 'selected' : '' ?>>Mês Atual (<?= date('m/Y') ?>)</option>
@@ -73,6 +76,17 @@
               </select>
             </div>
 
+            <!-- Status da Análise da Justificativa -->
+            <div class="col-lg-2 col-md-6">
+              <label class="form-label small fw-bold text-muted">Análise de Recusas</label>
+              <select name="status_analise" class="form-select rounded-3 shadow-none">
+                <option value="todos" <?= (($filtros['status_analise'] ?? 'todos') === 'todos') ? 'selected' : '' ?>>Todas as Recusas</option>
+                <option value="PENDENTE" <?= (($filtros['status_analise'] ?? '') === 'PENDENTE') ? 'selected' : '' ?>>⏳ Pendentes (<?= $relatorio->kpis->totalCancelamentosPendentes ?? 0 ?>)</option>
+                <option value="ABONADO" <?= (($filtros['status_analise'] ?? '') === 'ABONADO') ? 'selected' : '' ?>>🛡️ Abonadas (<?= $relatorio->kpis->totalCancelamentosAbonados ?? 0 ?>)</option>
+                <option value="DESCONTADO" <?= (($filtros['status_analise'] ?? '') === 'DESCONTADO') ? 'selected' : '' ?>>📉 Com Desconto (<?= $relatorio->kpis->totalCancelamentosDescontados ?? 0 ?>)</option>
+              </select>
+            </div>
+
             <!-- Busca por Nome / Nick / Whats -->
             <div class="col-lg-3 col-md-6">
               <label class="form-label small fw-bold text-muted">Buscar Voluntário</label>
@@ -80,12 +94,12 @@
             </div>
 
             <!-- Ordenação -->
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-2 col-md-6">
               <label class="form-label small fw-bold text-muted">Ordenar Por</label>
               <select name="ordem" class="form-select rounded-3 shadow-none">
-                <option value="cancelamentos_desc" <?= ($filtros['ordem'] === 'cancelamentos_desc') ? 'selected' : '' ?>>Mais Cancelamentos / Recusas</option>
-                <option value="assiduidade_asc" <?= ($filtros['ordem'] === 'assiduidade_asc') ? 'selected' : '' ?>>Menor Assiduidade (%)</option>
-                <option value="assiduidade_desc" <?= ($filtros['ordem'] === 'assiduidade_desc') ? 'selected' : '' ?>>Maior Assiduidade (%)</option>
+                <option value="cancelamentos_desc" <?= ($filtros['ordem'] === 'cancelamentos_desc') ? 'selected' : '' ?>>Mais Recusas</option>
+                <option value="assiduidade_asc" <?= ($filtros['ordem'] === 'assiduidade_asc') ? 'selected' : '' ?>>Menor Assiduidade</option>
+                <option value="assiduidade_desc" <?= ($filtros['ordem'] === 'assiduidade_desc') ? 'selected' : '' ?>>Maior Assiduidade</option>
                 <option value="escalas_desc" <?= ($filtros['ordem'] === 'escalas_desc') ? 'selected' : '' ?>>Mais Escalações</option>
                 <option value="nome_asc" <?= ($filtros['ordem'] === 'nome_asc') ? 'selected' : '' ?>>Nome (A-Z)</option>
               </select>
@@ -164,15 +178,19 @@
       <div class="col-lg-3 col-sm-6">
         <div class="card border-0 shadow-sm rounded-4 h-100 bg-danger text-white">
           <div class="card-body p-3 p-md-4">
-            <div class="d-flex justify-content-between align-items-start">
+            <div class="d-flex justify-content-between align-items-start mb-2">
               <div>
                 <p class="text-white-50 text-uppercase fw-semibold mb-1" style="font-size: 0.75rem;">Cancelamentos / Recusas</p>
                 <h3 class="fw-bold mb-0"><?= $relatorio->kpis->totalCancelamentos ?></h3>
-                <small class="text-white-50">Taxa de recusa: <?= $relatorio->kpis->taxaCancelamentoGeral ?>%</small>
               </div>
               <div class="p-3 bg-white bg-opacity-25 rounded-circle">
                 <i class="bi bi-x-circle-fill fs-4"></i>
               </div>
+            </div>
+            <div class="d-flex flex-wrap gap-1 mt-1 small">
+              <span class="badge bg-white text-danger fw-bold" title="Aguardando análise da liderança"><?= $relatorio->kpis->totalCancelamentosPendentes ?? 0 ?> pendentes</span>
+              <span class="badge bg-black bg-opacity-25 text-white" title="Abonadas sem desconto no ranking"><?= $relatorio->kpis->totalCancelamentosAbonados ?? 0 ?> abonadas</span>
+              <span class="badge bg-black bg-opacity-25 text-white" title="Com desconto de pontos confirmado"><?= $relatorio->kpis->totalCancelamentosDescontados ?? 0 ?> c/ desconto</span>
             </div>
           </div>
         </div>
@@ -208,8 +226,12 @@
           <li class="nav-item" role="presentation">
             <button class="nav-link fw-bold py-3 px-4 position-relative" id="cancelamentos-tab" data-bs-toggle="tab" data-bs-target="#cancelamentos-pane" type="button" role="tab">
               <i class="bi bi-chat-left-quote-fill me-2 text-danger"></i>Mural de Justificativas de Cancelamento
-              <?php if ($relatorio->kpis->totalCancelamentos > 0) { ?>
-                <span class="badge bg-danger rounded-pill ms-2"><?= $relatorio->kpis->totalCancelamentos ?></span>
+              <?php if (!empty($relatorio->kpis->totalCancelamentosPendentes)) { ?>
+                <span class="badge bg-warning text-dark rounded-pill ms-2" title="Justificativas aguardando sua análise para não descontar pontos">
+                  <?= $relatorio->kpis->totalCancelamentosPendentes ?> pendentes
+                </span>
+              <?php } elseif (!empty($relatorio->kpis->totalCancelamentos)) { ?>
+                <span class="badge bg-secondary rounded-pill ms-2"><?= $relatorio->kpis->totalCancelamentos ?></span>
               <?php } ?>
             </button>
           </li>
@@ -304,6 +326,18 @@
                             <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 fw-bold shadow-sm" onclick="abrirModalJustificativas(<?= $v->id_voluntario ?>)" title="Ver justificativas de recusa">
                               <i class="bi bi-x-circle me-1"></i> <?= $d->totalCancelamentos ?> recusa(s)
                             </button>
+                            <div class="d-flex flex-column align-items-center gap-1 mt-1">
+                              <?php if (!empty($d->totalCancelamentosAbonados)) { ?>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5 small" title="Justificativas abonadas: sem desconto de pontos" style="font-size: 0.68rem;">
+                                  <i class="bi bi-shield-check me-0.5"></i> <?= $d->totalCancelamentosAbonados ?> abon.
+                                </span>
+                              <?php } ?>
+                              <?php if (!empty($d->totalCancelamentosPendentes)) { ?>
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0.5 small" title="Aguardando análise da liderança" style="font-size: 0.68rem;">
+                                  <i class="bi bi-hourglass-split me-0.5"></i> <?= $d->totalCancelamentosPendentes ?> pend.
+                                </span>
+                              <?php } ?>
+                            </div>
                           <?php } else { ?>
                             <span class="badge bg-light text-muted border rounded-pill px-3 py-1">0</span>
                           <?php } ?>
@@ -374,62 +408,123 @@
                     $vNick = $tc->voluntario ? $tc->voluntario->nickname : '';
                     $vFone = $tc->voluntario ? $tc->voluntario->telefone_whatsapp : '';
                     $vFoto = ($tc->voluntario && !empty($tc->voluntario->foto_url)) ? $tc->voluntario->foto_url : 'https://ui-avatars.com/api/?name=' . urlencode($vNome) . '&background=dc2626&color=fff&size=80&bold=true';
+                    $stAnalise = strtoupper((string)($tc->status_analise_justificativa ?: 'PENDENTE'));
                   ?>
-                    <div class="col-lg-6">
+                    <div class="col-lg-6" id="mural-card-<?= $tc->id_escala_voluntario ?>">
                       <div class="card border border-danger-subtle shadow-sm rounded-4 h-100 bg-body">
-                        <div class="card-body p-4">
-
-                          <!-- Header do Card -->
-                          <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="d-flex align-items-center gap-3">
-                              <img src="<?= esc($vFoto) ?>" class="rounded-circle border" style="width: 48px; height: 48px; object-fit: cover;" alt="avatar">
-                              <div>
-                                <h6 class="fw-bold mb-0 text-body">
-                                  <?= esc($vNome) ?>
-                                  <?php if ($vNick) { ?>
-                                    <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-2 py-0 small">"<?= esc($vNick) ?>"</span>
-                                  <?php } ?>
-                                </h6>
-                                <div class="text-muted small">
-                                  <a href="https://wa.me/55<?= preg_replace('/\D/', '', $vFone) ?>" target="_blank" class="text-success text-decoration-none fw-semibold">
-                                    <i class="bi bi-whatsapp me-1"></i><?= esc($vFone) ?>
-                                  </a>
+                        <div class="card-body p-4 d-flex flex-column justify-content-between">
+                          <div>
+                            <!-- Header do Card -->
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                              <div class="d-flex align-items-center gap-3">
+                                <img src="<?= esc($vFoto) ?>" class="rounded-circle border" style="width: 48px; height: 48px; object-fit: cover;" alt="avatar">
+                                <div>
+                                  <h6 class="fw-bold mb-0 text-body">
+                                    <?= esc($vNome) ?>
+                                    <?php if ($vNick) { ?>
+                                      <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-2 py-0 small">"<?= esc($vNick) ?>"</span>
+                                    <?php } ?>
+                                  </h6>
+                                  <div class="text-muted small">
+                                    <a href="https://wa.me/55<?= preg_replace('/\D/', '', $vFone) ?>" target="_blank" class="text-success text-decoration-none fw-semibold">
+                                      <i class="bi bi-whatsapp me-1"></i><?= esc($vFone) ?>
+                                    </a>
+                                  </div>
                                 </div>
                               </div>
+
+                              <div class="text-end">
+                                <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-pill px-3 py-1 fw-bold d-block mb-1">
+                                  <i class="bi bi-x-circle-fill me-1"></i> Cancelado
+                                </span>
+                                <?php if ($stAnalise === 'ABONADO') { ?>
+                                  <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle rounded-pill px-2.5 py-1 small fw-bold">
+                                    <i class="bi bi-shield-check me-1"></i>Abonada (Sem Desconto)
+                                  </span>
+                                <?php } elseif ($stAnalise === 'DESCONTADO') { ?>
+                                  <span class="badge bg-danger text-white rounded-pill px-2.5 py-1 small fw-bold">
+                                    <i class="bi bi-dash-circle-fill me-1"></i>Desconto Confirmado (-10 pts)
+                                  </span>
+                                <?php } else { ?>
+                                  <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1 small fw-bold">
+                                    <i class="bi bi-hourglass-split me-1"></i>Aguardando Análise
+                                  </span>
+                                <?php } ?>
+                              </div>
                             </div>
 
-                            <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-pill px-3 py-1 fw-bold">
-                              <i class="bi bi-x-circle-fill me-1"></i> Cancelado
-                            </span>
-                          </div>
-
-                          <!-- Detalhes do Culto -->
-                          <div class="p-3 bg-body-tertiary rounded-3 border mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                              <span class="fw-bold text-primary font-monospace">
-                                <i class="bi bi-calendar-event me-1"></i> <?= date('d/m/Y', strtotime($tc->data_culto)) ?>
-                              </span>
-                              <span class="badge rounded-pill text-white px-2 py-1 small" style="background-color: <?= esc($tc->cor_departamento ?: '#2563eb') ?>;">
-                                <?= esc($tc->nome_departamento) ?>: <?= esc($tc->nome_area) ?>
-                              </span>
+                            <!-- Detalhes do Culto -->
+                            <div class="p-3 bg-body-tertiary rounded-3 border mb-3">
+                              <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-bold text-primary font-monospace">
+                                  <i class="bi bi-calendar-event me-1"></i> <?= date('d/m/Y', strtotime($tc->data_culto)) ?>
+                                </span>
+                                <span class="badge rounded-pill text-white px-2 py-1 small" style="background-color: <?= esc($tc->cor_departamento ?: '#2563eb') ?>;">
+                                  <?= esc($tc->nome_departamento) ?>: <?= esc($tc->nome_area) ?>
+                                </span>
+                              </div>
+                              <div class="fw-semibold text-body"><?= esc($tc->titulo_culto) ?></div>
+                              <small class="text-muted"><i class="bi bi-clock me-1"></i><?= substr($tc->horario_inicio, 0, 5) ?> às <?= substr($tc->horario_termino, 0, 5) ?></small>
                             </div>
-                            <div class="fw-semibold text-body"><?= esc($tc->titulo_culto) ?></div>
-                            <small class="text-muted"><i class="bi bi-clock me-1"></i><?= substr($tc->horario_inicio, 0, 5) ?> às <?= substr($tc->horario_termino, 0, 5) ?></small>
-                          </div>
 
-                          <!-- Justificativa do Voluntário -->
-                          <div>
-                            <div class="text-danger fw-bold small text-uppercase mb-1">
-                              <i class="bi bi-chat-quote-fill me-1"></i> Motivo / Justificativa Informada:
+                            <!-- Justificativa do Voluntário -->
+                            <div class="mb-3">
+                              <div class="text-danger fw-bold small text-uppercase mb-1">
+                                <i class="bi bi-chat-quote-fill me-1"></i> Motivo / Justificativa Informada:
+                              </div>
+                              <blockquote class="blockquote fs-6 p-3 bg-danger-subtle rounded-3 border border-danger-subtle text-danger-emphasis mb-2 fst-italic">
+                                "<?= nl2br(esc($tc->justificativa_recusa ?: 'Nenhuma justificativa textual preenchida.')) ?>"
+                              </blockquote>
+                              <?php if (!empty($tc->data_resposta)) { ?>
+                                <div class="text-end text-muted" style="font-size: 0.75rem;">
+                                  <i class="bi bi-clock-history me-1"></i> Respondido em: <?= date('d/m/Y H:i', strtotime($tc->data_resposta)) ?>
+                                </div>
+                              <?php } ?>
                             </div>
-                            <blockquote class="blockquote fs-6 p-3 bg-danger-subtle rounded-3 border border-danger-subtle text-danger-emphasis mb-2 fst-italic">
-                              "<?= nl2br(esc($tc->justificativa_recusa ?: 'Nenhuma justificativa textual preenchida.')) ?>"
-                            </blockquote>
-                            <?php if (!empty($tc->data_resposta)) { ?>
-                              <div class="text-end text-muted" style="font-size: 0.75rem;">
-                                <i class="bi bi-clock-history me-1"></i> Respondido em: <?= date('d/m/Y H:i', strtotime($tc->data_resposta)) ?>
+
+                            <!-- Parecer da Gestão / Analisador -->
+                            <?php if ($stAnalise !== 'PENDENTE') { ?>
+                              <div class="p-3 bg-body-secondary rounded-3 border small mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                  <span class="fw-bold text-body">
+                                    <i class="bi bi-person-check-fill text-primary me-1"></i> Analisado por: <?= esc($tc->nome_analisador ?: 'Gestor') ?>
+                                  </span>
+                                  <?php if (!empty($tc->justificativa_analisado_em)) { ?>
+                                    <span class="text-muted" style="font-size: 0.72rem;"><?= date('d/m/Y H:i', strtotime($tc->justificativa_analisado_em)) ?></span>
+                                  <?php } ?>
+                                </div>
+                                <?php if (!empty($tc->justificativa_parecer_gestor)) { ?>
+                                  <div class="text-secondary fst-italic">
+                                    <i class="bi bi-chat-left-text me-1"></i> Parecer: "<?= esc($tc->justificativa_parecer_gestor) ?>"
+                                  </div>
+                                <?php } ?>
                               </div>
                             <?php } ?>
+                          </div>
+
+                          <!-- Barra de Ações de Análise -->
+                          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-3 border-top mt-2">
+                            <div class="small">
+                              <span class="text-muted">Impacto no Ranking:</span>
+                              <?php if ($stAnalise === 'ABONADO') { ?>
+                                <strong class="text-success ms-1"><i class="bi bi-shield-check"></i> 0 pts descontados</strong>
+                              <?php } else { ?>
+                                <strong class="text-danger ms-1"><i class="bi bi-dash-circle"></i> -10 pts</strong>
+                              <?php } ?>
+                            </div>
+                            <div class="d-flex gap-2">
+                              <button type="button" class="btn btn-sm btn-outline-success rounded-pill fw-semibold" onclick="abrirModalParecer(<?= $tc->id_escala_voluntario ?>, '<?= esc(addslashes($vNome)) ?>', '<?= date('d/m/Y', strtotime($tc->data_culto)) ?> - <?= esc(addslashes($tc->titulo_culto)) ?>', 'ABONADO', '<?= esc(addslashes($tc->justificativa_parecer_gestor ?? '')) ?>')">
+                                <i class="bi bi-shield-check me-1"></i> <?= ($stAnalise === 'ABONADO') ? 'Editar Parecer' : 'Abonar (0 pts)' ?>
+                              </button>
+                              <button type="button" class="btn btn-sm btn-outline-danger rounded-pill fw-semibold" onclick="abrirModalParecer(<?= $tc->id_escala_voluntario ?>, '<?= esc(addslashes($vNome)) ?>', '<?= date('d/m/Y', strtotime($tc->data_culto)) ?> - <?= esc(addslashes($tc->titulo_culto)) ?>', 'DESCONTADO', '<?= esc(addslashes($tc->justificativa_parecer_gestor ?? '')) ?>')">
+                                <i class="bi bi-dash-circle me-1"></i> <?= ($stAnalise === 'DESCONTADO') ? 'Editar Parecer' : 'Descontar (-10 pts)' ?>
+                              </button>
+                              <?php if ($stAnalise !== 'PENDENTE') { ?>
+                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="reverterAnalise(<?= $tc->id_escala_voluntario ?>)" title="Reverter para pendente">
+                                  <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
+                              <?php } ?>
+                            </div>
                           </div>
 
                         </div>
@@ -502,7 +597,78 @@
   </div>
 </div>
 
+<!-- Modal Decisão e Parecer da Análise da Liderança -->
+<div class="modal fade" id="modalParecerAnalise" tabindex="-1" aria-labelledby="modalParecerLabel" aria-hidden="true" style="z-index: 1065;">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <form id="formAnaliseJustificativa" onsubmit="event.preventDefault(); submeterAnaliseJustificativa();">
+        <input type="hidden" name="id_escala_voluntario" id="analise_id_escala">
+
+        <div class="modal-header bg-primary text-white border-0">
+          <h5 class="modal-title fw-bold" id="modalParecerLabel">
+            <i class="bi bi-shield-check me-2"></i> Analisar Justificativa de Cancelamento
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+
+        <div class="modal-body p-4">
+          <div class="p-3 bg-body-tertiary rounded-3 border mb-3">
+            <div class="small text-muted text-uppercase fw-semibold mb-1">Voluntário & Escala</div>
+            <div class="fw-bold text-body" id="analise_nome_voluntario">-</div>
+            <div class="small text-muted" id="analise_info_culto">-</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold small text-uppercase text-muted">Decisão da Liderança:</label>
+            <div class="vstack gap-2">
+              <label class="d-flex align-items-start gap-3 p-3 border rounded-3 bg-body" style="cursor: pointer;">
+                <input class="form-check-input mt-1" type="radio" name="decisao" id="decisao_abonado" value="ABONADO" checked>
+                <div>
+                  <div class="fw-bold text-success"><i class="bi bi-shield-check me-1"></i> Abonar (Não Descontar Pontos)</div>
+                  <small class="text-muted d-block">A justificativa foi considerada válida (saúde, trabalho, luto, etc.). O cancelamento <strong>NÃO</strong> retirará pontos do ranking.</small>
+                </div>
+              </label>
+
+              <label class="d-flex align-items-start gap-3 p-3 border rounded-3 bg-body" style="cursor: pointer;">
+                <input class="form-check-input mt-1" type="radio" name="decisao" id="decisao_descontado" value="DESCONTADO">
+                <div>
+                  <div class="fw-bold text-danger"><i class="bi bi-dash-circle-fill me-1"></i> Confirmar Desconto (-10 pts)</div>
+                  <small class="text-muted d-block">A justificativa não foi acolhida ou foi feita fora do prazo acordado. A penalidade de 10 pontos será <strong>mantida</strong> no ranking.</small>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="mb-0">
+            <label for="analise_parecer" class="form-label fw-bold small text-uppercase text-muted">Parecer / Observação da Liderança (Opcional):</label>
+            <textarea class="form-control rounded-3" id="analise_parecer" name="parecer" rows="3" placeholder="Ex: Justificativa médica apresentada e aceita pelo coordenador..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold" id="btnSalvarAnalise">
+            <i class="bi bi-check-lg me-1"></i> Confirmar Decisão
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script>
+  let modalParecerInstance = null;
+
+  function notificar(tipo, titulo, msg) {
+    if (typeof USToast !== 'undefined' && USToast.show) {
+      USToast.show(tipo, titulo, msg);
+    } else if (typeof usShowToast === 'function') {
+      usShowToast(tipo, titulo, msg);
+    } else {
+      console.log(tipo, titulo, msg);
+    }
+  }
+
   function toggleDatasCustom(val) {
     const div = document.getElementById('divDatasCustom');
     if (val === 'custom') {
@@ -552,23 +718,76 @@
               const just = c.justificativa_recusa || 'Sem justificativa informada.';
               const dtResp = c.data_resposta ? new Date(c.data_resposta).toLocaleString('pt-BR') : 'Não registrada';
 
+              const stAn = (c.status_analise_justificativa || 'PENDENTE').toUpperCase();
+              let badgeStatus = '';
+              let pontosTexto = '';
+              if (stAn === 'ABONADO') {
+                badgeStatus = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 small fw-bold"><i class="bi bi-shield-check me-1"></i>Abonada (Sem Desconto)</span>';
+                pontosTexto = '<strong class="text-success"><i class="bi bi-shield-check"></i> 0 pts descontados</strong>';
+              } else if (stAn === 'DESCONTADO') {
+                badgeStatus = '<span class="badge bg-danger text-white rounded-pill px-2.5 py-1 small fw-bold"><i class="bi bi-dash-circle-fill me-1"></i>Desconto Confirmado (-10 pts)</span>';
+                pontosTexto = '<strong class="text-danger"><i class="bi bi-dash-circle"></i> -10 pts</strong>';
+              } else {
+                badgeStatus = '<span class="badge bg-warning text-dark rounded-pill px-2.5 py-1 small fw-bold"><i class="bi bi-hourglass-split me-1"></i>Aguardando Análise</span>';
+                pontosTexto = '<strong class="text-warning-emphasis"><i class="bi bi-hourglass-split"></i> Provisório (-10 pts)</strong>';
+              }
+
+              let parecerBox = '';
+              if (stAn !== 'PENDENTE') {
+                parecerBox = `
+                  <div class="p-2.5 bg-body-secondary rounded-3 border small mb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                      <span class="fw-bold text-body"><i class="bi bi-person-check-fill text-primary me-1"></i> Analisado por: ${c.nome_analisador || 'Gestor'}</span>
+                      ${c.justificativa_analisado_em ? `<span class="text-muted" style="font-size: 0.72rem;">${new Date(c.justificativa_analisado_em).toLocaleString('pt-BR')}</span>` : ''}
+                    </div>
+                    ${c.justificativa_parecer_gestor ? `<div class="text-secondary fst-italic">"${c.justificativa_parecer_gestor}"</div>` : ''}
+                  </div>
+                `;
+              }
+
+              const safeVolNome = (v.nome || '').replace(/'/g, "\\'");
+              const safeCultoInfo = `${dtCulto} - ${(c.titulo_culto || '').replace(/'/g, "\\'")}`;
+              const safeParecer = (c.justificativa_parecer_gestor || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
               html += `
               <div class="card border border-danger-subtle rounded-3 shadow-none bg-body">
                 <div class="card-body p-3">
-                  <div class="d-flex justify-content-between align-items-center mb-2">
+                  <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
                     <span class="fw-bold text-primary font-monospace">
                       <i class="bi bi-calendar-event me-1"></i> ${dtCulto} &bull; ${hora}
                     </span>
-                    <span class="badge rounded-pill text-white px-2 py-1 small" style="background-color: ${corDep};">
-                      ${c.nome_departamento}: ${c.nome_area}
-                    </span>
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="badge rounded-pill text-white px-2 py-1 small" style="background-color: ${corDep};">
+                        ${c.nome_departamento}: ${c.nome_area}
+                      </span>
+                      ${badgeStatus}
+                    </div>
                   </div>
                   <div class="fw-semibold text-body mb-2">${c.titulo_culto}</div>
                   <div class="p-3 bg-danger-subtle rounded-3 border border-danger-subtle text-danger-emphasis small fst-italic mb-2">
                     <i class="bi bi-chat-quote-fill me-1 text-danger"></i> "${just}"
                   </div>
-                  <div class="text-end text-muted" style="font-size: 0.72rem;">
+                  <div class="text-end text-muted mb-2" style="font-size: 0.72rem;">
                     <i class="bi bi-clock-history me-1"></i> Cancelado em: ${dtResp}
+                  </div>
+                  ${parecerBox}
+                  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 border-top">
+                    <div class="small">
+                      <span class="text-muted">Ranking:</span> ${pontosTexto}
+                    </div>
+                    <div class="d-flex gap-2">
+                      <button type="button" class="btn btn-sm btn-outline-success rounded-pill fw-semibold" onclick="abrirModalParecer(${c.id_escala_voluntario}, '${safeVolNome}', '${safeCultoInfo}', 'ABONADO', '${safeParecer}')">
+                        <i class="bi bi-shield-check me-1"></i> ${stAn === 'ABONADO' ? 'Editar Parecer' : 'Abonar (0 pts)'}
+                      </button>
+                      <button type="button" class="btn btn-sm btn-outline-danger rounded-pill fw-semibold" onclick="abrirModalParecer(${c.id_escala_voluntario}, '${safeVolNome}', '${safeCultoInfo}', 'DESCONTADO', '${safeParecer}')">
+                        <i class="bi bi-dash-circle me-1"></i> ${stAn === 'DESCONTADO' ? 'Editar Parecer' : 'Descontar (-10 pts)'}
+                      </button>
+                      ${stAn !== 'PENDENTE' ? `
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="reverterAnalise(${c.id_escala_voluntario})" title="Reverter para pendente">
+                          <i class="bi bi-arrow-counterclockwise"></i>
+                        </button>
+                      ` : ''}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -593,5 +812,87 @@
         document.getElementById('modalListaCancelamentos').classList.remove('d-none');
         document.getElementById('modalListaCancelamentos').innerHTML = `<div class="alert alert-danger">Erro de conexão ao carregar justificativas.</div>`;
       });
+  }
+
+  function abrirModalParecer(idEscala, nomeVoluntario, infoCulto, decisaoPrevia, parecerPrevio) {
+    document.getElementById('analise_id_escala').value = idEscala;
+    document.getElementById('analise_nome_voluntario').textContent = nomeVoluntario;
+    document.getElementById('analise_info_culto').textContent = infoCulto;
+    document.getElementById('analise_parecer').value = parecerPrevio || '';
+
+    if (decisaoPrevia === 'DESCONTADO') {
+      document.getElementById('decisao_descontado').checked = true;
+    } else {
+      document.getElementById('decisao_abonado').checked = true;
+    }
+
+    const modalEl = document.getElementById('modalParecerAnalise');
+    modalParecerInstance = new bootstrap.Modal(modalEl);
+    modalParecerInstance.show();
+  }
+
+  function submeterAnaliseJustificativa() {
+    const form = document.getElementById('formAnaliseJustificativa');
+    const btn = document.getElementById('btnSalvarAnalise');
+    const formData = new FormData(form);
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Salvando...';
+
+    fetch('<?= base_url('voluntario/analisarJustificativa') ?>', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Confirmar Decisão';
+
+      if (data.status === 'success') {
+        if (modalParecerInstance) modalParecerInstance.hide();
+        notificar('success', 'Decisão Salva!', data.message);
+        setTimeout(() => {
+          window.location.reload();
+        }, 700);
+      } else {
+        notificar('error', 'Atenção', data.message || 'Não foi possível salvar a decisão.');
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Confirmar Decisão';
+      notificar('error', 'Erro de Conexão', 'Falha ao comunicar com o servidor.');
+    });
+  }
+
+  function reverterAnalise(idEscala) {
+    const formData = new FormData();
+    formData.append('id_escala_voluntario', idEscala);
+    formData.append('decisao', 'PENDENTE');
+
+    fetch('<?= base_url('voluntario/analisarJustificativa') ?>', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.status === 'success') {
+        notificar('success', 'Status Revertido', data.message);
+        setTimeout(() => {
+          window.location.reload();
+        }, 700);
+      } else {
+        notificar('error', 'Atenção', data.message || 'Não foi possível reverter a análise.');
+      }
+    })
+    .catch(err => {
+      notificar('error', 'Erro de Conexão', 'Falha ao comunicar com o servidor.');
+    });
   }
 </script>

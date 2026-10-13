@@ -279,6 +279,9 @@ class Agenda extends BaseController
             return redirect()->to('accessdeny');
         }
 
+        // Sincroniza e marca como Omissão (-25 pts) escalas passadas não confirmadas
+        (new \App\Models\EscalaVoluntarioModel())->marcarOmissoesPassadas();
+
         $ano = (int)($ano ?: date('Y'));
         $mes = (int)($mes ?: date('m'));
 
@@ -373,11 +376,9 @@ class Agenda extends BaseController
 
             // Filtra cultos sugeridos usando as regras de recorrência do modelo
             $sugeridos = [];
-            if (!empty($cultosPadraoPorDia[$numDiaSemana])) {
-                foreach ($cultosPadraoPorDia[$numDiaSemana] as $cp) {
-                    if (\App\Models\CultoPadraoModel::isOcorrenciaCultoValida($cp, $dataIso)) {
-                        $sugeridos[] = $cp;
-                    }
+            foreach ($cultosPadrao as $cp) {
+                if (\App\Models\CultoPadraoModel::isOcorrenciaCultoValida($cp, $dataIso)) {
+                    $sugeridos[] = $cp;
                 }
             }
 
@@ -402,6 +403,21 @@ class Agenda extends BaseController
         $data['hojeIso']      = date('Y-m-d');
         $data['isMesAtual']   = ($ano === (int)date('Y') && $mes === (int)date('m'));
         $data['isMesPassado'] = ($ano < (int)date('Y') || ($ano === (int)date('Y') && $mes < (int)date('m')));
+
+        // Meses anteriores do ano corrente que possuem cultos agendados (mesma regra da grade de escalas)
+        $mesesPassadosComAgenda = [];
+        if ($ano === (int)date('Y') && (int)date('m') > 1) {
+            $rowsMeses = $db->table('tb_agenda_culto')
+                ->select('DISTINCT MONTH(data_culto) as mes', false)
+                ->where('status_culto', 1)
+                ->where('data_culto >=', sprintf('%04d-01-01', $ano))
+                ->where('data_culto <', sprintf('%04d-%02d-01', $ano, (int)date('m')))
+                ->orderBy('mes', 'ASC')
+                ->get()
+                ->getResult();
+            $mesesPassadosComAgenda = array_map(fn($r) => (int)$r->mes, $rowsMeses);
+        }
+        $data['mesesPassadosComAgenda'] = $mesesPassadosComAgenda;
 
         $data['content_view'] = view('agenda/agenda-grade', $data);
         return view('_layout', $data);
@@ -443,12 +459,11 @@ class Agenda extends BaseController
                 $dataIso      = sprintf('%04d-%02d-%02d', $ano, $mes, $d);
                 $numDiaSemana = (int)date('w', strtotime($dataIso));
 
-                if (!empty($cultosPadraoPorDia[$numDiaSemana])) {
-                    foreach ($cultosPadraoPorDia[$numDiaSemana] as $cp) {
-                        // Validação das regras de recorrência (ex: 3ª Quinta, Santa Ceia Domingo)
-                        if (!\App\Models\CultoPadraoModel::isOcorrenciaCultoValida($cp, $dataIso)) {
-                            continue;
-                        }
+                foreach ($cultosPadrao as $cp) {
+                    // Validação das regras de recorrência (ex: 3ª Quinta, Santa Ceia Domingo, Evento Avulso)
+                    if (!\App\Models\CultoPadraoModel::isOcorrenciaCultoValida($cp, $dataIso)) {
+                        continue;
+                    }
 
                         // Previne duplicar se já existir um culto com o mesmo nome na mesma data
                         $exists = $db->table('tb_agenda_culto')
@@ -473,7 +488,6 @@ class Agenda extends BaseController
                         }
                     }
                 }
-            }
 
             return $this->response->setJSON([
                 'status' => 'success',

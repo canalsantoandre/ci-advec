@@ -10,6 +10,7 @@ use App\Models\DepartamentoModel;
 use App\Models\DepartamentoAreaModel;
 use App\Models\DepartamentoGestorModel;
 use App\Models\DepartamentoConviteModel;
+use App\Models\EscalaVoluntarioModel;
 use App\Models\SessionModel;
 use App\Services\WebhookService;
 
@@ -32,6 +33,9 @@ class Voluntario extends BaseController
         if (empty($data['sys_action']->read)) {
             return redirect()->to('accessdeny');
         }
+
+        // Sincroniza e marca como Omissão (-25 pts) escalas passadas não confirmadas
+        (new EscalaVoluntarioModel())->marcarOmissoesPassadas();
 
         $departamentoGestorModel    = new DepartamentoGestorModel();
         $departamentosPermitidos    = $departamentoGestorModel->getDepartamentosPermitidosPorUsuario($data['usuario']);
@@ -317,6 +321,9 @@ class Voluntario extends BaseController
             return redirect()->to('accessdeny');
         }
 
+        // Sincroniza e marca como Omissão (-25 pts) escalas passadas não confirmadas
+        (new EscalaVoluntarioModel())->marcarOmissoesPassadas();
+
         $periodo = $this->request->getGet('periodo') ?: 'tudo';
         $voluntarioModel = new VoluntarioModel();
         $stats = $voluntarioModel->getEstatisticasVoluntario((int)$id_voluntario, $periodo);
@@ -361,6 +368,9 @@ class Voluntario extends BaseController
             return redirect()->to('accessdeny');
         }
 
+        // Sincroniza e marca como Omissão (-25 pts) escalas passadas não confirmadas
+        (new EscalaVoluntarioModel())->marcarOmissoesPassadas();
+
         $departamentoGestorModel = new DepartamentoGestorModel();
         $departamentosPermitidos = $departamentoGestorModel->getDepartamentosPermitidosPorUsuario($data['usuario']);
         $departamentosPermitidosIds = array_column($departamentosPermitidos, 'id_departamento');
@@ -373,6 +383,7 @@ class Voluntario extends BaseController
             'id_area'              => $this->request->getGet('id_area'),
             'status'               => $this->request->getGet('status') !== null ? $this->request->getGet('status') : '1',
             'apenas_cancelamentos' => (bool)$this->request->getGet('apenas_cancelamentos'),
+            'status_analise'       => $this->request->getGet('status_analise') ?: 'todos',
             'busca'                => $this->request->getGet('busca'),
             'ordem'                => $this->request->getGet('ordem') ?: 'cancelamentos_desc'
         ];
@@ -399,6 +410,93 @@ class Voluntario extends BaseController
 
         $data['content_view']  = view('voluntario/relatorio-desempenho', $data);
         return view('_layout', $data);
+    }
+
+    /**
+     * Tela Principal de Ranking e Gamificação dos Voluntários
+     * Visão do Gestor por Departamento, Sub-área e Visão Geral Multi-departamento
+     */
+    public function ranking()
+    {
+        $data = $this->session();
+        if (empty($data['sys_action']->read)) {
+            return redirect()->to('accessdeny');
+        }
+
+        // Sincroniza e marca como Omissão (-25 pts) escalas passadas não confirmadas
+        (new EscalaVoluntarioModel())->marcarOmissoesPassadas();
+
+        $departamentoGestorModel    = new DepartamentoGestorModel();
+        $departamentosPermitidos    = $departamentoGestorModel->getDepartamentosPermitidosPorUsuario($data['usuario']);
+        $departamentosPermitidosIds = array_column($departamentosPermitidos, 'id_departamento');
+
+        $filtros = [
+            'periodo'                  => $this->request->getGet('periodo') ?: 'mes_atual',
+            'data_inicio'              => $this->request->getGet('data_inicio'),
+            'data_fim'                 => $this->request->getGet('data_fim'),
+            'id_departamento'          => $this->request->getGet('id_departamento'),
+            'id_area'                  => $this->request->getGet('id_area'),
+            'apenas_multi'             => (bool)$this->request->getGet('apenas_multi'),
+            'apenas_escalados'         => $this->request->getGet('apenas_escalados') !== null ? (bool)$this->request->getGet('apenas_escalados') : true,
+            'busca'                    => $this->request->getGet('busca'),
+            'departamentos_permitidos' => $departamentosPermitidosIds
+        ];
+
+        if (!empty($filtros['id_departamento'])) {
+            if (!in_array((int)$filtros['id_departamento'], $departamentosPermitidosIds)) {
+                $filtros['id_departamento'] = !empty($departamentosPermitidosIds) ? $departamentosPermitidosIds[0] : -1;
+            }
+        }
+
+        $voluntarioModel = new VoluntarioModel();
+        $rankingData     = $voluntarioModel->getRankingGestor($filtros);
+
+        $areaModel = new DepartamentoAreaModel();
+        $areasDoDepartamento = [];
+        if (!empty($filtros['id_departamento'])) {
+            $areasDoDepartamento = $areaModel->getAreasPorDepartamento((int)$filtros['id_departamento'], true);
+        }
+
+        $data['rankingData']         = $rankingData;
+        $data['departamentos']       = $departamentosPermitidos;
+        $data['departamentosIds']    = $departamentosPermitidosIds;
+        $data['areasDoDepartamento'] = $areasDoDepartamento;
+        $data['todasAreasAgrupadas'] = $areaModel->getTodasAreasAgrupadas();
+        $data['filtros']             = $filtros;
+
+        $data['content_view'] = view('voluntario/voluntario-ranking', $data);
+        return view('_layout', $data);
+    }
+
+    /**
+     * AJAX: Retorna ficha comparativa completa de ranking de um voluntário
+     * (posição global, por departamento e por sub-área)
+     */
+    public function getRankingVoluntarioDetalhes($id_voluntario)
+    {
+        $data = $this->session();
+        if (empty($data['sys_action']->read)) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Acesso negado.']);
+        }
+
+        $id_voluntario = (int)$id_voluntario;
+        $periodo       = (string)($this->request->getGet('periodo') ?: 'mes_atual');
+
+        $departamentoGestorModel    = new DepartamentoGestorModel();
+        $departamentosPermitidos    = $departamentoGestorModel->getDepartamentosPermitidosPorUsuario($data['usuario']);
+        $departamentosPermitidosIds = array_column($departamentosPermitidos, 'id_departamento');
+
+        $voluntarioModel = new VoluntarioModel();
+        $detalhes = $voluntarioModel->getRankingDetalhesVoluntario($id_voluntario, $periodo, $departamentosPermitidosIds);
+
+        if (!$detalhes) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Voluntário não encontrado.']);
+        }
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'dados'  => $detalhes
+        ]);
     }
 
     /**
@@ -431,6 +529,78 @@ class Voluntario extends BaseController
                 'foto_url' => $vol->foto_url
             ],
             'cancelamentos' => $cancelamentos
+        ]);
+    }
+
+    /**
+     * AJAX: Analisa a justificativa de cancelamento de escala
+     * Permite ao Gestor aprovar (ABONADO - sem desconto de pontos) ou confirmar desconto (DESCONTADO - com perda de pontos)
+     */
+    public function analisarJustificativa()
+    {
+        $data = $this->session();
+        if (empty($data['sys_action']->update)) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Você não tem permissão para analisar justificativas.']);
+        }
+
+        $idEscala = (int)$this->request->getPost('id_escala_voluntario');
+        $decisao  = strtoupper(trim((string)$this->request->getPost('decisao')));
+        $parecer  = trim((string)$this->request->getPost('parecer'));
+
+        if ($idEscala <= 0) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Escala não identificada.']);
+        }
+
+        if (!in_array($decisao, ['ABONADO', 'DESCONTADO', 'PENDENTE'])) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Decisão de análise inválida.']);
+        }
+
+        $escalaModel = new \App\Models\EscalaVoluntarioModel();
+        $escala = $escalaModel->find($idEscala);
+
+        if (!$escala) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Escala não encontrada no sistema.']);
+        }
+
+        // Valida se o usuário tem permissão sobre o departamento da escala
+        $departamentoGestorModel = new \App\Models\DepartamentoGestorModel();
+        $departamentosPermitidos = $departamentoGestorModel->getDepartamentosPermitidosPorUsuario($data['usuario']);
+        $departamentosPermitidosIds = array_column($departamentosPermitidos, 'id_departamento');
+
+        if (!empty($departamentosPermitidosIds) && !in_array((int)$escala->id_departamento, $departamentosPermitidosIds)) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Você não possui permissão para gerenciar justificativas deste departamento.']);
+        }
+
+        $dadosUpdate = [
+            'status_analise_justificativa' => $decisao,
+            'justificativa_parecer_gestor' => !empty($parecer) ? $parecer : null,
+            'justificativa_analisado_por'  => (int)$data['usuario']->id_usuario,
+            'justificativa_analisado_em'   => date('Y-m-d H:i:s')
+        ];
+
+        if ($decisao === 'PENDENTE') {
+            $dadosUpdate['justificativa_parecer_gestor'] = null;
+            $dadosUpdate['justificativa_analisado_por']  = null;
+            $dadosUpdate['justificativa_analisado_em']   = null;
+        }
+
+        $escalaModel->update($idEscala, $dadosUpdate);
+
+        $nomeGestor = $data['usuario']->nome ?? 'Gestor';
+        $msgSucesso = ($decisao === 'ABONADO') 
+            ? 'Justificativa abonada com sucesso! Os pontos deste cancelamento NÃO serão descontados no ranking.'
+            : (($decisao === 'DESCONTADO')
+                ? 'Desconto de pontos confirmado para este cancelamento.'
+                : 'Análise revertida para pendente.');
+
+        return $this->response->setJSON([
+            'status'                       => 'success',
+            'message'                      => $msgSucesso,
+            'id_escala_voluntario'         => $idEscala,
+            'status_analise_justificativa' => $decisao,
+            'justificativa_parecer_gestor' => $dadosUpdate['justificativa_parecer_gestor'],
+            'justificativa_analisado_em'   => $dadosUpdate['justificativa_analisado_em'] ? date('d/m/Y H:i', strtotime($dadosUpdate['justificativa_analisado_em'])) : null,
+            'nome_analisador'              => $nomeGestor
         ]);
     }
 

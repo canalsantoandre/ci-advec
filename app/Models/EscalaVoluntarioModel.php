@@ -19,6 +19,10 @@ class EscalaVoluntarioModel extends Model
         'status_presenca',
         'status_confirmacao',
         'justificativa_recusa',
+        'status_analise_justificativa',
+        'justificativa_parecer_gestor',
+        'justificativa_analisado_por',
+        'justificativa_analisado_em',
         'data_resposta',
         'data_ultimo_lembrete',
         'observacao'
@@ -277,7 +281,7 @@ class EscalaVoluntarioModel extends Model
     }
 
     /**
-     * Rotina de Validação Automática: Marca escalas passadas que permaneceram 'PENDENTE' como 'NAO_CONFIRMADO' (Omissão/Falta)
+     * Rotina de Validação Automática: Marca escalas passadas que permaneceram 'PENDENTE' como 'OMISSAO' (Omissão: -25 pontos)
      *
      * @return int Total de registros atualizados
      */
@@ -292,10 +296,11 @@ class EscalaVoluntarioModel extends Model
             ->where('status_confirmacao', 'PENDENTE')
             ->orWhere('status_confirmacao IS NULL')
             ->orWhere('status_confirmacao', '')
+            ->orWhere('status_confirmacao', 'NAO_CONFIRMADO')
         ->groupEnd();
 
         $builder->update([
-            'status_confirmacao' => 'NAO_CONFIRMADO',
+            'status_confirmacao' => 'OMISSAO',
             'status_presenca'    => 0
         ]);
 
@@ -323,6 +328,12 @@ class EscalaVoluntarioModel extends Model
 
         // Bloqueia se a escala já ocorreu (data no passado)
         if (!empty($escala->data_culto) && $escala->data_culto < date('Y-m-d')) {
+            return false;
+        }
+
+        // Impede reprocessamento se o status já é exatamente o mesmo
+        $statusAtual = strtoupper(trim((string)($escala->status_confirmacao ?? 'PENDENTE')));
+        if ($statusAtual === $status_confirmacao) {
             return false;
         }
 

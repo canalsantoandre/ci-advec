@@ -372,18 +372,24 @@ class PortalVoluntario extends BaseController
         $participantesMap = $escalaModel->getParticipantesEscalasEmLote($escalas);
 
         // Agrupamento e contadores
-        $totalMes      = count($escalas);
+        $totalMes         = count($escalas);
         $totalConfirmadas = 0;
         $totalRecusadas   = 0;
+        $totalOmissoes    = 0;
         $totalPendentes   = 0;
 
+        $hojeIso = date('Y-m-d');
         $scheduleResourceModel = new \App\Models\ScheduleResourceModel();
         foreach ($escalas as &$esc) {
             $conf = strtoupper((string)($esc->status_confirmacao ?: 'PENDENTE'));
+            $isPassado = (!empty($esc->data_culto) && $esc->data_culto < $hojeIso);
+
             if ($conf === 'CONFIRMADO') {
                 $totalConfirmadas++;
             } elseif ($conf === 'RECUSADO') {
                 $totalRecusadas++;
+            } elseif ($conf === 'OMISSAO' || $conf === 'NAO_CONFIRMADO' || ($isPassado && $conf === 'PENDENTE')) {
+                $totalOmissoes++;
             } else {
                 $totalPendentes++;
             }
@@ -419,6 +425,7 @@ class PortalVoluntario extends BaseController
             'totalMes'          => $totalMes,
             'totalConfirmadas'  => $totalConfirmadas,
             'totalRecusadas'    => $totalRecusadas,
+            'totalOmissoes'     => $totalOmissoes,
             'totalPendentes'    => $totalPendentes,
             'menuAtivo'         => 'agenda'
         ];
@@ -446,6 +453,16 @@ class PortalVoluntario extends BaseController
 
         if (!$escala || (int)$escala->id_voluntario !== (int)$voluntario->id_voluntario) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'Escala não encontrada.']);
+        }
+
+        $statusAtual = strtoupper(trim((string)($escala->status_confirmacao ?? 'PENDENTE')));
+
+        // Bloqueio de redundância: se já aceitou anteriormente, impede novo aceite e evita envio indevido de WhatsApp
+        if ($statusAtual === 'CONFIRMADO') {
+            return $this->response->setJSON([
+                'status'  => 'warning',
+                'message' => 'Você já aceitou e confirmou presença nesta escala anteriormente. Nenhuma ação necessária.'
+            ]);
         }
 
         // Bloqueio de ação tardia se a data do evento já passou
@@ -496,6 +513,16 @@ class PortalVoluntario extends BaseController
 
         if (!$escala || (int)$escala->id_voluntario !== (int)$voluntario->id_voluntario) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'Escala não encontrada.']);
+        }
+
+        $statusAtual = strtoupper(trim((string)($escala->status_confirmacao ?? 'PENDENTE')));
+
+        // Bloqueio de redundância: se já cancelou anteriormente, impede novo cancelamento e evita envio indevido de WhatsApp
+        if ($statusAtual === 'RECUSADO') {
+            return $this->response->setJSON([
+                'status'  => 'warning',
+                'message' => 'Esta escala já se encontra desmarcada/cancelada anteriormente. Nenhuma ação necessária.'
+            ]);
         }
 
         // Bloqueio de ação tardia se a data do evento já passou
@@ -595,6 +622,10 @@ class PortalVoluntario extends BaseController
 
         $periodo = $this->request->getGet('periodo') ?: 'mes_atual';
         $id_dep_param = $this->request->getGet('id_departamento');
+
+        // Sincroniza e marca como Omissão (-25 pts) escalas passadas não confirmadas
+        $escalaModel = new EscalaVoluntarioModel();
+        $escalaModel->marcarOmissoesPassadas();
 
         $voluntarioModel = new VoluntarioModel();
         $meusDepartamentos = $voluntarioModel->getDepartamentosDoVoluntario($voluntario->id_voluntario);

@@ -230,6 +230,12 @@ if (!function_exists('renderizarRedesSociaisBadgeList')) {
               <span class="d-none d-sm-inline ms-1">Desempenho</span>
             </a>
 
+            <!-- Botão Ranking de Voluntários -->
+            <a href="<?= base_url('voluntario/ranking') ?>" class="btn btn-warning rounded-3 px-3 fw-bold text-dark shadow-sm text-nowrap" data-bs-toggle="tooltip" data-bs-placement="top" title="Ranking & Gamificação de Voluntários">
+              <i class="bi bi-trophy-fill text-dark me-1"></i>
+              <span class="d-none d-sm-inline">Ranking</span>
+            </a>
+
             <!-- Botão Novo Voluntário Manual -->
             <?php if (!empty($sys_action->create)) { ?>
               <a href="<?= base_url('voluntario/novo') ?>" class="btn btn-primary rounded-3 px-3 fw-semibold shadow-sm text-nowrap" data-bs-toggle="tooltip" data-bs-placement="top" title="Cadastrar Novo Voluntário">
@@ -435,6 +441,11 @@ if (!function_exists('renderizarRedesSociaisBadgeList')) {
                             <a href="<?= base_url('voluntario/dashVoluntario/' . $v->id_voluntario) ?>" class="btn btn-outline-info btn-action" title="Dashboard de Assiduidade">
                               <i class="bi bi-graph-up-arrow"></i>
                             </a>
+
+                            <!-- Ranking & Posição nos Departamentos -->
+                            <button type="button" class="btn btn-outline-warning btn-action" title="Visualizar Posição no Ranking" onclick="abrirModalRankingVoluntario(<?= $v->id_voluntario ?>, '<?= esc($v->nome) ?>')">
+                              <i class="bi bi-trophy-fill text-warning"></i>
+                            </button>
 
                             <?php if (!empty($sys_action->update)) { ?>
                               <button type="button" class="btn btn-outline-warning btn-action" title="Resetar Senha para Telefone Padrão" onclick="abrirModalResetSenhaVol(<?= $v->id_voluntario ?>, '<?= esc($v->nome) ?>', '<?= esc($v->telefone_whatsapp) ?>')">
@@ -1049,6 +1060,33 @@ if (!function_exists('renderizarRedesSociaisBadgeList')) {
   </div>
 </div>
 
+<!-- Modal Ranking & Gamificação do Voluntário -->
+<div class="modal fade" id="modalRankingVoluntario" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-4 shadow border-0 overflow-hidden">
+      <div class="modal-header bg-dark text-white border-0 py-3">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-trophy-fill text-warning fs-5"></i>
+          <h5 class="modal-title fw-bold mb-0">Posição no Ranking dos Departamentos</h5>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body p-4" id="modalRankingVoluntarioCorpo">
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="small text-muted mt-2">Carregando dados de ranking...</p>
+        </div>
+      </div>
+      <div class="modal-footer border-0 bg-body-tertiary justify-content-between">
+        <a href="<?= base_url('voluntario/ranking') ?>" class="btn btn-outline-primary rounded-pill px-3 fw-semibold">
+          <i class="bi bi-trophy-fill me-1"></i> Ver Leaderboard Geral Completo
+        </a>
+        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   let idVoluntarioParaReset = null;
   let idVoluntarioParaRejeitar = null;
@@ -1516,6 +1554,184 @@ if (!function_exists('renderizarRedesSociaisBadgeList')) {
     document.getElementById('btnConfirmarDeleteVol').href = '<?= base_url('voluntario/apagar/') ?>/' + id;
     const modal = new bootstrap.Modal(document.getElementById('modalConfirmarExclusaoVol'));
     modal.show();
+  }
+
+  let modalRankingVolInstance = null;
+
+  function abrirModalRankingVoluntario(idVoluntario, nomeVoluntario) {
+    const corpo = document.getElementById('modalRankingVoluntarioCorpo');
+    corpo.innerHTML = `
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="small text-muted mt-2">Carregando ranking de <strong>${nomeVoluntario}</strong>...</p>
+      </div>
+    `;
+
+    if (!modalRankingVolInstance) {
+      modalRankingVolInstance = new bootstrap.Modal(document.getElementById('modalRankingVoluntario'));
+    }
+    modalRankingVolInstance.show();
+
+    fetch('<?= base_url('voluntario/ranking-voluntario') ?>/' + idVoluntario)
+      .then(r => r.json())
+      .then(resp => {
+        if (resp.status === 'success' && resp.dados) {
+          renderizarModalRankingVoluntario(resp.dados);
+        } else {
+          corpo.innerHTML = `
+            <div class="alert alert-warning border-0 rounded-3 mb-0">
+              <i class="bi bi-exclamation-triangle-fill me-1"></i> Não foi possível carregar as informações deste voluntário.
+            </div>
+          `;
+        }
+      })
+      .catch(err => {
+        corpo.innerHTML = `
+          <div class="alert alert-danger border-0 rounded-3 mb-0">
+            <i class="bi bi-x-circle-fill me-1"></i> Erro de comunicação com o servidor ao consultar ranking.
+          </div>
+        `;
+      });
+  }
+
+  function renderizarModalRankingVoluntario(dados) {
+    const v = dados.voluntario;
+    const corpo = document.getElementById('modalRankingVoluntarioCorpo');
+
+    let htmlDeps = '';
+    if (v.breakdown_departamentos && v.breakdown_departamentos.length > 0) {
+      v.breakdown_departamentos.forEach(dep => {
+        let subareasHtml = '';
+        if (dep.subareas && dep.subareas.length > 0) {
+          subareasHtml = `
+            <div class="mt-2 pt-2 border-top">
+              <small class="text-muted fw-bold d-block mb-1" style="font-size: 0.72rem;">CLASSIFICAÇÃO NAS SUB-ÁREAS DESTE DEPARTAMENTO:</small>
+              <div class="d-flex flex-wrap gap-2">
+                ${dep.subareas.map(sa => `
+                  <div class="p-2 bg-body border rounded-3" style="min-width: 140px;">
+                    <div class="fw-bold small text-body">${sa.nome_area}</div>
+                    <div class="d-flex align-items-center justify-content-between mt-1">
+                      <span class="badge bg-primary-subtle text-primary rounded-pill" style="font-size: 0.7rem;">
+                        ${sa.posicao ? '#' + sa.posicao + ' de ' + sa.total_subarea : 'N/C'}
+                      </span>
+                      <small class="font-monospace fw-bold text-warning-emphasis">${sa.pontos} pts</small>
+                    </div>
+                    <small class="text-muted d-block mt-0.5" style="font-size: 0.68rem;">${sa.presencas}/${sa.total_escalas} presenças (${sa.taxa_assiduidade}%)</small>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        htmlDeps += `
+          <div class="card border mb-3 rounded-3 shadow-none overflow-hidden">
+            <div class="card-header py-2.5 d-flex align-items-center justify-content-between" style="background-color: ${dep.cor_identificacao}15;">
+              <div class="d-flex align-items-center gap-2">
+                <span class="rounded-circle" style="width: 12px; height: 12px; background-color: ${dep.cor_identificacao};"></span>
+                <h6 class="fw-bold mb-0 text-body">${dep.nome_departamento}</h6>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-warning text-dark fw-bold rounded-pill px-2.5 py-1">
+                  ${dep.posicao ? '#' + dep.posicao + ' no Departamento' : 'Sem Escalas'}
+                </span>
+                <span class="badge bg-dark rounded-pill px-2.5 py-1 font-monospace">
+                  ${dep.pontos} pts
+                </span>
+              </div>
+            </div>
+            <div class="card-body p-3">
+              <div class="row g-2 text-center">
+                <div class="col-3">
+                  <small class="text-muted d-block" style="font-size: 0.7rem;">ESCALAS</small>
+                  <span class="fw-bold font-monospace">${dep.total_escalas}</span>
+                </div>
+                <div class="col-3">
+                  <small class="text-muted d-block" style="font-size: 0.7rem;">PRESENÇAS</small>
+                  <span class="fw-bold font-monospace text-success">${dep.presencas}</span>
+                </div>
+                <div class="col-3">
+                  <small class="text-muted d-block" style="font-size: 0.7rem;">CANCELAMENTOS</small>
+                  <span class="fw-bold font-monospace ${dep.cancelados > 0 ? 'text-danger' : 'text-muted'}">${dep.cancelados}</span>
+                </div>
+                <div class="col-3">
+                  <small class="text-muted d-block" style="font-size: 0.7rem;">ASSIDUIDADE</small>
+                  <span class="fw-bold font-monospace text-primary">${dep.taxa_assiduidade}%</span>
+                </div>
+              </div>
+              ${subareasHtml}
+            </div>
+          </div>
+        `;
+      });
+    } else {
+      htmlDeps = `
+        <div class="alert alert-light border rounded-3 p-3 text-muted small">
+          Este voluntário não possui departamentos ou histórico vinculado no período selecionado.
+        </div>
+      `;
+    }
+
+    corpo.innerHTML = `
+      <!-- Perfil do Voluntário no Topo -->
+      <div class="d-flex align-items-center gap-3 p-3 bg-body-tertiary rounded-4 mb-4">
+        <img src="${v.foto_url}" class="rounded-circle shadow-sm" style="width: 64px; height: 64px; object-fit: cover;" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(v.nome_completo)}&background=2563eb&color=fff&size=80&bold=true'">
+        <div class="flex-grow-1">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <h5 class="fw-bold mb-0 text-body">${v.nome_completo}</h5>
+            ${v.nickname ? `<span class="badge bg-secondary-subtle text-secondary rounded-pill">"${v.nickname}"</span>` : ''}
+            <span class="badge bg-primary text-white rounded-pill px-2.5 py-1" style="font-size: 0.75rem;">${v.nivel_conhecimento}</span>
+            ${v.is_multidepartamento ? `<span class="badge rounded-pill px-2.5 py-1 text-white" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);">Atua em ${v.total_departamentos_atuacao} Departamentos</span>` : ''}
+          </div>
+          <div class="text-muted small mt-1">
+            <i class="bi bi-calendar-event me-1"></i> Período Analisado: <strong>${dados.labelPeriodo}</strong>
+          </div>
+        </div>
+        <div class="text-end">
+          <div class="small text-muted fw-bold">POSIÇÃO GERAL</div>
+          <h3 class="fw-bold text-warning mb-0 font-monospace">
+            ${v.posicao_global ? '#' + v.posicao_global : 'N/C'}
+          </h3>
+          <small class="text-muted" style="font-size: 0.72rem;">de ${v.total_geral_voluntarios} voluntários</small>
+        </div>
+      </div>
+
+      <!-- Resumo Geral de Pontuação -->
+      <div class="row g-2 mb-4 text-center">
+        <div class="col-6 col-md-3">
+          <div class="p-2.5 bg-body border rounded-3">
+            <small class="text-muted d-block" style="font-size: 0.72rem;">TOTAL PONTOS GERAIS</small>
+            <h4 class="fw-bold text-warning mb-0 font-monospace">${v.pontos_globais || v.pontos} <span class="fs-6">pts</span></h4>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="p-2.5 bg-body border rounded-3">
+            <small class="text-muted d-block" style="font-size: 0.72rem;">TOTAL DE ESCALAS</small>
+            <h4 class="fw-bold text-body mb-0 font-monospace">${v.total_escalas}</h4>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="p-2.5 bg-body border rounded-3">
+            <small class="text-muted d-block" style="font-size: 0.72rem;">PRESENÇAS</small>
+            <h4 class="fw-bold text-success mb-0 font-monospace">${v.presencas}</h4>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="p-2.5 bg-body border rounded-3">
+            <small class="text-muted d-block" style="font-size: 0.72rem;">ASSIDUIDADE GLOBAL</small>
+            <h4 class="fw-bold text-primary mb-0 font-monospace">${v.taxa_assiduidade}%</h4>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desempenho e Ranking nos Departamentos -->
+      <h6 class="fw-bold text-primary mb-3 d-flex align-items-center gap-2">
+        <i class="bi bi-diagram-3-fill"></i>
+        <span>Ranking nos Departamentos onde o Voluntário Serve</span>
+      </h6>
+
+      ${htmlDeps}
+    `;
   }
 
   // Inicializa tooltips do Bootstrap

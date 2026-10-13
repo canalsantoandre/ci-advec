@@ -64,7 +64,10 @@ $routes->group('voluntario', static function ($routes) {
     $routes->get('apagar/(:num)', 'Voluntario::apagar/$1', ['filter' => 'auth']);
     $routes->get('dashVoluntario/(:num)', 'Voluntario::dashVoluntario/$1', ['filter' => 'auth']);
     $routes->get('desempenho', 'Voluntario::desempenho', ['filter' => 'auth']);
+    $routes->get('ranking', 'Voluntario::ranking', ['filter' => 'auth']);
+    $routes->get('ranking-voluntario/(:num)', 'Voluntario::getRankingVoluntarioDetalhes/$1', ['filter' => 'auth']);
     $routes->get('getJustificativas/(:num)', 'Voluntario::getJustificativas/$1', ['filter' => 'auth']);
+    $routes->post('analisarJustificativa', 'Voluntario::analisarJustificativa', ['filter' => 'auth']);
     $routes->get('getEstatisticasPeriodo', 'Voluntario::getEstatisticasPeriodo', ['filter' => 'auth']);
     $routes->post('resetSenha', 'Voluntario::resetSenha', ['filter' => 'auth']);
     $routes->get('verificarTelefone', 'Voluntario::verificarTelefone', ['filter' => 'auth']);

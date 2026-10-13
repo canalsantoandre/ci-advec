@@ -1311,6 +1311,11 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
                                     $conf = strtoupper((string)($esc->status_confirmacao ?: 'PENDENTE'));
                                     $nomeDisplay = formatarNomeExibicaoGrade($esc->nome_voluntario, $esc->nickname);
                                     $nivelVol = !empty($esc->nivel_conhecimento) ? $esc->nivel_conhecimento : 'JUNIOR';
+                                    $agoraDt = date('Y-m-d H:i:s');
+                                    $horaIniCulto = !empty($c->horario_inicio) ? $c->horario_inicio : '00:00:00';
+                                    $cultoDt = $c->data_culto . ' ' . $horaIniCulto;
+                                    $isCultoFuturo = ($cultoDt > $agoraDt);
+                                    $isPassadoData = ($c->data_culto < date('Y-m-d'));
                                   ?>
                                     <div class="d-flex align-items-center justify-content-between gap-1 p-1 rounded shadow-sm slot-vol-badge" id="boxEscala_<?= $esc->id_escala_voluntario ?>">
                                       <div class="d-flex align-items-center gap-1 text-truncate" style="max-width: 140px;">
@@ -1335,17 +1340,12 @@ if (!function_exists('formatarNomeExibicaoGrade')) {
                                               <?= $isPresente ? 'Pres.' : 'Aus.' ?>
                                             </span>
                                           <?php } ?>
-                                        <?php } elseif ($conf === 'NAO_CONFIRMADO') { ?>
-                                          <!-- Voluntário Omitiu / Não Confirmou no Passado (Falta) -->
-                                          <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-1.5 py-0.5 d-inline-flex align-items-center gap-1" data-bs-toggle="tooltip" title="Não confirmou até a data do evento (Omissão/Falta)">
-                                            <i class="bi bi-exclamation-octagon-fill text-danger" style="font-size: 0.75rem;"></i> Falta
+                                        <?php } elseif ($conf === 'OMISSAO' || $conf === 'NAO_CONFIRMADO' || ($isPassadoData && $conf === 'PENDENTE')) { ?>
+                                          <!-- Voluntário Omitiu / Não Confirmou no Passado (Omissão: -25 pts) -->
+                                          <span class="badge bg-danger text-white border border-danger rounded-pill px-1.5 py-0.5 d-inline-flex align-items-center gap-1 shadow-xs" data-bs-toggle="tooltip" title="Omissão: Não confirmou até a data do evento (-25 pontos)">
+                                            <i class="bi bi-exclamation-octagon-fill text-white" style="font-size: 0.75rem;"></i> Omissão
                                           </span>
-                                        <?php } else {
-                                          $agoraDt = date('Y-m-d H:i:s');
-                                          $horaIniCulto = !empty($c->horario_inicio) ? $c->horario_inicio : '00:00:00';
-                                          $cultoDt = $c->data_culto . ' ' . $horaIniCulto;
-                                          $isCultoFuturo = ($cultoDt > $agoraDt);
-                                        ?>
+                                        <?php } else { ?>
                                           <!-- Voluntário Pendente: Ampulheta com Efeito Pulsante -->
                                           <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-1.5 py-0.5 d-inline-flex align-items-center justify-content-center pulse-pending" data-bs-toggle="tooltip" title="Pendente de confirmação do voluntário">
                                             <i class="bi bi-hourglass-split text-warning" style="font-size: 0.78rem;"></i>

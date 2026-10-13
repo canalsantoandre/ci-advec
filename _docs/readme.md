@@ -193,10 +193,16 @@ flowchart TD
 | `POST` | `/webhook/salvar` | Salva configurações do webhook | `auth` (Admin) |
 | `POST` | `/webhook/testar` | Teste de disparo de webhook via AJAX | `auth` (Admin) |
 | `GET` | `/voluntario/desempenho` | Relatório de Desempenho e Cancelamentos | `auth` (Admin) |
+| `GET` | `/voluntario/ranking` | Painel de Ranking de Voluntários (Visão Departamental e Multi-Departamento) | `auth` (Líder/Admin) |
 | `POST` | `/voluntario/resetSenha` | Redefine senha do voluntário e ativa OTP | `auth` (Admin) |
 | `GET` | `/voluntario/verificarTelefone` | Verifica existência global de voluntário por telefone | `auth` (Líder/Admin) |
 | `POST` | `/voluntario/vincularRapido` | Vincula voluntário existente à sub-área do departamento | `auth` (Líder/Admin) |
 | `GET` | `/voluntario/getSubareasPorDepartamento/(:num)` | Retorna sub-áreas ativas do departamento | `auth` (Líder/Admin) |
+| `GET` | `/agenda/grade` | Grade mensal de cultos da congregação com filtros e meses anteriores | `auth` |
+| `POST` | `/agenda/gerarGradeMes` | Geração automática da grade de cultos a partir dos modelos padrão | `auth` |
+| `GET` | `/cultopadrao` | Listagem de cultos padrão e eventos avulsos cadastrados | `auth` |
+| `GET/POST` | `/cultopadrao/novo` / `editar/(:num)` | Cadastro e edição de culto padrão ou evento avulso em data específica | `auth` |
+| `POST` | `/cultopadrao/salvar` | Persistência de modelo de culto / evento avulso | `auth` |
 | `GET` | `/dashboard` | Painel inicial com suporte à view padrão de boas-vindas | `auth` |
 | `GET` | `/resource` | Listagem e gestão da Resource Library (Materiais e Coleções) | `auth_sysadm` (SysAdm) |
 | `GET/POST` | `/resource/novo` / `editar/(:num)` | Cadastro e edição de material avulso com auto-parsing | `auth_sysadm` (SysAdm) |
@@ -332,6 +338,105 @@ flowchart TD
   - **Bloqueio no Uso (Convite Aberto/Lote):** Na Landing Page do convite ([`Convite::solicitarOtp`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Controllers/Convite.php)), quando o candidato insere seu telefone para receber o OTP, o sistema valida se o número já possui cadastro e bloqueia o prosseguimento.
   - **Otimização de Banco de Dados:** Criação do índice `idx_voluntario_telefone` em `tb_voluntario(telefone_whatsapp)` e normalização de busca indexada de múltiplos formatos para tempo de resposta sub-milissegundo.
 
+### 15. Grade da Agenda de Cultos: Alinhamento de Filtros, Meses Passados & Ocorrências
+- **Exibição Inteligente de Dias no Mês Corrente ([`agenda-grade.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/agenda/agenda-grade.php))**:
+  - No mês atual, exibe por padrão apenas cultos a partir da data de hoje (`data >= hoje`), alinhando o comportamento com a grade de escalas.
+  - Switch interativo *"Exibir dias anteriores (X)"* permite ao gestor alternar a visualização dos dias passados sob demanda sem recarregar a página.
+  - Em meses anteriores selecionados no histórico, todos os dias do mês são exibidos automaticamente.
+- **Filtro Seletor de Cultos Ativos**:
+  - Inclusão de dropdown de filtro de cultos ativos da congregação no cabeçalho da grade, permitindo ao gestor isolar um culto específico ou visualizar a grade completa.
+- **Validação Estrita de Ocorrência de Modelos ([`Agenda.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Controllers/Agenda.php))**:
+  - Tanto na renderização da grade quanto na geração automática de cultos do mês (`/agenda/gerarGradeMes`), a alocação de cultos utiliza estritamente `CultoPadraoModel::isOcorrenciaCultoValida($cp, $dataIso)`.
+
+### 16. Ranking de Voluntários Multi-Departamento & Visão do Gestor ([`voluntario-ranking.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/voluntario/voluntario-ranking.php))
+- **Visão para Gestores e Líderes (`/voluntario/ranking`)**:
+  - Permite aos gestores acompanhar o engajamento dos voluntários sob três dimensões complementares:
+    - **Visão Geral Departamental:** ranking geral entre todos os voluntários que atuam nos departamentos autorizados do usuário logado.
+    - **Visão por Sub-área:** ranking segmentado por especialidade/sub-área de atuação (ex: Recepção, Mídia, Louvor, etc.).
+    - **Visão Multi-Departamento por Voluntário:** para membros que servem em múltiplos departamentos, o card/tabela detalha a pontuação e assiduidade em cada departamento individualmente somado à pontuação consolidada geral.
+- **Métricas e Gamificação**:
+  - Pódios visuais com medalhas (Ouro, Prata, Bronze) para os 3 primeiros colocados.
+  - Exibição de taxa de assiduidade percentual, total de escalas, confirmações, presenças realizadas, recusas e score de fidelidade.
+- **Acesso Rápido**:
+  - Botão destacado *"Ranking de Voluntários"* no topo da listagem de voluntários ([`voluntario-list.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/voluntario/voluntario-list.php)).
+
+### 17. Modelos de Cultos & Eventos Avulsos sem Recorrência em Data Específica ([`culto-padrao-form.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/culto_padrao/culto-padrao-form.php))
+- **Cadastro de Evento Pontual/Avulso (`/cultopadrao/novo` e `/cultopadrao/editar/(:num)`)**:
+  - Suporte ao cadastro de cultos ou eventos especiais que acontecem em uma data única e determinada, sem se repetir nas demais semanas.
+  - Nova opção no seletor de recorrência: `"Evento Avulso em Data Específica (Sem Recorrência)"` (`tipo_recorrencia = 'avulso'`).
+- **Campo de Data Específica com Detecção Automática**:
+  - Ao selecionar a opção avulsa, o campo *"Data do Evento"* (`data_especifica`) é exibido e marcado como obrigatório.
+  - Sincronização em tempo real: o sistema calcula o dia da semana correspondente à data escolhida, atualizando o formulário com badge visual explicativo e persistindo o campo `dia_semana` no backend ([`Cultopadrao::salvar`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Controllers/Cultopadrao.php)) para preservar compatibilidade com rotinas legadas.
+- **Regra de Ocorrência Estrita na Agenda e Escalas ([`CultoPadraoModel.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Models/CultoPadraoModel.php))**:
+  - O método `CultoPadraoModel::isOcorrenciaCultoValida()` valida que se `$tipo === 'avulso'`, o evento só é válido exatamente quando `$cultoPadrao->data_especifica === $dataIso`.
+  - Garante que eventos avulsos apareçam exclusivamente em sua data na grade de agenda mensal ([`Agenda::grade`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Controllers/Agenda.php)) e na grade de escalas dos voluntários ([`Escala::grade`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Controllers/Escala.php)).
+- **Destaque na Listagem ([`culto-padrao-list.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/culto_padrao/culto-padrao-list.php))**:
+  - Exibição de badge `"Avulso"` acompanhada da data formatada (*ex: `Data Única: 25/12/2026`*).
+
+### 18. Análise de Justificativas e Abono de Pontos por Cancelamento no Ranking ([`relatorio-desempenho.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/voluntario/relatorio-desempenho.php) & [`voluntario-ranking.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/voluntario/voluntario-ranking.php))
+- **Objetivo e Regra de Negócio**:
+  - Permite aos Gestores e Líderes analisar as justificativas de cancelamento/recusa de escala informadas pelos voluntários.
+  - Se a justificativa for aprovada pela liderança (`status_analise_justificativa = 'ABONADO'`), o cancelamento **não desconta os 10 pontos de penalidade** no ranking do voluntário, preservando sua pontuação em caso de imprevistos justos (saúde, luto, trabalho imprevisto, etc.).
+  - Se for rejeitada ou mantida como desconto (`DESCONTADO`), a penalidade de 10 pontos continua ativa no ranking.
+  - Caso revertida (`PENDENTE`), permanece aguardando decisão.
+- **Workflow e Interface do Gestor**:
+  - **Mural de Justificativas (`/voluntario/desempenho` - Aba 2)**: exibe cards completos com status visual (`Aguardando Análise`, `Abonada (Sem Desconto)` ou `Desconto Confirmado (-10 pts)`), quem analisou e parecer textual registrado.
+  - **Modal de Decisão (`#modalParecerAnalise`)**: permite escolher entre *"Abonar (Sem Desconto de Pontos)"* e *"Confirmar Desconto (-10 pts)"*, além de um parecer/feedback textual opcional da liderança.
+  - **Histórico no Desempenho por Voluntário (Aba 1)**: botões de acesso direto às justificativas por voluntário com indicadores de recusas abonadas vs pendentes.
+  - **Banner de Pendências no Ranking (`/voluntario/ranking`)**: notifica os gestores quando existem justificativas pendentes de avaliação com link direto para o filtro correspondente.
+  - **Coluna de Recusas no Ranking**: detalha o total de recusas e destaca quantas já foram abonadas pela liderança.
+- **Visibilidade no Portal do Voluntário ([`agenda.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/portal_voluntario/agenda.php))**:
+  - Exibe selo verde explicativo nas escalas recusadas que foram abonadas pela liderança, com o parecer textual do coordenador quando preenchido.
+
+### 19. Critério de Agilidade no Ranking & Painel "Transparência & Monitoramento de Escalas" ([`voluntario-ranking.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/voluntario/voluntario-ranking.php) & [`metricas.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/portal_voluntario/metricas.php))
+- **Agilidade como Divisor de Águas na Classificação**:
+  - Em situações onde voluntários acumulam a mesma pontuação geral (ex: empates com 25 pontos), o sistema utiliza a **rapidez em que o voluntário respondeu e aceitou a agenda** como critério de desempate definitivo.
+  - O cálculo afere o tempo decorrido entre o momento da convocação/escala (`data_escalado` ou `date_insert`) e a confirmação registrada no portal (`data_resposta`), apurando o `tempo_medio_resposta_segundos`.
+  - Na ordenação do leaderboard gestor e do portal, empates de pontuação são ordenados por `tempo_medio_resposta_segundos ASC`, posicionando à frente quem respondeu com maior prontidão.
+- **Bônus de Rapidez (+5 Pontos)**:
+  - Cada escala confirmada em **até 24 horas** (86.400 segundos) após a convocação confere um bônus de **+5 pontos de agilidade** ao voluntário (`bonus_agilidade_count * 5`).
+- **Painel "Transparência & Monitoramento de Escalas" no Portal do Voluntário (`/portal/metricas#transparencia`)**:
+  - Oferece aos voluntários total visibilidade sobre as regras oficiais de pontuação da ADVEC:
+    - **Presença Cumprida**: `+15 pontos`
+    - **Confirmação de Escala**: `+10 pontos`
+    - **Bônus de Agilidade / Rapidez**: `+5 pontos` (ao aceitar em até 24h)
+    - **Cancelamento Abonado pela Liderança**: `0 pontos` (sem penalidade)
+    - **Cancelamento não Abonado**: `-10 pontos`
+    - **Falta / Omissão**: `-25 pontos`
+    - **Alerta Explicativo**: Destaca que a velocidade de resposta é o divisor de águas oficial em situações de empate.
+  - **Indicadores Pessoais de Agilidade**: o voluntário visualiza seu tempo médio de resposta formatado (ex: `1h 45m`) e os pontos de bônus acumulados.
+  - **Coluna de Agilidade no Leaderboard**: exibe o tempo médio de resposta de cada voluntário na tabela do ranking para justificar a ordem de classificação.
+  - **Estímulo na Agenda (`/portal/agenda`)**: exibe dica visual lembrando da bonificação de +5 pontos por resposta rápida com link direto para a seção de transparência.
+
+### 20. Idempotência em Ações de Escalas & Prevenção de Notificações WhatsApp Redundantes ([`PortalVoluntario.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Controllers/PortalVoluntario.php), [`EscalaVoluntarioModel.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Models/EscalaVoluntarioModel.php), [`agenda.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/portal_voluntario/agenda.php))
+- **Bloqueio de Reconfirmação Redundante**:
+  - Quando um voluntário já aceitou uma escala (`status_confirmacao = 'CONFIRMADO'`) e tenta aceitar novamente (via clique duplo, reload ou gesto de swipe para a direita), a requisição é interceptada imediatamente.
+  - Retorna resposta amigável com status `warning` informando que a presença já se encontra confirmada.
+  - **Garantia de Não Envio de WhatsApp**: o método interno `notificarLiderInteracaoEscala()` **não é invocado**, assegurando que os líderes de departamento não recebam mensagens de WhatsApp repetidas ou indevidas.
+- **Bloqueio de Recusa/Cancelamento Redundante**:
+  - Quando uma escala já se encontra desmarcada/recusada (`status_confirmacao = 'RECUSADO'`) e ocorre nova tentativa de recusa/cancelamento (via swipe para a esquerda ou requisição POST), o sistema bloqueia a ação com status `warning`.
+  - Nenhuma nova justificativa sobrescreve a anterior e **nenhuma mensagem de WhatsApp é disparada** para os líderes.
+- **Proteção em Três Camadas**:
+  1. **Interface do Usuário (Frontend/UI)**: no gesto de Swipe em dispositivos móveis, o deslize é interrompido com aviso visual (`showToast('info')`) caso o card já esteja no status almejado. No desktop, os botões são dinamicamente ocultados/alternados.
+  2. **Controller de Entrada ([`PortalVoluntario.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Controllers/PortalVoluntario.php))**: checagem prévia de estado que devolve aviso amigável sem chamar a rotina de notificação nem de gravação.
+  3. **Camada de Dados ([`EscalaVoluntarioModel.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Models/EscalaVoluntarioModel.php))**: impede reprocessamento ou atualização do timestamp `data_resposta` caso o status recebido seja idêntico ao já persistido no banco de dados.
+
+### 21. Sincronização Automática de Omissões & Penalização de -25 Pontos no Ranking ([`EscalaVoluntarioModel.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Models/EscalaVoluntarioModel.php), [`VoluntarioModel.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Models/VoluntarioModel.php), [`agenda.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/portal_voluntario/agenda.php), [`escala-grade.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Views/escala/escala-grade.php))
+- **Gatilho de Sincronização Automática**:
+  - Sempre que qualquer tela de listagem é aberta — seja no portal do voluntário (`/portal/agenda`, `/portal/metricas`) ou no painel do gestor (`/voluntario`, `/voluntario/ranking`, `/voluntario/desempenho`, `/voluntario/dash/{id}`, `/escala/grade`, `/agenda/grade`) —, a rotina `marcarOmissoesPassadas()` é disparada.
+- **Regra de Transição de Status**:
+  - Toda escala cuja data do evento já passou (`data_culto < CURDATE()`) e que permaneceu como `PENDENTE`, nula ou não respondida é automaticamente atualizada no banco de dados para:
+    - `status_confirmacao = 'OMISSAO'`
+    - `status_presenca = 0`
+- **Penalização no Ranking (Gamificação)**:
+  - Cada omissão registrada desconta **-25 pontos** no Score de Fidelidade do voluntário:
+    $$\text{Pontos} = (\text{Presenças} \times 15) + (\text{Confirmações} \times 10) + (\text{Bônus Agilidade} \times 5) - (\text{Cancelamentos Penalizados} \times 10) - (\mathbf{Omissões} \times \mathbf{25})$$
+- **Representação Visual Uniforme**:
+  - **Portal do Voluntário (`agenda.php`)**: o badge muda de "Pendente" para badge vermelho com texto **"Omissão"** e adiciona caixa explicativa avisando sobre a penalidade de -25 pontos. O card é excluído do filtro de "Pendentes".
+  - **Grade de Escalas (`escala-grade.php`)**: o badge muda de "Pendente" (ampulheta) para badge vermelho com ícone de alerta e texto **"Omissão"**.
+  - **Dashboard do Gestor (`dash-voluntario.php`)**: exibe badge vermelho **"Omissão (-25 pts)"** no histórico de escalas.
+  - **Ranking de Voluntários (`voluntario-ranking.php`)**: a coluna de omissões destaca a penalidade correspondente com tooltip (`X omissões (-Y pts no ranking)`).
+
 ---
 
 ## 🗄️ 5. Scripts de Banco de Dados (`scripts_deploys/`)
@@ -349,6 +454,10 @@ flowchart TD
 | [`02102026_self_onboarding_convites_voluntarios.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/02102026_self_onboarding_convites_voluntarios.sql) | `02102026_self_onboarding_convites_voluntarios_rollback.sql` | Tabela `tb_departamento_convite`, colunas de aprovação em `tb_voluntario` e ação `send_invite` |
 | [`02102026_foto_perfil_usuario_admin.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/02102026_foto_perfil_usuario_admin.sql) | `02102026_foto_perfil_usuario_admin_rollback.sql` | Coluna `foto_url` na tabela `tb_sys_usuario` |
 | [`02102026_indice_telefone_voluntario.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/02102026_indice_telefone_voluntario.sql) | [`02102026_indice_telefone_voluntario_rollback.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/02102026_indice_telefone_voluntario_rollback.sql) | Criação do índice de performance `idx_voluntario_telefone` em `tb_voluntario(telefone_whatsapp)` |
+| [`12102026_culto_padrao_evento_avulso_data_especifica.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/12102026_culto_padrao_evento_avulso_data_especifica.sql) | [`12102026_culto_padrao_evento_avulso_data_especifica_rollback.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/12102026_culto_padrao_evento_avulso_data_especifica_rollback.sql) | Adição da coluna `data_especifica` em `tb_culto_padrao` para suporte a eventos avulsos sem recorrência em data determinada |
+| [`12102026_analise_justificativas_cancelamento.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/12102026_analise_justificativas_cancelamento.sql) | [`12102026_analise_justificativas_cancelamento_rollback.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/12102026_analise_justificativas_cancelamento_rollback.sql) | Adição dos campos `status_analise_justificativa`, `justificativa_parecer_gestor`, `justificativa_analisado_por` e `justificativa_analisado_em` em `tb_escala_voluntario` para abono de faltas no ranking |
+| [`12102026_sincronizacao_omissoes_pontuacao_negativa.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/12102026_sincronizacao_omissoes_pontuacao_negativa.sql) | [`12102026_sincronizacao_omissoes_pontuacao_negativa_rollback.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/12102026_sincronizacao_omissoes_pontuacao_negativa_rollback.sql) | Sincronização de escalas passadas pendentes para status `OMISSAO` e aplicação da penalização de -25 pontos no ranking |
+
 
 
 

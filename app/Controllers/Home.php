@@ -141,11 +141,9 @@ class Home extends BaseController
 
             // Filtra cultos sugeridos usando as regras de recorrência do modelo
             $sugeridos = [];
-            if (!empty($cultosPadraoPorDia[$numDiaSemana])) {
-                foreach ($cultosPadraoPorDia[$numDiaSemana] as $cp) {
-                    if (\App\Models\CultoPadraoModel::isOcorrenciaCultoValida($cp, $dataIso)) {
-                        $sugeridos[] = $cp;
-                    }
+            foreach ($cultosPadrao as $cp) {
+                if (\App\Models\CultoPadraoModel::isOcorrenciaCultoValida($cp, $dataIso)) {
+                    $sugeridos[] = $cp;
                 }
             }
 

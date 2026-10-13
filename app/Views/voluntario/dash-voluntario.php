@@ -280,6 +280,10 @@
                         <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-pill px-3 py-1 fw-bold">
                           <i class="bi bi-x-circle-fill me-1"></i> Recusado
                         </span>
+                      <?php } elseif ($h->status_confirmacao === 'OMISSAO' || $h->status_confirmacao === 'NAO_CONFIRMADO' || (!empty($h->data_culto) && $h->data_culto < date('Y-m-d') && $h->status_confirmacao === 'PENDENTE')) { ?>
+                        <span class="badge bg-danger text-white border border-danger rounded-pill px-3 py-1 fw-bold" title="Omissão de resposta: -25 pontos">
+                          <i class="bi bi-exclamation-octagon-fill me-1"></i> Omissão (-25 pts)
+                        </span>
                       <?php } else { ?>
                         <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-1">
                           <i class="bi bi-hourglass-split me-1"></i> Pendente

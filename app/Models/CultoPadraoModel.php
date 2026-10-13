@@ -18,6 +18,7 @@ class CultoPadraoModel extends Model
         'descricao',
         'cor_evento',
         'tipo_recorrencia',
+        'data_especifica',
         'posicao_semana',
         'status_culto'
     ];
@@ -59,7 +60,8 @@ class CultoPadraoModel extends Model
             'apenas_posicao'             => 'Apenas em uma Ocorrência Específica (ex: 3ª Quinta)',
             'exceto_posicao'            => 'Todas as Semanas EXCETO uma Ocorrência Específica',
             'santa_ceia_domingo'        => 'Santa Ceia Domingo (1º Domingo ou 2º Domingo se dia 1)',
-            'exceto_santa_ceia_domingo' => 'Todos os Domingos EXCETO no Domingo de Santa Ceia'
+            'exceto_santa_ceia_domingo' => 'Todos os Domingos EXCETO no Domingo de Santa Ceia',
+            'avulso'                     => 'Evento Avulso em Data Específica (Sem Recorrência)'
         ];
     }
 
@@ -94,6 +96,13 @@ class CultoPadraoModel extends Model
      */
     public static function isOcorrenciaCultoValida($cultoPadrao, $dataIso)
     {
+        $tipo = $cultoPadrao->tipo_recorrencia ?? 'todas';
+
+        // Regra Especial: Evento Avulso (sem recorrência, apenas na data especificada)
+        if ($tipo === 'avulso' || $tipo === 'data_especifica') {
+            return (!empty($cultoPadrao->data_especifica) && $cultoPadrao->data_especifica === $dataIso);
+        }
+
         $time = strtotime($dataIso);
         $numDiaSemana = (int)date('w', $time);
 
@@ -104,7 +113,6 @@ class CultoPadraoModel extends Model
         $diaNumero = (int)date('j', $time);
         $posicaoNoMes = (int)ceil($diaNumero / 7);
 
-        $tipo = $cultoPadrao->tipo_recorrencia ?? 'todas';
         $posicaoTarget = (int)($cultoPadrao->posicao_semana ?? 0);
 
         switch ($tipo) {

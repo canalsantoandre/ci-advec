@@ -103,18 +103,34 @@ class Cultopadrao extends BaseController
         }
 
         $cultoPadraoModel = new CultoPadraoModel();
+        $tipoRecorrencia  = (string)$this->request->getPost('tipo_recorrencia') ?: 'todas';
+        $dataEspecificaRaw = trim((string)$this->request->getPost('data_especifica'));
+        $dataEspecifica   = !empty($dataEspecificaRaw) ? $dataEspecificaRaw : null;
         $posicaoSemanaRaw = $this->request->getPost('posicao_semana');
+
+        // Se for evento avulso (data específica), calcula automaticamente o dia da semana a partir da data
+        if ($tipoRecorrencia === 'avulso') {
+            if (empty($dataEspecifica)) {
+                session()->setFlashdata('error', 'Para evento avulso, informe a data do evento.');
+                return redirect()->back()->withInput();
+            }
+            $diaSemana = (int)date('w', strtotime($dataEspecifica));
+        } else {
+            $diaSemana = (int)$this->request->getPost('dia_semana');
+            $dataEspecifica = null;
+        }
 
         $dados = [
             'id_filial'        => 1,
             'nome_culto'       => trim((string)$this->request->getPost('nome_culto')),
-            'dia_semana'       => (int)$this->request->getPost('dia_semana'),
+            'dia_semana'       => $diaSemana,
             'horario_inicio'   => (string)$this->request->getPost('horario_inicio'),
             'horario_termino'  => (string)$this->request->getPost('horario_termino'),
             'descricao'        => trim((string)$this->request->getPost('descricao')),
             'cor_evento'       => (string)$this->request->getPost('cor_evento') ?: '#2563eb',
-            'tipo_recorrencia' => (string)$this->request->getPost('tipo_recorrencia') ?: 'todas',
-            'posicao_semana'   => ($posicaoSemanaRaw !== '' && $posicaoSemanaRaw !== null) ? (int)$posicaoSemanaRaw : null,
+            'tipo_recorrencia' => $tipoRecorrencia,
+            'data_especifica'  => $dataEspecifica,
+            'posicao_semana'   => ($posicaoSemanaRaw !== '' && $posicaoSemanaRaw !== null && $tipoRecorrencia !== 'avulso') ? (int)$posicaoSemanaRaw : null,
             'status_culto'     => (int)$this->request->getPost('status_culto')
         ];
 

@@ -200,6 +200,25 @@ usConfirm({
    - Nunca exponha IDs numéricos sequenciais em links públicos ou compartilháveis externos. Utilize tokens criptograficamente seguros (32 a 64 caracteres hexadecimais gerados via `bin2hex(random_bytes(16))`).
 3. **Controle de Acesso RBAC**:
    - Valide sempre se o usuário logado possui a permissão/ação requerida para o módulo (ex: `send_invite`, `update_past`) através de `PerfilModel::usuarioTemAcao()`.
+4. **Projeção de Cultos & Eventos Avulsos (`isOcorrenciaCultoValida`)**:
+   - Toda funcionalidade que projete ou gere cultos em datas específicas (`Agenda::grade`, `Agenda::gerarGradeMes`, `Escala::grade`, `Home`) deve delegar a validação de data estritamente para `CultoPadraoModel::isOcorrenciaCultoValida($culto, $dataIso)`.
+   - Essa centralização garante o respeito uniforme a regras de recorrência (`todas`, `apenas_posicao`, `exceto_posicao`, `santa_ceia_domingo`) e eventos pontuais (`avulso` com `data_especifica`).
+5. **Gamificação, Ranking e Análise de Justificativas**:
+   - O score gamificado de voluntários computa presenças cumpridas (+15), confirmações (+10), bônus de agilidade de resposta (+5), cancelamentos/recusas penalizados (-10) e omissões/faltas (-25).
+   - **Bônus de Agilidade (+5 pontos)**: Concedido quando o voluntário confirma/aceita sua escala em até 24 horas (86.400 segundos) a contar da convocação (`data_escalado` ou `date_insert`).
+   - **Divisor de Águas (Critério de Desempate)**: Quando voluntários empatam na pontuação, a ordenação prioriza o **menor tempo médio de resposta** às convocações (`tempo_medio_resposta_segundos ASC`). Quem responde mais rápido assume a frente no ranking.
+   - **Regra de Abono de Cancelamento**: Cancelamentos possuem status de análise pela liderança (`PENDENTE`, `ABONADO`, `DESCONTADO`). Quando uma justificativa é aprovada pelo gestor (`status_analise_justificativa = 'ABONADO'`), a penalidade de -10 pontos é **suprimida**, preservando a pontuação do voluntário no ranking.
+   - Como membros podem atuar em mais de uma frente, as consultas de ranking permitem agrupamento segmentado por departamento e sub-área, além do somatório consolidado global para visualização do gestor.
+   - **Transparência no Portal do Voluntário**: O portal do voluntário disponibiliza a seção *"Transparência & Monitoramento de Escalas"* (`/portal/metricas#transparencia`), exibindo o conjunto completo de regras de pontuação, o divisor de águas no desempate e as métricas individuais de agilidade do voluntário.
+6. **Idempotência em Ações de Escala & Prevenção de Notificações Redundantes**:
+   - Para evitar duplicidade de registros, loops de cliques acidentais e disparos indevidos de WhatsApp para a liderança:
+     - **Tentativa de Aceite Redundante**: Se a escala já possuir `status_confirmacao = 'CONFIRMADO'`, o backend bloqueia a operação imediatamente com status `warning`, não altera timestamps de resposta no banco e **não dispara** notificação via WhatsApp. Na interface (web e gesture swipe), o voluntário recebe feedback informativo (`showToast`).
+     - **Tentativa de Recusa Redundante**: Se a escala já possuir `status_confirmacao = 'RECUSADO'`, novas tentativas de cancelamento/recusa são interceptadas com status `warning`, sem reprocessar justificativa e **sem disparar** notificação de WhatsApp para os líderes.
+     - **Camadas de Proteção**: A trava opera em 3 níveis (Gesto UI/Swipe + Controller Endpoint + Model no BD), garantindo 100% de confiabilidade mesmo sob chamadas assíncronas concorrentes.
+7. **Sincronização de Omissões Passadas & Penalização de -25 Pontos**:
+   - Escalas cujo evento já ocorreu (`data_culto < CURDATE()`) e que permaneceram sem confirmação (`PENDENTE`, nula ou não respondida) são migradas automaticamente para `status_confirmacao = 'OMISSAO'` e `status_presenca = 0` ao abrir qualquer listagem de voluntário ou grade.
+   - O cálculo do ranking e métricas deduz **-25 pontos** por cada omissão apurada.
+   - Na grade de escalas e na lista do voluntário, o status muda de "Pendente" para "Omissão" com badge vermelho e aviso explicativo.
 
 ---
 

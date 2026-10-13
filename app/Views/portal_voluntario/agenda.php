@@ -834,6 +834,18 @@ if (!function_exists('getContrasteTexto')) {
           </div>
         </div>
 
+        <!-- Dica de Pontuação & Bônus de Rapidez -->
+        <div class="mt-3 pt-2 border-top d-flex align-items-center justify-content-between flex-wrap gap-2">
+          <small class="text-muted d-flex align-items-center gap-1.5" style="font-size: 0.74rem;">
+            <i class="bi bi-lightning-charge-fill text-warning"></i>
+            <span>Responda em até 24h para ganhar <strong>+5 pts de agilidade</strong> e subir no ranking!</span>
+          </small>
+          <a href="<?= base_url('portal/metricas#transparencia') ?>" class="small fw-bold text-decoration-none d-inline-flex align-items-center gap-1 text-primary hover-underline" style="font-size: 0.74rem;">
+            <span>Transparência & Regras de Pontuação</span>
+            <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+
       </div>
     </div>
 
@@ -891,12 +903,14 @@ if (!function_exists('getContrasteTexto')) {
           $isPassado = ($dataCultoIso < $hojeIso);
           $isHoje = ($dataCultoIso === $hojeIso);
           $isAmanha = ($dataCultoIso === date('Y-m-d', strtotime('+1 day')));
+          $isOmissao = ($conf === 'OMISSAO' || $conf === 'NAO_CONFIRMADO' || ($isPassado && $conf === 'PENDENTE'));
+          $statusFinalCard = $isOmissao ? 'OMISSAO' : $conf;
         ?>
           <div class="swipe-container <?= ($isPassado && $modoInicial === 'vigentes') ? 'd-none' : '' ?>"
             id="swipe_wrapper_<?= $esc->id_escala_voluntario ?>"
             data-escala-item="1"
             data-passado="<?= $isPassado ? '1' : '0' ?>"
-            data-status="<?= $conf ?>">
+            data-status="<?= $statusFinalCard ?>">
 
             <!-- Fundo de Ação Esquerda: Aceitar / Confirmar (Verde) -->
             <div class="swipe-bg swipe-bg-accept" id="bg_accept_<?= $esc->id_escala_voluntario ?>" style="opacity: 0;">
@@ -920,7 +934,7 @@ if (!function_exists('getContrasteTexto')) {
               data-id="<?= $esc->id_escala_voluntario ?>"
               data-titulo="<?= esc($esc->titulo_culto) ?>"
               data-data="<?= date('d/m/Y', $tsData) ?>"
-              data-status="<?= $conf ?>"
+              data-status="<?= $statusFinalCard ?>"
               data-passado="<?= $isPassado ? '1' : '0' ?>"
               style="border-left: 6px solid <?= esc($corCulto) ?> !important;">
 
@@ -943,6 +957,10 @@ if (!function_exists('getContrasteTexto')) {
                     <?php } elseif ($conf === 'RECUSADO') { ?>
                       <span class="badge status-badge-recusado rounded-pill w-100 py-1 px-1 fw-bold shadow-xs d-flex align-items-center justify-content-center gap-1 text-nowrap" style="font-size: 0.64rem;" title="Justificativa: <?= esc($esc->justificativa_recusa) ?>">
                         <i class="bi bi-x-circle-fill"></i> Recusado
+                      </span>
+                    <?php } elseif ($isOmissao) { ?>
+                      <span class="badge bg-danger text-white rounded-pill w-100 py-1 px-1 fw-bold shadow-xs d-flex align-items-center justify-content-center gap-1 text-nowrap" style="font-size: 0.64rem;" title="Omissão: Não confirmou até a data do evento (-25 pontos)">
+                        <i class="bi bi-exclamation-octagon-fill"></i> Omissão
                       </span>
                     <?php } else { ?>
                       <span class="badge status-badge-pendente pulse-warning rounded-pill w-100 py-1 px-1 fw-bold shadow-xs d-flex align-items-center justify-content-center gap-1 text-nowrap" style="font-size: 0.64rem;">
@@ -1054,9 +1072,26 @@ if (!function_exists('getContrasteTexto')) {
                 </div>
               <?php } ?>
 
-              <?php if ($conf === 'RECUSADO' && !empty($esc->justificativa_recusa)) { ?>
-                <div class="mt-2 pt-2 border-top small text-danger d-flex align-items-center gap-1" style="font-size: 0.75rem;">
-                  <i class="bi bi-chat-quote-fill"></i> <strong>Motivo da recusa:</strong> "<?= esc($esc->justificativa_recusa) ?>"
+              <?php if ($conf === 'RECUSADO') { ?>
+                <?php if (!empty($esc->justificativa_recusa)) { ?>
+                  <div class="mt-2 pt-2 border-top small text-danger d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                    <i class="bi bi-chat-quote-fill"></i> <strong>Motivo da recusa:</strong> "<?= esc($esc->justificativa_recusa) ?>"
+                  </div>
+                <?php } ?>
+                <?php if (($esc->status_analise_justificativa ?? '') === 'ABONADO') { ?>
+                  <div class="mt-1 small text-success fw-semibold d-flex align-items-center gap-1" style="font-size: 0.74rem;">
+                    <i class="bi bi-shield-check"></i> Justificativa abonada pela liderança (sem desconto de pontos no ranking)
+                    <?php if (!empty($esc->justificativa_parecer_gestor)) { ?>
+                      <span class="text-muted fst-italic">- "<?= esc($esc->justificativa_parecer_gestor) ?>"</span>
+                    <?php } ?>
+                  </div>
+                <?php } ?>
+              <?php } ?>
+
+              <?php if ($isOmissao) { ?>
+                <div class="mt-2 pt-2 border-top small text-danger d-flex align-items-center gap-1.5" style="font-size: 0.75rem;">
+                  <i class="bi bi-exclamation-octagon-fill text-danger fs-6"></i>
+                  <span>&nbsp;&nbsp;<strong>Omissão de Confirmação:</strong> A data do culto já passou sem sua resposta prévia, aplicando <strong>-25 pontos</strong> no seu ranking.</span>
                 </div>
               <?php } ?>
 
@@ -1327,6 +1362,9 @@ if (!function_exists('getContrasteTexto')) {
           if (data.status === 'success') {
             showToast('success', data.message);
             setTimeout(() => window.location.reload(), 500);
+          } else if (data.status === 'warning' || data.status === 'info') {
+            showToast('warning', data.message);
+            setTimeout(() => window.location.reload(), 800);
           } else {
             showToast('error', data.message || 'Erro ao confirmar presença.');
             if (btnContainer) btnContainer.innerHTML = originalHtml;
@@ -1381,6 +1419,9 @@ if (!function_exists('getContrasteTexto')) {
           if (data.status === 'success') {
             showToast('success', data.message);
             setTimeout(() => window.location.reload(), 500);
+          } else if (data.status === 'warning' || data.status === 'info') {
+            showToast('warning', data.message);
+            setTimeout(() => window.location.reload(), 800);
           } else {
             showToast('error', data.message || 'Erro ao desmarcar escala.');
           }
@@ -1428,7 +1469,7 @@ if (!function_exists('getContrasteTexto')) {
         } else if (tipo === 'aceitas') {
           exibir = (status === 'CONFIRMADO');
         } else if (tipo === 'pendentes') {
-          exibir = (status === 'PENDENTE');
+          exibir = (status === 'PENDENTE' && !isPassado);
         }
 
         if (exibir) {
@@ -1568,16 +1609,29 @@ if (!function_exists('getContrasteTexto')) {
 
           const touch = e.changedTouches ? e.changedTouches[0] : e;
           const dx = touch.clientX - startX;
+          const currentStatus = (card.getAttribute('data-status') || '').toUpperCase();
 
           if (isHorizontal) {
             if (dx > threshold) {
               // Ação Direita: Aceitar / Confirmar
+              if (currentStatus === 'CONFIRMADO') {
+                card.style.transform = 'translateX(0)';
+                if (bgAccept) bgAccept.style.opacity = '0';
+                showToast('info', 'Esta escala já se encontra confirmada por você.');
+                return;
+              }
               card.style.transform = 'translateX(100%)';
               setTimeout(() => {
                 confirmarPresencaAjax(id);
               }, 150);
             } else if (dx < -threshold) {
               // Ação Esquerda: Recusar / Abrir Modal
+              if (currentStatus === 'RECUSADO') {
+                card.style.transform = 'translateX(0)';
+                if (bgReject) bgReject.style.opacity = '0';
+                showToast('info', 'Esta escala já se encontra cancelada/desmarcada.');
+                return;
+              }
               card.style.transform = 'translateX(-100%)';
               setTimeout(() => {
                 card.style.transform = 'translateX(0)';

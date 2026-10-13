@@ -360,8 +360,17 @@ $txtDepAtual  = getContrasteTexto($corDepAtual);
               <?php } ?>
             </div>
 
-            <div class="text-white-50 small">
-              <i class="bi bi-star-fill text-warning me-1"></i> <?= $pontosMeu ?> Pontos <?= $isClassificado ? 'acumulados' : 'no período' ?>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <span class="text-white-50 small">
+                <i class="bi bi-star-fill text-warning me-1"></i> <strong><?= $pontosMeu ?></strong> Pontos <?= $isClassificado ? 'acumulados' : 'no período' ?>
+              </span>
+              <span class="text-white-50 small">&bull;</span>
+              <a href="#transparencia" class="badge bg-warning bg-opacity-25 text-warning rounded-pill px-2.5 py-1 text-decoration-none border border-warning border-opacity-50 d-inline-flex align-items-center gap-1" title="Seu tempo médio de resposta às convocações">
+                <i class="bi bi-stopwatch-fill"></i> Tempo Médio: <?= esc($metricas->tempoMedioRespostaFormatado ?? '--') ?>
+                <?php if (!empty($metricas->totalBonusAgilidade)) { ?>
+                  <span class="badge bg-success text-white rounded-pill px-1.5 ms-0.5">+<?= $metricas->totalBonusAgilidadePontos ?> pts bônus</span>
+                <?php } ?>
+              </a>
             </div>
           </div>
         </div>
@@ -369,7 +378,7 @@ $txtDepAtual  = getContrasteTexto($corDepAtual);
         <!-- Posição no Pódio & Assiduidade -->
         <div class="col-md-5 text-md-end">
           <div class="p-3 bg-white bg-opacity-10 rounded-4 border border-white border-opacity-10 d-inline-block text-center text-md-end w-100">
-            <div class="d-flex justify-content-around justify-content-md-end gap-4 align-items-center">
+            <div class="d-flex justify-content-around justify-content-md-end gap-3 gap-md-4 align-items-center">
               <div>
                 <span class="d-block text-white-50 small text-uppercase fw-bold" style="font-size: 0.72rem;">Sua Posição <?= $departamentoAtual ? 'no Depto' : '' ?></span>
                 <?php if ($isClassificado) { ?>
@@ -384,6 +393,11 @@ $txtDepAtual  = getContrasteTexto($corDepAtual);
                 <span class="fs-2 fw-black text-<?= ($metricas->taxaAssiduidade >= 80 ? 'success' : ($metricas->taxaAssiduidade >= 50 ? 'warning' : 'danger')) ?>"><?= $metricas->taxaAssiduidade ?>%</span>
               </div>
             </div>
+            <div class="mt-2 text-center text-md-end">
+              <a href="#transparencia" class="btn btn-sm btn-outline-light rounded-pill px-3 py-1 fw-bold text-nowrap" style="font-size: 0.75rem;">
+                <i class="bi bi-info-circle me-1"></i> Ver Regras de Pontuação
+              </a>
+            </div>
           </div>
         </div>
 
@@ -391,15 +405,15 @@ $txtDepAtual  = getContrasteTexto($corDepAtual);
     </div>
 
     <!-- ========================================== -->
-    <!-- CARDS DE METRICAS COMPARATIVAS (4 CARDS)   -->
+    <!-- CARDS DE METRICAS COMPARATIVAS (5 CARDS)   -->
     <!-- ========================================== -->
-    <div class="row g-3 mb-4">
+    <div class="row g-2 g-md-3 mb-4">
 
       <!-- 1. Cultos Aceitos / Confirmados -->
-      <div class="col-6 col-lg-3">
-        <div class="kpi-card p-3 p-md-4 h-100 shadow-xs">
+      <div class="col-6 col-md-4 col-xl">
+        <div class="kpi-card p-3 h-100 shadow-xs">
           <div class="d-flex justify-content-between align-items-start mb-2">
-            <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.72rem;">Cultos Aceitos</span>
+            <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.7rem;">Cultos Aceitos</span>
             <i class="bi bi-check-circle-fill text-success fs-5"></i>
           </div>
           <h3 class="fw-black text-success mb-1"><?= $metricas->totalConfirmados ?></h3>
@@ -409,25 +423,39 @@ $txtDepAtual  = getContrasteTexto($corDepAtual);
         </div>
       </div>
 
-      <!-- 2. Cancelamentos / Recusas (Monitorado) -->
-      <div class="col-6 col-lg-3">
-        <div class="kpi-card p-3 p-md-4 h-100 shadow-xs border-danger-subtle <?= ($metricas->totalCancelamentos > 0) ? 'bg-danger-subtle bg-opacity-25' : '' ?>">
+      <!-- 2. Agilidade & Rapidez de Aceite -->
+      <div class="col-6 col-md-4 col-xl">
+        <div class="kpi-card p-3 h-100 shadow-xs border-warning-subtle" style="background: rgba(245, 158, 11, 0.04);">
           <div class="d-flex justify-content-between align-items-start mb-2">
-            <span class="text-danger small fw-bold text-uppercase" style="font-size: 0.72rem;">Cancelamentos</span>
-            <i class="bi bi-hand-thumbs-down-fill text-danger fs-5"></i>
+            <span class="text-warning-emphasis small fw-bold text-uppercase" style="font-size: 0.7rem;">Agilidade (Aceite)</span>
+            <i class="bi bi-stopwatch-fill text-warning fs-5"></i>
           </div>
-          <h3 class="fw-black text-danger mb-1"><?= $metricas->totalCancelamentos ?></h3>
-          <small class="text-danger" style="font-size: 0.75rem;">
-            <i class="bi bi-exclamation-triangle-fill me-1"></i> Monitorado (-10 pts)
+          <h3 class="fw-black text-warning-emphasis mb-1"><?= esc($metricas->tempoMedioRespostaFormatado ?? '--') ?></h3>
+          <small class="text-success fw-bold" style="font-size: 0.75rem;" title="Ganhe +5 pontos ao responder em até 24 horas">
+            <i class="bi bi-lightning-charge-fill"></i> +<?= $metricas->totalBonusAgilidadePontos ?? 0 ?> pts (<?= $metricas->totalBonusAgilidade ?? 0 ?>x em 24h)
           </small>
         </div>
       </div>
 
-      <!-- 3. Taxa de Assiduidade -->
-      <div class="col-6 col-lg-3">
-        <div class="kpi-card p-3 p-md-4 h-100 shadow-xs">
+      <!-- 3. Cancelamentos / Recusas (Monitorado) -->
+      <div class="col-6 col-md-4 col-xl">
+        <div class="kpi-card p-3 h-100 shadow-xs border-danger-subtle <?= ($metricas->totalCancelamentos > 0) ? 'bg-danger-subtle bg-opacity-25' : '' ?>">
           <div class="d-flex justify-content-between align-items-start mb-2">
-            <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.72rem;">Assiduidade</span>
+            <span class="text-danger small fw-bold text-uppercase" style="font-size: 0.7rem;">Cancelamentos</span>
+            <i class="bi bi-hand-thumbs-down-fill text-danger fs-5"></i>
+          </div>
+          <h3 class="fw-black text-danger mb-1"><?= $metricas->totalCancelamentos ?></h3>
+          <small class="text-danger" style="font-size: 0.75rem;">
+            <?= !empty($metricas->totalCancelamentosAbonados) ? $metricas->totalCancelamentosAbonados . ' abonado(s)' : 'Monitorado (-10 pts)' ?>
+          </small>
+        </div>
+      </div>
+
+      <!-- 4. Taxa de Assiduidade -->
+      <div class="col-6 col-md-6 col-xl">
+        <div class="kpi-card p-3 h-100 shadow-xs">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.7rem;">Assiduidade</span>
             <i class="bi bi-pie-chart-fill text-info fs-5"></i>
           </div>
           <h3 class="fw-black text-body mb-1"><?= $metricas->taxaAssiduidade ?>%</h3>
@@ -437,11 +465,11 @@ $txtDepAtual  = getContrasteTexto($corDepAtual);
         </div>
       </div>
 
-      <!-- 4. Total de Escalações Atribuídas -->
-      <div class="col-6 col-lg-3">
-        <div class="kpi-card p-3 p-md-4 h-100 shadow-xs">
+      <!-- 5. Total de Escalações Atribuídas -->
+      <div class="col-12 col-md-6 col-xl">
+        <div class="kpi-card p-3 h-100 shadow-xs">
           <div class="d-flex justify-content-between align-items-start mb-2">
-            <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.72rem;">Total Atribuído</span>
+            <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.7rem;">Total Atribuído</span>
             <i class="bi bi-calendar-check text-primary fs-5"></i>
           </div>
           <h3 class="fw-black text-primary mb-1"><?= $metricas->totalEscalas ?></h3>
@@ -453,22 +481,108 @@ $txtDepAtual  = getContrasteTexto($corDepAtual);
 
     </div>
 
-    <!-- ========================================== -->
-    <!-- ALERTA DE MONITORAMENTO DE CANCELAMENTOS   -->
-    <!-- ========================================== -->
-    <div class="card border-0 shadow-xs rounded-4 mb-4 bg-body border-start border-4 border-<?= ($metricas->totalCancelamentos > 0 ? 'danger' : 'primary') ?>">
+    <!-- ======================================================== -->
+    <!-- SEÇÃO: TRANSPARÊNCIA & MONITORAMENTO DE ESCALAS          -->
+    <!-- ======================================================== -->
+    <div id="transparencia" class="card border-0 shadow-sm rounded-4 mb-4 bg-body border-start border-4 border-primary">
       <div class="card-body p-3 p-md-4">
-        <div class="d-flex align-items-start gap-3">
-          <div class="p-2 rounded-circle bg-<?= ($metricas->totalCancelamentos > 0 ? 'danger' : 'primary') ?>-subtle text-<?= ($metricas->totalCancelamentos > 0 ? 'danger' : 'primary') ?> fs-4">
-            <i class="bi bi-shield-check"></i>
+
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="p-2.5 rounded-circle bg-primary-subtle text-primary fs-4">
+              <i class="bi bi-shield-check"></i>
+            </div>
+            <div>
+              <h5 class="fw-bold text-body mb-0">Transparência & Monitoramento de Escalas</h5>
+              <small class="text-secondary">Entenda detalhadamente as regras de pontuação, bônus de agilidade e critérios de desempate no ranking da ADVEC</small>
+            </div>
+          </div>
+          <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1.5 fw-bold">
+            <i class="bi bi-patch-check-fill me-1"></i> Regras de Pontuação
+          </span>
+        </div>
+
+        <!-- Grade de Regras Oficiais de Pontuação -->
+        <div class="row g-2 g-md-3 mb-3">
+
+          <div class="col-6 col-md-4">
+            <div class="p-3 rounded-3 bg-body-tertiary border h-100">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="fw-bold small text-body"><i class="bi bi-check2-circle text-success me-1"></i> Presença Cumprida</span>
+                <span class="badge bg-success text-white rounded-pill font-monospace fw-bold">+15 pts</span>
+              </div>
+              <small class="text-muted d-block" style="font-size: 0.73rem;">Presença confirmada e servida com excelência no culto.</small>
+            </div>
+          </div>
+
+          <div class="col-6 col-md-4">
+            <div class="p-3 rounded-3 bg-body-tertiary border h-100">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="fw-bold small text-body"><i class="bi bi-hand-thumbs-up text-primary me-1"></i> Confirmação</span>
+                <span class="badge bg-primary text-white rounded-pill font-monospace fw-bold">+10 pts</span>
+              </div>
+              <small class="text-muted d-block" style="font-size: 0.73rem;">Aceite da escala pelo portal confirmando disponibilidade.</small>
+            </div>
+          </div>
+
+          <div class="col-6 col-md-4">
+            <div class="p-3 rounded-3 bg-body-tertiary border border-warning-subtle h-100" style="background: rgba(245, 158, 11, 0.05) !important;">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="fw-bold small text-warning-emphasis"><i class="bi bi-lightning-charge-fill text-warning me-1"></i> Bônus de Agilidade</span>
+                <span class="badge bg-warning text-dark rounded-pill font-monospace fw-bold">+5 pts</span>
+              </div>
+              <small class="text-muted d-block" style="font-size: 0.73rem;">Concedido quando você aceita a escala em <strong>até 24 horas</strong> da convocação.</small>
+            </div>
+          </div>
+
+          <div class="col-6 col-md-4">
+            <div class="p-3 rounded-3 bg-body-tertiary border h-100">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="fw-bold small text-body"><i class="bi bi-shield-check text-success me-1"></i> Cancelamento Abonado</span>
+                <span class="badge bg-secondary text-white rounded-pill font-monospace fw-bold">0 pts</span>
+              </div>
+              <small class="text-muted d-block" style="font-size: 0.73rem;">Recusa justificada previamente e abonada pela liderança (sem desconto).</small>
+            </div>
+          </div>
+
+          <div class="col-6 col-md-4">
+            <div class="p-3 rounded-3 bg-body-tertiary border h-100">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="fw-bold small text-danger"><i class="bi bi-x-circle text-danger me-1"></i> Cancelamento</span>
+                <span class="badge bg-danger text-white rounded-pill font-monospace fw-bold">-10 pts</span>
+              </div>
+              <small class="text-muted d-block" style="font-size: 0.73rem;">Cancelamento sem justificativa ou não abonado pela liderança.</small>
+            </div>
+          </div>
+
+          <div class="col-6 col-md-4">
+            <div class="p-3 rounded-3 bg-body-tertiary border h-100">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="fw-bold small text-danger"><i class="bi bi-slash-circle text-danger me-1"></i> Falta / Omissão</span>
+                <span class="badge bg-dark text-white rounded-pill font-monospace fw-bold">-25 pts</span>
+              </div>
+              <small class="text-muted d-block" style="font-size: 0.73rem;">Escala não respondida e ausência no culto sem aviso prévio.</small>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Box Especial: Divisor de Águas (Rapidez no Aceite) -->
+        <div class="alert alert-warning border-0 rounded-3 p-3 mb-0 d-flex align-items-start gap-3">
+          <div class="fs-4 text-warning-emphasis">
+            <i class="bi bi-stopwatch-fill"></i>
           </div>
           <div>
-            <h6 class="fw-bold text-body mb-1">Transparência & Monitoramento de Escalas</h6>
-            <p class="text-secondary small mb-0">
-              A liderança da ADVEC acompanha em tempo real a confirmação e as justificativas de cancelamento das agendas. Cada culto atendido soma pontos no seu score e fortalece a equipe. Evite desmarcar em cima da hora para manter a excelência do serviço.
-            </p>
+            <div class="fw-bold text-warning-emphasis">
+              Divisor de Águas: A Rapidez de Resposta Define o Desempate no Ranking
+            </div>
+            <div class="small text-body-secondary mt-1">
+              Quando voluntários alcançam a mesma quantidade de pontos, o critério definitivo de classificação é a <strong>velocidade de aceite</strong>. 
+              O voluntário que responde às convocações com o menor tempo médio assume a frente na classificação. Aceite suas escalas rapidamente para garantir sua melhor colocação!
+            </div>
           </div>
         </div>
+
       </div>
     </div>
 
@@ -554,7 +668,8 @@ $txtDepAtual  = getContrasteTexto($corDepAtual);
                   <th class="text-center d-none d-md-table-cell">Cultos Aceitos</th>
                   <th class="text-center d-none d-md-table-cell">Cancelamentos</th>
                   <th class="text-center d-none d-md-table-cell">Assiduidade</th>
-                  <th class="pe-4 text-end d-none d-md-table-cell">Pontuação</th>
+                  <th class="text-center d-none d-lg-table-cell" title="Tempo médio de resposta às convocações (critério de desempate)">Agilidade</th>
+                  <th class="pe-4 text-end">Pontuação</th>
                 </tr>
               </thead>
               <tbody>
@@ -624,9 +739,24 @@ $txtDepAtual  = getContrasteTexto($corDepAtual);
                       </span>
                     </td>
 
+                    <!-- Agilidade (Tempo Médio de Resposta / Desempate) -->
+                    <td class="text-center d-none d-lg-table-cell">
+                      <span class="badge bg-body-secondary text-body border rounded-pill px-2.5 py-1 font-monospace small" title="Tempo médio de resposta">
+                        <i class="bi bi-stopwatch text-warning me-1"></i><?= $item->tempo_medio_resposta_formatado ?>
+                      </span>
+                      <?php if (!empty($item->bonus_agilidade_count)) { ?>
+                        <div class="small text-success fw-bold mt-0.5" style="font-size: 0.68rem;" title="<?= $item->bonus_agilidade_count ?>x aceite em até 24h">
+                          +<?= $item->bonus_agilidade_pontos ?> pts
+                        </div>
+                      <?php } ?>
+                    </td>
+
                     <!-- Pontuação -->
-                    <td class="pe-4 text-end d-none d-md-table-cell">
-                      <span class="fw-black fs-6 text-primary"><?= $item->pontos ?> <small class="text-muted fs-8">pts</small></span>
+                    <td class="pe-4 text-end">
+                      <span class="fw-black fs-6 text-primary"><?= $item->pontos ?> <small class="text-muted" style="font-size: 0.72rem;">pts</small></span>
+                      <div class="d-lg-none small text-muted font-monospace" style="font-size: 0.68rem;" title="Tempo médio de resposta">
+                        ⚡ <?= $item->tempo_medio_resposta_formatado ?>
+                      </div>
                     </td>
 
                   </tr>
