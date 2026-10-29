@@ -765,6 +765,8 @@ class VoluntarioModel extends Model
         $db = db_connect();
         $builder = $db->table('tb_voluntario');
         $builder->where("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(telefone_whatsapp, '(', ''), ')', ''), '-', ''), ' ', ''), '+', '') LIKE '%{$digitosSem55}%'");
+        $builder->orderBy('status', 'DESC');
+        $builder->orderBy('id_voluntario', 'DESC');
         $query = $builder->get();
         $voluntario = $query->getFirstRow();
 

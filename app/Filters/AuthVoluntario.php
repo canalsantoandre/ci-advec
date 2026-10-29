@@ -27,7 +27,7 @@ class AuthVoluntario implements FilterInterface
         $voluntarioModel = new VoluntarioModel();
         $vol = $voluntarioModel->find($idVoluntario);
 
-        if (!$vol || $vol->status != 1 || (isset($vol->status_aprovacao) && $vol->status_aprovacao === 'PENDENTE')) {
+        if (!$vol || (int)$vol->status !== 1 || (isset($vol->status_aprovacao) && $vol->status_aprovacao !== 'APROVADO')) {
             $session->remove('dsh_voluntario');
             $session->remove('otp_auth_challenge');
             
@@ -35,6 +35,8 @@ class AuthVoluntario implements FilterInterface
                 session()->setFlashdata('erro_login', 'Seu cadastro de voluntário não foi encontrado na base de dados. Caso necessário, realize um novo pré-cadastro ou contate o líder do departamento.');
             } elseif (isset($vol->status_aprovacao) && $vol->status_aprovacao === 'PENDENTE') {
                 session()->setFlashdata('erro_login', 'Seu pré-cadastro está aguardando aprovação do líder.');
+            } elseif (isset($vol->status_aprovacao) && $vol->status_aprovacao === 'REJEITADO') {
+                session()->setFlashdata('erro_login', 'Sua solicitação de cadastro não foi aprovada. Fale com o líder do seu departamento.');
             } else {
                 session()->setFlashdata('erro_login', 'Seu cadastro de voluntário está inativo. Fale com o líder do seu departamento.');
             }

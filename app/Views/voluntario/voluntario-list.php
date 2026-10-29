@@ -140,6 +140,18 @@ if (!function_exists('renderizarRedesSociaisBadgeList')) {
     transform: translateY(-1px);
     opacity: 0.9;
   }
+
+  .cursor-pointer {
+    cursor: pointer !important;
+  }
+
+  .hover-scale {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .hover-scale:hover {
+    transform: scale(1.06);
+  }
 </style>
 <!-- Content Header (Page header) -->
 <div class="app-content-header">
@@ -422,16 +434,20 @@ if (!function_exists('renderizarRedesSociaisBadgeList')) {
                           </div>
                         </td>
 
-                        <!-- Status -->
-                        <td class="text-center">
-                          <?php if ($v->status == 1) { ?>
-                            <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle rounded-pill px-2 py-1 small">
-                              Ativo
-                            </span>
+                        <!-- Status Interativo -->
+                        <td class="text-center" id="status-cell-<?= $v->id_voluntario ?>">
+                          <?php if ((int)$v->status === 1) { ?>
+                            <button type="button" class="btn p-0 border-0 bg-transparent" title="Status: Ativo. Clique para inativar" onclick="abrirModalToggleStatusVol(<?= $v->id_voluntario ?>, '<?= esc(addslashes($v->nome)) ?>', 1)">
+                              <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle rounded-pill px-2.5 py-1 small fw-semibold cursor-pointer shadow-sm hover-scale">
+                                <i class="bi bi-check-circle-fill text-success me-1"></i> Ativo
+                              </span>
+                            </button>
                           <?php } else { ?>
-                            <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-pill px-2 py-1 small">
-                              Inativo
-                            </span>
+                            <button type="button" class="btn p-0 border-0 bg-transparent" title="Status: Inativo. Clique para ativar" onclick="abrirModalToggleStatusVol(<?= $v->id_voluntario ?>, '<?= esc(addslashes($v->nome)) ?>', 0)">
+                              <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-pill px-2.5 py-1 small fw-semibold cursor-pointer shadow-sm hover-scale">
+                                <i class="bi bi-slash-circle-fill text-danger me-1"></i> Inativo
+                              </span>
+                            </button>
                           <?php } ?>
                         </td>
 
@@ -448,6 +464,15 @@ if (!function_exists('renderizarRedesSociaisBadgeList')) {
                             </button>
 
                             <?php if (!empty($sys_action->update)) { ?>
+                              <!-- Alternar Status (Ativar / Inativar) -->
+                              <button type="button" 
+                                class="btn <?= ((int)$v->status === 1 ? 'btn-outline-danger' : 'btn-outline-success') ?> btn-action" 
+                                id="btn-toggle-status-<?= $v->id_voluntario ?>"
+                                title="<?= ((int)$v->status === 1 ? 'Inativar Voluntário (Bloquear Acesso ao Portal)' : 'Ativar Voluntário (Liberar Acesso ao Portal)') ?>" 
+                                onclick="abrirModalToggleStatusVol(<?= $v->id_voluntario ?>, '<?= esc(addslashes($v->nome)) ?>', <?= (int)$v->status ?>)">
+                                <i class="bi <?= ((int)$v->status === 1 ? 'bi-person-slash' : 'bi-person-check') ?>"></i>
+                              </button>
+
                               <button type="button" class="btn btn-outline-warning btn-action" title="Resetar Senha para Telefone Padrão" onclick="abrirModalResetSenhaVol(<?= $v->id_voluntario ?>, '<?= esc($v->nome) ?>', '<?= esc($v->telefone_whatsapp) ?>')">
                                 <i class="bi bi-key-fill"></i>
                               </button>
@@ -1060,6 +1085,37 @@ if (!function_exists('renderizarRedesSociaisBadgeList')) {
   </div>
 </div>
 
+<!-- Modal Alternar Status (Ativar / Inativar) Voluntário -->
+<div class="modal fade" id="modalConfirmarToggleStatusVol" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 shadow border-0">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" id="modalToggleStatusTitulo">
+          <i class="bi bi-person-slash me-2" id="modalToggleStatusIcone"></i> Inativar Voluntário
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body py-3">
+        <input type="hidden" id="modalToggleStatusId">
+        <input type="hidden" id="modalToggleStatusNovoValor">
+        
+        <p class="mb-2">Confirma a alteração de status do voluntário <strong id="modalToggleStatusNome"></strong>?</p>
+        
+        <div class="alert border-0 rounded-3 small p-3 mb-0" id="modalToggleStatusAlerta">
+          <!-- Texto dinâmico explicando o impacto no acesso ao portal -->
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" id="btnConfirmarToggleStatusVol" class="btn rounded-pill px-4 fw-bold" onclick="executarToggleStatusVol()">
+          <span class="spinner-border spinner-border-sm me-1 d-none" id="btnToggleStatusSpinner" role="status" aria-hidden="true"></span>
+          <span id="btnToggleStatusTexto">Confirmar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Ranking & Gamificação do Voluntário -->
 <div class="modal fade" id="modalRankingVoluntario" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -1554,6 +1610,147 @@ if (!function_exists('renderizarRedesSociaisBadgeList')) {
     document.getElementById('btnConfirmarDeleteVol').href = '<?= base_url('voluntario/apagar/') ?>/' + id;
     const modal = new bootstrap.Modal(document.getElementById('modalConfirmarExclusaoVol'));
     modal.show();
+  }
+
+  let modalToggleStatusVolInstance = null;
+
+  function abrirModalToggleStatusVol(id, nome, statusAtual) {
+    const isAtivo = (statusAtual === 1 || statusAtual === '1');
+    const novoStatus = isAtivo ? 0 : 1;
+
+    document.getElementById('modalToggleStatusId').value = id;
+    document.getElementById('modalToggleStatusNovoValor').value = novoStatus;
+    document.getElementById('modalToggleStatusNome').textContent = nome;
+
+    const tituloEl = document.getElementById('modalToggleStatusTitulo');
+    const alertaEl = document.getElementById('modalToggleStatusAlerta');
+    const btnEl = document.getElementById('btnConfirmarToggleStatusVol');
+    const btnTextoEl = document.getElementById('btnToggleStatusTexto');
+
+    if (isAtivo) {
+      // Vai inativar
+      tituloEl.className = 'modal-title fw-bold text-danger';
+      tituloEl.innerHTML = '<i class="bi bi-person-slash me-2"></i> Inativar Voluntário';
+      alertaEl.className = 'alert alert-danger border-0 rounded-3 small p-3 mb-0';
+      alertaEl.innerHTML = `
+        <div class="fw-bold mb-1"><i class="bi bi-shield-lock-fill me-1"></i> Bloqueio Imediato de Acesso</div>
+        Ao inativar este voluntário, ele será <strong>desconectado imediatamente</strong> do sistema, <strong>não conseguirá logar</strong> no Portal do Voluntário e <strong>não aparecerá nas opções de escala</strong> de cultos.
+      `;
+      btnEl.className = 'btn btn-danger rounded-pill px-4 fw-bold';
+      btnTextoEl.innerHTML = '<i class="bi bi-person-slash me-1"></i> Inativar Voluntário';
+    } else {
+      // Vai ativar
+      tituloEl.className = 'modal-title fw-bold text-success';
+      tituloEl.innerHTML = '<i class="bi bi-person-check me-2"></i> Ativar Voluntário';
+      alertaEl.className = 'alert alert-success border-0 rounded-3 small p-3 mb-0';
+      alertaEl.innerHTML = `
+        <div class="fw-bold mb-1"><i class="bi bi-shield-check me-1"></i> Liberação de Acesso</div>
+        Ao ativar este voluntário, o <strong>acesso ao Portal do Voluntário será liberado</strong> para login e ele <strong>voltará a estar disponível</strong> para ser escalado nos cultos.
+      `;
+      btnEl.className = 'btn btn-success rounded-pill px-4 fw-bold';
+      btnTextoEl.innerHTML = '<i class="bi bi-person-check me-1"></i> Ativar Voluntário';
+    }
+
+    if (!modalToggleStatusVolInstance) {
+      modalToggleStatusVolInstance = new bootstrap.Modal(document.getElementById('modalConfirmarToggleStatusVol'));
+    }
+    modalToggleStatusVolInstance.show();
+  }
+
+  function executarToggleStatusVol() {
+    const id = document.getElementById('modalToggleStatusId').value;
+    const novoStatus = document.getElementById('modalToggleStatusNovoValor').value;
+    const btn = document.getElementById('btnConfirmarToggleStatusVol');
+    const spinner = document.getElementById('btnToggleStatusSpinner');
+    const btnTexto = document.getElementById('btnToggleStatusTexto');
+
+    btn.disabled = true;
+    spinner.classList.remove('d-none');
+
+    const formData = new FormData();
+    formData.append('id_voluntario', id);
+    formData.append('status', novoStatus);
+
+    fetch('<?= base_url('voluntario/toggleStatus') ?>', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      btn.disabled = false;
+      spinner.classList.add('d-none');
+
+      if (data.status === 'success') {
+        if (modalToggleStatusVolInstance) {
+          modalToggleStatusVolInstance.hide();
+        }
+
+        const isNovoAtivo = (parseInt(data.novo_status, 10) === 1);
+        const nomeEscapado = (data.nome || '').replace(/'/g, "\\'");
+
+        // Atualiza a célula de status na tabela
+        const statusCell = document.getElementById('status-cell-' + id);
+        if (statusCell) {
+          if (isNovoAtivo) {
+            statusCell.innerHTML = `
+              <button type="button" class="btn p-0 border-0 bg-transparent" title="Status: Ativo. Clique para inativar" onclick="abrirModalToggleStatusVol(${id}, '${nomeEscapado}', 1)">
+                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle rounded-pill px-2.5 py-1 small fw-semibold cursor-pointer shadow-sm hover-scale">
+                  <i class="bi bi-check-circle-fill text-success me-1"></i> Ativo
+                </span>
+              </button>
+            `;
+          } else {
+            statusCell.innerHTML = `
+              <button type="button" class="btn p-0 border-0 bg-transparent" title="Status: Inativo. Clique para ativar" onclick="abrirModalToggleStatusVol(${id}, '${nomeEscapado}', 0)">
+                <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle rounded-pill px-2.5 py-1 small fw-semibold cursor-pointer shadow-sm hover-scale">
+                  <i class="bi bi-slash-circle-fill text-danger me-1"></i> Inativo
+                </span>
+              </button>
+            `;
+          }
+        }
+
+        // Atualiza o botão de ação na tabela
+        const btnAcao = document.getElementById('btn-toggle-status-' + id);
+        if (btnAcao) {
+          if (isNovoAtivo) {
+            btnAcao.className = 'btn btn-outline-danger btn-action';
+            btnAcao.title = 'Inativar Voluntário (Bloquear Acesso ao Portal)';
+            btnAcao.innerHTML = '<i class="bi bi-person-slash"></i>';
+            btnAcao.setAttribute('onclick', `abrirModalToggleStatusVol(${id}, '${nomeEscapado}', 1)`);
+          } else {
+            btnAcao.className = 'btn btn-outline-success btn-action';
+            btnAcao.title = 'Ativar Voluntário (Liberar Acesso ao Portal)';
+            btnAcao.innerHTML = '<i class="bi bi-person-check"></i>';
+            btnAcao.setAttribute('onclick', `abrirModalToggleStatusVol(${id}, '${nomeEscapado}', 0)`);
+          }
+        }
+
+        if (typeof USToast !== 'undefined' && USToast.show) {
+          USToast.show('success', isNovoAtivo ? 'Voluntário Ativado' : 'Voluntário Inativado', data.message);
+        } else {
+          alert(data.message);
+        }
+      } else {
+        if (typeof USToast !== 'undefined' && USToast.show) {
+          USToast.show('error', 'Erro', data.message || 'Falha ao alterar status.');
+        } else {
+          alert(data.message || 'Falha ao alterar status.');
+        }
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      spinner.classList.add('d-none');
+      if (typeof USToast !== 'undefined' && USToast.show) {
+        USToast.show('error', 'Erro de Conexão', 'Falha na comunicação com o servidor.');
+      } else {
+        alert('Falha na comunicação com o servidor.');
+      }
+    });
   }
 
   let modalRankingVolInstance = null;

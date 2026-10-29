@@ -640,6 +640,66 @@ class Voluntario extends BaseController
     }
 
     /**
+     * AJAX/POST: Ativa ou inativa o voluntário no cadastro
+     * Quando inativo, ele não consegue logar no Portal do Voluntário e fica indisponível para escalas
+     */
+    public function toggleStatus()
+    {
+        $data = $this->session();
+        if (empty($data['sys_action']->update)) {
+            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Acesso negado para alterar status de voluntários.']);
+        }
+
+        $id_voluntario = (int)$this->request->getPost('id_voluntario');
+        if ($id_voluntario <= 0) {
+            return $this->response->setStatusCode(400)->setJSON(['status' => 'error', 'message' => 'ID do voluntário inválido.']);
+        }
+
+        $voluntarioModel = new VoluntarioModel();
+        $voluntario = $voluntarioModel->find($id_voluntario);
+
+        if (!$voluntario) {
+            return $this->response->setStatusCode(404)->setJSON(['status' => 'error', 'message' => 'Voluntário não encontrado.']);
+        }
+
+        // Validação de departamentos permitidos para líderes
+        $departamentoGestorModel = new DepartamentoGestorModel();
+        $departamentosPermitidos = $departamentoGestorModel->getDepartamentosIdsPorUsuario((int)$data['usuario']->id_usuario);
+        if (!empty($departamentosPermitidos)) {
+            $voluntarioAreaModel = new VoluntarioAreaModel();
+            $areasDoVol = $voluntarioAreaModel->getAreasDoVoluntario($id_voluntario);
+            $depsDoVol = array_unique(array_map(function($a) { return (int)$a->id_departamento; }, $areasDoVol));
+
+            if (!empty($depsDoVol) && empty(array_intersect($depsDoVol, $departamentosPermitidos))) {
+                return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Você não tem permissão para alterar voluntários deste departamento.']);
+            }
+        }
+
+        $novoStatusPost = $this->request->getPost('status');
+        if ($novoStatusPost !== null && $novoStatusPost !== '') {
+            $novoStatus = ((int)$novoStatusPost === 1) ? 1 : 0;
+        } else {
+            $novoStatus = ((int)$voluntario->status === 1) ? 0 : 1;
+        }
+
+        $voluntarioModel->update($id_voluntario, ['status' => $novoStatus]);
+
+        $statusLabel  = ($novoStatus === 1) ? 'ativado' : 'inativado';
+        $statusAcesso = ($novoStatus === 1) 
+            ? 'O acesso ao Portal do Voluntário foi liberado e ele voltará a aparecer nas escalas.' 
+            : 'O acesso ao Portal do Voluntário foi bloqueado imediatamente e ele não aparecerá em novas escalas.';
+
+        return $this->response->setJSON([
+            'status'        => 'success',
+            'novo_status'   => $novoStatus,
+            'id_voluntario' => $id_voluntario,
+            'nome'          => $voluntario->nome,
+            'label'         => ($novoStatus === 1 ? 'Ativo' : 'Inativo'),
+            'message'       => "Voluntário '{$voluntario->nome}' foi {$statusLabel} com sucesso! {$statusAcesso}"
+        ]);
+    }
+
+    /**
      * AJAX: Verifica se o voluntário já existe no sistema pelo número de telefone
      * GET /voluntario/verificarTelefone ou GET /api/voluntarios/verificar-telefone
      */

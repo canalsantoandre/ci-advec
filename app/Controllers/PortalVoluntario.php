@@ -25,7 +25,7 @@ class PortalVoluntario extends BaseController
 
         $voluntarioModel = new VoluntarioModel();
         $vol = $voluntarioModel->find((int)$sessData['id_voluntario']);
-        if (!$vol || $vol->status != 1 || (isset($vol->status_aprovacao) && $vol->status_aprovacao === 'PENDENTE')) {
+        if (!$vol || (int)$vol->status !== 1 || (isset($vol->status_aprovacao) && $vol->status_aprovacao !== 'APROVADO')) {
             $session->remove('dsh_voluntario');
             $session->remove('otp_auth_challenge');
             return null;
@@ -46,7 +46,7 @@ class PortalVoluntario extends BaseController
             $idVol = (int)($session->get('dsh_voluntario')['id_voluntario'] ?? 0);
             $voluntarioModel = new VoluntarioModel();
             $vol = $idVol > 0 ? $voluntarioModel->find($idVol) : null;
-            if ($vol && $vol->status == 1 && (!isset($vol->status_aprovacao) || $vol->status_aprovacao === 'APROVADO')) {
+            if ($vol && (int)$vol->status === 1 && (!isset($vol->status_aprovacao) || $vol->status_aprovacao === 'APROVADO')) {
                 return redirect()->to(base_url('portal/agenda'));
             } else {
                 $session->remove('dsh_voluntario');
@@ -74,14 +74,18 @@ class PortalVoluntario extends BaseController
             }
 
             $voluntarioModel = new VoluntarioModel();
-            $voluntario = $voluntarioModel->buscarPorTelefone($telefone);
+            if (strpos($telefone, '@') !== false) {
+                $voluntario = $voluntarioModel->findByColumn('email', $telefone);
+            } else {
+                $voluntario = $voluntarioModel->buscarPorTelefone($telefone);
+            }
 
             if (!$voluntario) {
                 $data['erro'] = 'Voluntário não encontrado com o telefone informado.';
                 return view('portal_voluntario/login', $data);
             }
 
-            if ($voluntario->status != 1 || (isset($voluntario->status_aprovacao) && $voluntario->status_aprovacao === 'PENDENTE')) {
+            if ((int)$voluntario->status !== 1 || (isset($voluntario->status_aprovacao) && $voluntario->status_aprovacao !== 'APROVADO')) {
                 if (isset($voluntario->status_aprovacao) && $voluntario->status_aprovacao === 'PENDENTE') {
                     $data['erro'] = 'Seu pré-cadastro foi recebido e está aguardando aprovação do líder do departamento. Você receberá uma notificação assim que for liberado!';
                 } elseif (isset($voluntario->status_aprovacao) && $voluntario->status_aprovacao === 'REJEITADO') {
@@ -191,6 +195,14 @@ class PortalVoluntario extends BaseController
             return redirect()->to(base_url('portal/login'));
         }
 
+        $idVol = (int)($challenge['id_voluntario'] ?? 0);
+        $voluntario = (new VoluntarioModel())->find($idVol);
+        if (!$voluntario || (int)$voluntario->status !== 1 || (isset($voluntario->status_aprovacao) && $voluntario->status_aprovacao !== 'APROVADO')) {
+            $session->remove('otp_auth_challenge');
+            session()->setFlashdata('erro_login', 'Seu cadastro de voluntário está inativo. Fale com o líder do seu departamento.');
+            return redirect()->to(base_url('portal/login'));
+        }
+
         $telefone = (string)($challenge['telefone'] ?? '');
         $digits = preg_replace('/\D/', '', $telefone);
         $telefoneMascarado = $telefone;
@@ -227,8 +239,9 @@ class PortalVoluntario extends BaseController
         $voluntarioModel = new VoluntarioModel();
         $voluntario = $voluntarioModel->find($id_voluntario);
 
-        if (!$voluntario) {
+        if (!$voluntario || (int)$voluntario->status !== 1 || (isset($voluntario->status_aprovacao) && $voluntario->status_aprovacao !== 'APROVADO')) {
             $session->remove('otp_auth_challenge');
+            session()->setFlashdata('erro_login', 'Seu cadastro de voluntário está inativo. Fale com o líder do seu departamento.');
             return redirect()->to(base_url('portal/login'));
         }
 
@@ -316,8 +329,8 @@ class PortalVoluntario extends BaseController
         $voluntarioModel = new VoluntarioModel();
         $voluntario = $voluntarioModel->find($id_voluntario);
 
-        if (!$voluntario) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Voluntário não encontrado.']);
+        if (!$voluntario || (int)$voluntario->status !== 1 || (isset($voluntario->status_aprovacao) && $voluntario->status_aprovacao !== 'APROVADO')) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Seu cadastro de voluntário está inativo. Fale com o líder do seu departamento.']);
         }
 
         // Gera novo OTP com validade renovada

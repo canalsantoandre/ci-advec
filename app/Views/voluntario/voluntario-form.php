@@ -72,10 +72,23 @@ $idade = $isEdit && !empty($voluntario->data_nascimento) ? date_diff(date_create
               </span>
             </div>
 
-            <div class="mb-3">
+            <div class="mb-2">
               <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle rounded-pill px-3 py-2 fw-semibold" id="previewWhats">
                 <i class="bi bi-whatsapp me-1"></i><?= $isEdit ? esc($voluntario->telefone_whatsapp) : '(00) 00000-0000' ?>
               </span>
+            </div>
+
+            <!-- Status do Voluntário no Hero Card -->
+            <div class="mb-3" id="heroStatusWrapper">
+              <?php if (!$isEdit || (int)$voluntario->status === 1) { ?>
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1.5 fw-semibold" id="heroStatusBadge">
+                  <i class="bi bi-check-circle-fill me-1"></i> Ativo &bull; Acesso Liberado
+                </span>
+              <?php } else { ?>
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1.5 fw-semibold" id="heroStatusBadge">
+                  <i class="bi bi-slash-circle-fill me-1"></i> Inativo &bull; Acesso Bloqueado
+                </span>
+              <?php } ?>
             </div>
 
             <?php if ($idade !== null) { ?>
@@ -203,11 +216,22 @@ $idade = $isEdit && !empty($voluntario->data_nascimento) ? date_diff(date_create
                     </div>
 
                     <div class="col-md-4">
-                      <label for="status" class="form-label fw-semibold">Status <span class="text-danger">*</span></label>
-                      <select name="status" id="status" class="form-select" required>
-                        <option value="1" <?= (!$isEdit || $voluntario->status == 1) ? 'selected' : '' ?>>Ativo</option>
-                        <option value="0" <?= ($isEdit && $voluntario->status == 0) ? 'selected' : '' ?>>Inativo</option>
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="status" class="form-label fw-semibold mb-0">Status do Voluntário <span class="text-danger">*</span></label>
+                        <span class="badge rounded-pill <?= (!$isEdit || (int)$voluntario->status === 1) ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle' ?>" id="statusIndicatorBadge">
+                          <?= (!$isEdit || (int)$voluntario->status === 1) ? 'Ativo' : 'Inativo' ?>
+                        </span>
+                      </div>
+                      <select name="status" id="status" class="form-select <?= ($isEdit && (int)$voluntario->status === 0) ? 'border-danger' : 'border-success' ?>" required onchange="atualizarStatusFeedback(this.value)">
+                        <option value="1" <?= (!$isEdit || (int)$voluntario->status === 1) ? 'selected' : '' ?>>🟢 Ativo (Acesso Liberado ao Portal)</option>
+                        <option value="0" <?= ($isEdit && (int)$voluntario->status === 0) ? 'selected' : '' ?>>🔴 Inativo (Acesso Bloqueado ao Portal)</option>
                       </select>
+                      <small class="form-text mt-1 d-block <?= ($isEdit && (int)$voluntario->status === 0) ? 'text-danger fw-semibold' : 'text-muted' ?>" id="statusFeedbackText" style="font-size: 0.78rem;">
+                        <i class="bi <?= (!$isEdit || (int)$voluntario->status === 1) ? 'bi-shield-check text-success' : 'bi-shield-lock-fill text-danger' ?>"></i>
+                        <?= (!$isEdit || (int)$voluntario->status === 1) 
+                          ? 'O voluntário pode acessar o portal e receber novas escalas.' 
+                          : 'Quando inativo, o voluntário NÃO consegue fazer login e fica indisponível para escalas.' ?>
+                      </small>
                     </div>
 
                     <div class="col-md-4">
@@ -632,6 +656,43 @@ $idade = $isEdit && !empty($voluntario->data_nascimento) ? date_diff(date_create
   });
   document.getElementById('telefone_whatsapp')?.addEventListener('input', function() {
     document.getElementById('previewWhats').innerHTML = '<i class="bi bi-whatsapp me-1"></i>' + (this.value || '(00) 00000-0000');
+  });
+
+  // Atualização em tempo real do Status do voluntário
+  function atualizarStatusFeedback(val) {
+    const isAtivo = (val === '1' || val === 1 || val === true);
+    const badgeDot = document.getElementById('badgeStatusPreview');
+    const heroBadge = document.getElementById('heroStatusBadge');
+    const indicator = document.getElementById('statusIndicatorBadge');
+    const select = document.getElementById('status');
+    const feedback = document.getElementById('statusFeedbackText');
+
+    if (badgeDot) {
+      badgeDot.className = `position-absolute bottom-0 end-0 badge rounded-circle p-2 bg-${isAtivo ? 'success' : 'danger'} border border-2 border-white`;
+      badgeDot.title = isAtivo ? 'Status: Ativo' : 'Status: Inativo';
+    }
+    if (heroBadge) {
+      heroBadge.className = `badge bg-${isAtivo ? 'success' : 'danger'}-subtle text-${isAtivo ? 'success' : 'danger'} border border-${isAtivo ? 'success' : 'danger'}-subtle rounded-pill px-3 py-1.5 fw-semibold`;
+      heroBadge.innerHTML = `<i class="bi bi-${isAtivo ? 'check-circle-fill' : 'slash-circle-fill'} me-1"></i> ${isAtivo ? 'Ativo &bull; Acesso Liberado' : 'Inativo &bull; Acesso Bloqueado'}`;
+    }
+    if (indicator) {
+      indicator.className = `badge rounded-pill bg-${isAtivo ? 'success' : 'danger'}-subtle text-${isAtivo ? 'success' : 'danger'} border border-${isAtivo ? 'success' : 'danger'}-subtle`;
+      indicator.textContent = isAtivo ? 'Ativo' : 'Inativo';
+    }
+    if (select) {
+      select.classList.remove('border-success', 'border-danger');
+      select.classList.add(isAtivo ? 'border-success' : 'border-danger');
+    }
+    if (feedback) {
+      feedback.className = `form-text mt-1 d-block ${isAtivo ? 'text-muted' : 'text-danger fw-semibold'}`;
+      feedback.innerHTML = isAtivo 
+        ? '<i class="bi bi-shield-check text-success"></i> O voluntário pode acessar o portal e receber novas escalas.' 
+        : '<i class="bi bi-shield-lock-fill text-danger"></i> <strong>Acesso Bloqueado:</strong> O voluntário NÃO consegue fazer login e fica indisponível para escalas.';
+    }
+  }
+
+  document.getElementById('status')?.addEventListener('change', function() {
+    atualizarStatusFeedback(this.value);
   });
   document.getElementById('foto_file')?.addEventListener('change', function(e) {
     if (e.target.files && e.target.files[0]) {

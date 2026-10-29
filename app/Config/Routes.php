@@ -70,6 +70,7 @@ $routes->group('voluntario', static function ($routes) {
     $routes->post('analisarJustificativa', 'Voluntario::analisarJustificativa', ['filter' => 'auth']);
     $routes->get('getEstatisticasPeriodo', 'Voluntario::getEstatisticasPeriodo', ['filter' => 'auth']);
     $routes->post('resetSenha', 'Voluntario::resetSenha', ['filter' => 'auth']);
+    $routes->post('toggleStatus', 'Voluntario::toggleStatus', ['filter' => 'auth']);
     $routes->get('verificarTelefone', 'Voluntario::verificarTelefone', ['filter' => 'auth']);
     $routes->post('vincularRapido', 'Voluntario::vincularRapido', ['filter' => 'auth']);
     $routes->get('getSubareasPorDepartamento', 'Voluntario::getSubareasPorDepartamento', ['filter' => 'auth']);
