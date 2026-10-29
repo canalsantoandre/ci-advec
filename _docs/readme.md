@@ -211,6 +211,15 @@ flowchart TD
 | `GET` | `/resource/getRecursosEscala` | Retorna materiais anexados a um culto e departamento | `auth_sysadm` / `auth` |
 | `POST` | `/resource/anexarNaEscala` | Anexa materiais avulsos ou coleção desmembrada na escala | `auth_sysadm` / `auth` |
 | `POST` | `/resource/removerDaEscala` | Desanexa material de um culto específico | `auth_sysadm` / `auth` |
+| `GET/POST` | `/api-client` | Painel de Gestão de Aplicações de API, Credenciais e Swagger Hub | `auth` (SysAdm) |
+| `POST` | `/api-client/salvar` | Cria nova credencial de aplicação de API | `auth` (SysAdm) |
+| `POST` | `/api-client/rotacionarSecret` | Rotaciona secret e invalida credenciais antigas | `auth` (SysAdm) |
+| `POST` | `/api-client/toggleStatus` | Ativa ou desativa o acesso de uma aplicação | `auth` (SysAdm) |
+| `POST` | `/api/v1/auth/token` | Emissão de token JWT via `client_id` e `client_secret` | `api_rate_limit` (10 req/min) |
+| `GET` | `/api/v1/escalas/lembretes-pendentes` | Consulta de voluntários com escalas pendentes futuras | `jwt_api` + `api_rate_limit` (60 req/min) |
+| `POST` | `/api/v1/escalas/marcar-lembrete` | Confirmação em lote de lembretes enviados | `jwt_api` + `api_rate_limit` (60 req/min) |
+| `GET` | `/api/v1/docs` | Interface Swagger UI para testes interativos dos endpoints | Público |
+| `GET` | `/api/v1/openapi.json` | Especificação OpenAPI 3.0 dinâmica baseada no `$baseURL` | Público |
 
 ---
 
@@ -437,6 +446,37 @@ flowchart TD
   - **Dashboard do Gestor (`dash-voluntario.php`)**: exibe badge vermelho **"Omissão (-25 pts)"** no histórico de escalas.
   - **Ranking de Voluntários (`voluntario-ranking.php`)**: a coluna de omissões destaca a penalidade correspondente com tooltip (`X omissões (-Y pts no ranking)`).
 
+### 22. Módulo de Aplicações API, Autenticação JWT, Rate Limiting, Documentação Swagger & Automação n8n ([`ApiClient.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Controllers/ApiClient.php), [`AuthApiController.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Controllers/Api/AuthApiController.php), [`EscalaApiController.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Controllers/Api/EscalaApiController.php), [`SwaggerApiController.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Controllers/Api/SwaggerApiController.php))
+- **Gestão de Aplicações e Credenciais (`/api-client`)**:
+  - Painel administrativo moderno com suporte nativo a temas Claro e Escuro (Dark Mode).
+  - Tabela `tb_api_client` gerencia chaves de acesso com `client_id`, `client_secret` criptografado em hash e segredo JWT independente por aplicação.
+  - Ações administrativas: criação de novas aplicações, rotação instantânea de secrets, ativação/desativação dinâmica (`status = 1/0`) e contador de requisições.
+  - Abas segmentadas com visualizador de documentação integrado contendo blocos de código estilo terminal macOS (cURL e JavaScript) com botão de cópia instantânea.
+- **Autenticação Segura JWT (Pure PHP HMAC-SHA256)**:
+  - Implementado em [`JwtService.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Libraries/JwtService.php) sem dependência de bibliotecas externas pesadas ou instáveis.
+  - Endpoint `POST /api/v1/auth/token` valida `client_id` e `client_secret`, emitindo token com validade configurável (padrão 1 hora / 3600 segundos).
+  - Filtro [`JwtApiFilter.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Filters/JwtApiFilter.php) intercepta rotas da API validando o header `Authorization: Bearer <token>`, verificando assinatura, expiração e status ativo da aplicação.
+- **Proteção contra Ataques de Força Bruta & Rate Limiting ([`ApiRateLimitFilter.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Filters/ApiRateLimitFilter.php))**:
+  - **Endpoint de Autenticação (`/api/v1/auth/token`)**: limitado estritamente a **10 requisições por minuto por IP** para mitigar tentativas de força bruta contra credenciais.
+  - **Endpoints da API Protegida (`/api/v1/*`)**: limitado a **60 requisições por minuto por IP**.
+  - Ao exceder o limite, retorna HTTP `429 Too Many Requests` com cabeçalho padrão `Retry-After: 60` e payload estruturado em JSON com mensagem orientativa.
+- **Endpoints de Lembretes de Escalas (`/api/v1/escalas/*`)**:
+  - `GET /api/v1/escalas/lembretes-pendentes`:
+    - Consulta voluntários ativos e aprovados com escalas futuras que estejam com status `PENDENTE`.
+    - Agrupamento inteligente: une cultos do mesmo dia e departamento por voluntário, evitando o envio de mensagens fragmentadas ou repetidas.
+    - Suporte a múltiplos departamentos: por padrão traz voluntários de **todos os departamentos**, com suporte ao filtro opcional `?id_departamento=X`.
+    - Resolução automática e dinâmica da instância do WhatsApp Evolution: consulta a tabela `whatsapp_configs` filtrando por instâncias ativas (`deleted_at IS NULL` e `connected = 1`), entregando o nome correto no campo `instance`.
+    - Formatação para n8n: entrega os campos `instance`, `WHATSAPP` (formato JID `@s.whatsapp.net`), `remoteJid`, `telefone_destino`, `mensagem` (texto completo pronto com quebras de linha e link direto do portal), `ids_escala` e `link_portal`.
+    - Proteção Anti-Spam: ignora automaticamente escalas com `data_ultimo_lembrete` registrado no mesmo dia. Suporta bypass para homologação via `?ignorar_antispam=1`.
+  - `POST /api/v1/escalas/marcar-lembrete`:
+    - Recebe o array de `ids_escala` no corpo JSON e atualiza em lote a coluna `data_ultimo_lembrete` com o timestamp atual, dando baixa imediata após o envio no WhatsApp.
+- **Documentação Interativa Swagger UI & Especificação OpenAPI 3.0 ([`SwaggerApiController.php`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/app/Controllers/Api/SwaggerApiController.php))**:
+  - Especificação OpenAPI 3.0 dinâmica gerada em `/api/v1/openapi.json`.
+  - Interface Swagger UI renderizada em `/api/v1/docs`.
+  - **URLs 100% Dinâmicas**: o host e a lista de servidores utilizam a `$baseURL` do CodeIgniter (`base_url()`), garantindo que tanto em desenvolvimento local (`http://localhost:8080`) quanto em produção (`https://eabc.com.br`) as requisições interativas funcionem sem necessidade de ajustes manuais.
+- **Esteira de Automação n8n (Evolution API)**:
+  - Fluxo orquestrado: `Disparo Diário 08:00 (Schedule)` ➔ `1. Obter Token JWT (HTTP Request POST)` ➔ `2. Buscar Pendentes (HTTP Request GET)` ➔ `3. Separar Voluntários (Split Out)` ➔ `4. Enviar Individual (Evolution API)` ➔ `5. Dar Baixa no Lembrete (HTTP Request POST)`.
+
 ---
 
 ## 🗄️ 5. Scripts de Banco de Dados (`scripts_deploys/`)
@@ -457,6 +497,8 @@ flowchart TD
 | [`12102026_culto_padrao_evento_avulso_data_especifica.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/12102026_culto_padrao_evento_avulso_data_especifica.sql) | [`12102026_culto_padrao_evento_avulso_data_especifica_rollback.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/12102026_culto_padrao_evento_avulso_data_especifica_rollback.sql) | Adição da coluna `data_especifica` em `tb_culto_padrao` para suporte a eventos avulsos sem recorrência em data determinada |
 | [`12102026_analise_justificativas_cancelamento.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/12102026_analise_justificativas_cancelamento.sql) | [`12102026_analise_justificativas_cancelamento_rollback.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/12102026_analise_justificativas_cancelamento_rollback.sql) | Adição dos campos `status_analise_justificativa`, `justificativa_parecer_gestor`, `justificativa_analisado_por` e `justificativa_analisado_em` em `tb_escala_voluntario` para abono de faltas no ranking |
 | [`12102026_sincronizacao_omissoes_pontuacao_negativa.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/12102026_sincronizacao_omissoes_pontuacao_negativa.sql) | [`12102026_sincronizacao_omissoes_pontuacao_negativa_rollback.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/12102026_sincronizacao_omissoes_pontuacao_negativa_rollback.sql) | Sincronização de escalas passadas pendentes para status `OMISSAO` e aplicação da penalização de -25 pontos no ranking |
+| [`29102026_modulo_api_client_jwt.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/29102026_modulo_api_client_jwt.sql) | [`29102026_modulo_api_client_jwt_rollback.sql`](file:///Users/elpidio.junior/Documents/_projetos/advec/ci-advec/scripts_deploys/29102026_modulo_api_client_jwt_rollback.sql) | Criação da tabela `tb_api_client`, rate limiting, módulo de API e permissões de acesso |
+
 
 
 

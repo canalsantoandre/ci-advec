@@ -219,6 +219,13 @@ usConfirm({
    - Escalas cujo evento já ocorreu (`data_culto < CURDATE()`) e que permaneceram sem confirmação (`PENDENTE`, nula ou não respondida) são migradas automaticamente para `status_confirmacao = 'OMISSAO'` e `status_presenca = 0` ao abrir qualquer listagem de voluntário ou grade.
    - O cálculo do ranking e métricas deduz **-25 pontos** por cada omissão apurada.
    - Na grade de escalas e na lista do voluntário, o status muda de "Pendente" para "Omissão" com badge vermelho e aviso explicativo.
+8. **Segurança de APIs REST, Rate Limiting & Swagger OpenAPI**:
+   - **Autenticação JWT (Pure PHP HMAC-SHA256)**: Rotas de API externas (`/api/v1/*`) devem ser protegidas por tokens assinados criptograficamente (`JwtService`), com segredo exclusivo por aplicação registrada em `tb_api_client`.
+   - **Proteção Estrita contra Força Bruta & Rate Limiting (`ApiRateLimitFilter`)**:
+     - Endpoint de emissão de tokens (`/api/v1/auth/token`): limitado a **10 requisições por minuto por IP**.
+     - Endpoints protegidos da API: limitados a **60 requisições por minuto por IP**.
+     - Violações devem responder obrigatoriamente com status HTTP `429 Too Many Requests` e cabeçalho `Retry-After: 60`.
+   - **URLs Dinâmicas na Documentação OpenAPI**: Servidores e URLs declarados na especificação Swagger OpenAPI (`/api/v1/openapi.json`) devem ser 100% dinâmicos, derivados da variável `$baseURL` via `base_url()`, eliminando URLs fixas ou quebradas na transição entre desenvolvimento local e produção.
 
 ---
 

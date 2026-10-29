@@ -39,6 +39,8 @@ class Filters extends BaseFilters
         'auth_voluntario' => \App\Filters\AuthVoluntario::class,
 		'noauth' => \App\Filters\Noauth::class,
 		'userscheck' => \App\Filters\UsersCheck::class,
+        'api_rate_limit' => \App\Filters\ApiRateLimitFilter::class,
+        'jwt_api'        => \App\Filters\JwtApiFilter::class,
     ];
 
     /**

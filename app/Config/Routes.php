@@ -153,6 +153,34 @@ $routes->group('webhook', static function ($routes) {
     $routes->post('testar', 'Webhook::testar', ['filter' => 'auth']);
 });
 
+/* APLICAÇÕES E INTEGRAÇÕES DE API (GERENCIAMENTO NO PAINEL) */
+$routes->get('api-client', 'ApiClient::index', ['filter' => 'auth']);
+$routes->group('api-client', ['filter' => 'auth'], static function ($routes) {
+    $routes->match(['GET', 'POST'], 'index', 'ApiClient::index');
+    $routes->get('novo', 'ApiClient::novo');
+    $routes->match(['GET', 'POST'], 'editar/(:num)', 'ApiClient::editar/$1');
+    $routes->post('salvar', 'ApiClient::salvar');
+    $routes->get('apagar/(:num)', 'ApiClient::apagar/$1');
+    $routes->post('rotacionarSecret', 'ApiClient::rotacionarSecret');
+    $routes->post('toggleStatus', 'ApiClient::toggleStatus');
+});
+
+/* API REST v1 (INTEGRAÇÃO n8n / BOTS COM OAUTH2 JWT & RATE LIMITING) */
+$routes->group('api/v1', static function ($routes) {
+    // Documentação Interativa e Especificação OpenAPI 3.0 (Swagger)
+    $routes->get('docs', 'Api\SwaggerApiController::ui');
+    $routes->get('openapi.json', 'Api\SwaggerApiController::openapi');
+
+    // 1. Endpoint de Emissão / Renovação de Token (Protegido por Rate Limit estrito anti-brute-force)
+    $routes->post('auth/token', 'Api\AuthApiController::token', ['filter' => 'api_rate_limit']);
+
+    // 2. Endpoints Protegidos por Bearer JWT e Rate Limit por Aplicação
+    $routes->group('escalas', ['filter' => 'jwt_api'], static function ($routes) {
+        $routes->get('lembretes-pendentes', 'Api\EscalaApiController::lembretesPendentes');
+        $routes->post('marcar-lembrete', 'Api\EscalaApiController::marcarLembrete');
+    });
+});
+
 /* ESCALA DE VOLUNTÁRIOS */
 $routes->get('escala', 'Escala::index', ['filter' => 'auth']);
 $routes->group('escala', static function ($routes) {
